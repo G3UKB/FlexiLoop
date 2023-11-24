@@ -52,6 +52,16 @@ class AppMain:
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)
         
+        # Create a SerialComms instance
+        serial_comms = SerialComms('COM5')
+        
+        # Create a Calibration instance
+        cal = Calibrate(serial_comms)
+        
+        # Dummy calibration.
+        end_points = cal.cal_end_points()
+        print (end_points)
+        
 #======================================================================================================================
 # Main code
 def main():

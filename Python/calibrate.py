@@ -46,8 +46,8 @@ import vna
 #===================================================== 
 class Calibrate:
 
-    def __init__(self):
-        pass
+    def __init__(self, serial_comms):
+        self.__comms = serial_comms
         
     def calibrate(self, loop, interval):
         # Retrieve the end points
@@ -71,3 +71,12 @@ class Calibrate:
         if cal_map == None:
             return "Unable to create a calibration map for loop: {}!".format(loop), cal_map, False
         return "", cal_map, True
+
+    def cal_end_points(self):
+        self.__serial_comms.home()
+        h = self.__serial_comms.pos()
+        self.__serial_comms.max()
+        m = self.__serial_comms.pos()
+        return h,m
+        
+        
