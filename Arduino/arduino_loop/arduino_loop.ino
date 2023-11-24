@@ -21,7 +21,7 @@
 #include "DualMC33926MotorShield.h"
 
 // Constants
-#define POTENTIOMETER_PIN A0
+#define POTENTIOMETER_PIN A3
 #define FORWARD 0
 #define REVERSE 1
 #define TRUE 1
@@ -39,6 +39,7 @@ void setup() {
   Serial.begin(9600);
   // Initialise motor driver
   md.init();
+  pinMode(POTENTIOMETER_PIN, INPUT);
 }
 
 // Execution loop runs continuously
@@ -151,7 +152,7 @@ void process(String data) {
         Serial.print(val);
         Serial.print(';');
       } else {
-         Serial.print("Motor fault on move!;");
+        Serial.print("Motor fault on move!;");
       }
       break;
 
@@ -199,8 +200,11 @@ int go_home_or_max(int pos) {
     int last_val = -1;
     delay(200);
     while (get_feedback_value() != last_val) {
+      Serial.print("Status: ");
+      Serial.print(get_feedback_value());
+      Serial.print(";");
       last_val = get_feedback_value();
-      delay(100);
+      delay(500);
     }
     delay(100);
     md.setM1Speed(0);

@@ -26,97 +26,123 @@
 import serial
 import time
 
-ser = serial.Serial('COM5', 9600, timeout=1)
-ser.reset_input_buffer()
+#=====================================================
+# Manage all serial comms to the Arduino
+#===================================================== 
+class SerialComms
 
-def read_resp():
+    # Initialise class
+    def __init__(self, port):
+        self.__ser = serial.Serial(port, 9600, timeout=1)
+        self.__ser.reset_input_buffer()
+
+    # Read all responses for a command.
+    # Wait for a response.
+    # Print all STATUS responses
+    # Print and return RESPONSE responses
+    def read_resp(self):
         acc = ""
+        value = 0
         success = False
-        resp_timeout = 5
+        resp_timeout = 10
         while(1):
-                chr = ser.read().decode('utf-8')
-                if chr == '':
-                        print("Waiting response...")
-                        if resp_timeout <= 0:
-                                print("Response timeout - retrying...")
-                                break
-                        else:
-                                resp_timeout -= 1
-                                time.sleep(0.5)
-                                continue
-                acc = acc + chr
-                if chr == ";":
-                        print("Response: ", acc)
-                        if ser.in_waiting > 0:
-                                print("Mode data available - collecting... ", ser.in_waiting)
-                                acc = ""
-                                continue
-                        success = True
-                        break
-        return success, acc
-
-def send(cmd):
-        while(1):
-                print("Sending ", cmd)
-                ser.write(cmd)
-                ser.flush()
-                time.sleep(0.1)
-                r, acc = read_resp()
-                if r == False:
-                        time.sleep(0.2)
-                        continue
+            # Read a single character
+            chr = ser.read().decode('utf-8')
+            if chr == '':
+                # Timeout on read
+                print("Waiting response...")
+                if resp_timeout <= 0:
+                    # Timeout on waiting for a response
+                    print("Response timeout!")
+                    break
                 else:
-                        break
-                time.sleep(1)
-                        
-def speed():
+                    # Continue waiting
+                    resp_timeout -= 1
+                    time.sleep(0.5)
+                    continue
+            acc = acc + chr
+            if chr == ";":
+                # Found terminator character
+                if "Status" in acc:
+                    # Its a status message so just print and continue waiting
+                    print(acc)
+                    acc = ""
+                    continue
+                # Otherwise its a response to the command
+                print("Response: ", acc)
+                if ser.in_waiting > 0:
+                    # Still data in buffer, probably should not happen!
+                    # Dump response and use this data
+                    print("More data available - collecting... ", ser.in_waiting)
+                    acc = ""
+                     continue
+                success = True
+                break
+        if success:
+            # We have good response data
+            # Strip data from text
+            if acc.len() > 2:
+                # There is some data
+                p = acc[1:len(acc)-1]
+                if p.isdigit():
+                    val = int(p)
+                else:
+                    print("Invalid value for position (not int): ", p)
+        return success, val
+    
+    # Send a command to the Arduino
+    def send(self, cmd):
+        val = 0
+        while(1):
+            print("Sending ", cmd)
+            ser.write(cmd)
+            ser.flush()
+            time.sleep(0.1)
+            r, val = read_resp()
+            if r == False:
+                time.sleep(0.2)
+                print("Command failed, retrying...")
+                continue
+            else:
+                break
+            time.sleep(1)
+        return val
+    
+    # Command execution                        
+    def speed(self):
         send(b"s;")
-        
-def home():
+            
+    def home(self):
         send(b"h;")
-        
-def max():
+            
+    def max(self):
         send(b"x;")
-        
-def pos():
-        send(b"p;")
-        
-def move(pos):
+            
+    def pos(self):
+        return send(b"p;")
+            
+    def move(self, pos):
         b = bytearray(b"m,")
         b += pos.encode('utf-8')
         b += b'.;'
         send(b)
-
-def nudge_fwd():
+    
+    def nudge_fwd(self):
         send(b"f;")
-
-def nudge_rev():
+    
+    def nudge_rev(self):
         send(b"r;")
-   
-def run_fwd(ms):
+       
+    def run_fwd(self, ms):
         b = bytearray(b"w,")
         b += ms.encode('utf-8')
         b += b'.;'
         send(b)
-        
-def run_rev(ms):
+            
+    def run_rev(self, ms):
         b = bytearray(b"v,")
         b += ms.encode('utf-8')
         b += b'.;'
         send(b)
-        
-def main():
-        # Command sequence
-        #move("86")
-        #pos()
-        #nudge_rev()
-        #run_fwd("500")
-        #p = pos()
-        move("100")
-        
-        print("Press any key to exit...")
-        input()
-        
-if __name__ == '__main__':
-        main()
+            
         
