@@ -29,7 +29,7 @@ import time
 #=====================================================
 # Manage all serial comms to the Arduino
 #===================================================== 
-class SerialComms
+class SerialComms:
 
     # Initialise class
     def __init__(self, port):
@@ -75,7 +75,7 @@ class SerialComms
                     # Dump response and use this data
                     print("More data available - collecting... ", ser.in_waiting)
                     acc = ""
-                     continue
+                    continue
                 success = True
                 break
         if success:

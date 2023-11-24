@@ -23,8 +23,8 @@
 #     bob@bobcowdery.plus.com
 #
 
-import serialcomms.py
-import vna.py
+import serialcomms
+import vna
 
 # This is a relatively slow process.
 # 1.    Establish the travel end points as feedback analogue values from the Arduino.
