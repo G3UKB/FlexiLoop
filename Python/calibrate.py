@@ -23,6 +23,8 @@
 #     bob@bobcowdery.plus.com
 #
 
+from defs import *
+import model
 import serialcomms
 import vna
 
@@ -46,37 +48,69 @@ import vna
 #===================================================== 
 class Calibrate:
 
-    def __init__(self, serial_comms):
+    def __init__(self, serial_comms, model):
         self.__comms = serial_comms
+        self.__model = model
         
     def calibrate(self, loop, interval):
         # Retrieve the end points
-        end_points = retrieve_end_points()
-        if end_points == None:
+        r, end_points = self.retrieve_end_points()
+        if not r:
             # Calibrate end points
-            cal_end_points()
-            end_points = retrieve_end_points()
-            if end_points == None:
+            self.cal_end_points()
+            r, end_points = self.retrieve_end_points()
+            if not r:
                 # We have a problem
                 return "Unable to retrieve or create end points!", False
         
         # Create a calibration map for loop
-        if not create_map(loop, interval, end_points):
-            # We have a problem
-            return "Unable to create a calibration map for loop: {}!".format(loop), False
-        return "", True
+        cal_map = self.retrieve_map(loop)
+        if len(cal_map) == 0:
+            r,t,cal_map = self.create_map(loop, interval, end_points)
+            if not r:
+                # We have a problem
+                return False, "Unable to create a calibration map for loop: {}!".format(loop), []
+        return True, "", cal_map
     
-    def map_for_loop(self, loop):
-        cal_map = retrieve_map(loop)
-        if cal_map == None:
-            return "Unable to create a calibration map for loop: {}!".format(loop), cal_map, False
-        return "", cal_map, True
-
+    def re_calibrate_end_points(self):
+        self.cal_end_points()
+        
+    def re_calibrate_loop(loop, interval):
+        r, end_points = retrieve_end_points()
+        if not r:
+            # Calibrate end points
+            self.cal_end_points()
+            r, end_points = self.retrieve_end_points()
+            if not r:
+                # We have a problem
+                return "Unable to retrieve or create end points!", False
+        r,t,cal_map = self.create_map(loop, interval, end_points)
+        if not r:
+            # We have a problem
+            return False, "Unable to create a calibration map for loop: {}!".format(loop), []
+        return True, "", cal_map
+        
+    def retrieve_end_points(self):
+        h = self.__model[CONFIG][CAL][HOME]
+        m = self.__model[CONFIG][CAL][MAX]
+        if h==-1 or m==-1:
+            return False, [h, m]
+        else:
+            return True, [h, m]
+        
     def cal_end_points(self):
-        self.__serial_comms.home()
-        h = self.__serial_comms.pos()
-        self.__serial_comms.max()
-        m = self.__serial_comms.pos()
+        self.__comms.home()
+        h = self.__comms.pos()
+        self.__comms.max()
+        m = self.__comms.pos()
+        self.__model[CONFIG][CAL][HOME] = h
+        self.__model[CONFIG][CAL][MAX] = m
         return h,m
+    
+    def retrieve_map(self, loop):
+        return []
+
+    def create_map(self, loop, interval, end_points):
+        return True, "", [1,2]
         
         

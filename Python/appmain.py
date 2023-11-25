@@ -48,19 +48,20 @@ class AppMain:
             print ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
             self.__configured = False
-        print(self.__model)
-        # Save model
-        persist.saveCfg(CONFIG_PATH, self.__model)
+        #print(self.__model)
         
         # Create a SerialComms instance
-        serial_comms = SerialComms('COM5')
+        serial_comms = serialcomms.SerialComms('COM5')
         
         # Create a Calibration instance
-        cal = Calibrate(serial_comms)
+        cal = calibrate.Calibrate(serial_comms, self.__model)
         
         # Dummy calibration.
-        end_points = cal.cal_end_points()
-        print (end_points)
+        cal = cal.calibrate(1, 10)
+        print (cal)
+        
+        # Save model
+        persist.saveCfg(CONFIG_PATH, self.__model)
         
 #======================================================================================================================
 # Main code

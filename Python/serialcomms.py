@@ -35,24 +35,27 @@ class SerialComms:
     def __init__(self, port):
         self.__ser = serial.Serial(port, 9600, timeout=1)
         self.__ser.reset_input_buffer()
+        self.__first_run = True
 
     # Read all responses for a command.
     # Wait for a response.
     # Print all STATUS responses
     # Print and return RESPONSE responses
-    def read_resp(self):
+    def read_resp(self, timeout):
         acc = ""
-        value = 0
+        val = 0
         success = False
-        resp_timeout = 10
+        # timeout is secs to wait for a response
+        resp_timeout = timeout*2
         while(1):
             # Read a single character
-            chr = ser.read().decode('utf-8')
+            chr = self.__ser.read().decode('utf-8')
             if chr == '':
                 # Timeout on read
-                print("Waiting response...")
-                if resp_timeout <= 0:
+                #print("Waiting response...")
+                if resp_timeout <= 0 or self.__first_run:
                     # Timeout on waiting for a response
+                    self.__first_run = False
                     print("Response timeout!")
                     break
                 else:
@@ -70,7 +73,7 @@ class SerialComms:
                     continue
                 # Otherwise its a response to the command
                 print("Response: ", acc)
-                if ser.in_waiting > 0:
+                if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
                     print("More data available - collecting... ", ser.in_waiting)
@@ -81,9 +84,11 @@ class SerialComms:
         if success:
             # We have good response data
             # Strip data from text
-            if acc.len() > 2:
+            n = acc.find(":")
+            if n != -1:
                 # There is some data
-                p = acc[1:len(acc)-1]
+                p = acc[n+1:len(acc)-1]
+                p = p.strip()
                 if p.isdigit():
                     val = int(p)
                 else:
@@ -91,14 +96,14 @@ class SerialComms:
         return success, val
     
     # Send a command to the Arduino
-    def send(self, cmd):
+    def send(self, cmd, timeout):
         val = 0
         while(1):
             print("Sending ", cmd)
-            ser.write(cmd)
-            ser.flush()
+            self.__ser.write(cmd)
+            self.__ser.flush()
             time.sleep(0.1)
-            r, val = read_resp()
+            r, val = self.read_resp(timeout)
             if r == False:
                 time.sleep(0.2)
                 print("Command failed, retrying...")
@@ -110,39 +115,39 @@ class SerialComms:
     
     # Command execution                        
     def speed(self):
-        send(b"s;")
+        self.send(b"s;", 1)
             
     def home(self):
-        send(b"h;")
+        self.send(b"h;", 30)
             
     def max(self):
-        send(b"x;")
+        self.send(b"x;", 30)
             
     def pos(self):
-        return send(b"p;")
+        return self.send(b"p;", 1)
             
     def move(self, pos):
         b = bytearray(b"m,")
         b += pos.encode('utf-8')
         b += b'.;'
-        send(b)
+        self.send(b, 30)
     
     def nudge_fwd(self):
-        send(b"f;")
+        self.send(b"f;", 2)
     
     def nudge_rev(self):
-        send(b"r;")
+        self.send(b"r;", 2)
        
     def run_fwd(self, ms):
         b = bytearray(b"w,")
         b += ms.encode('utf-8')
         b += b'.;'
-        send(b)
+        self.send(b, 10)
             
     def run_rev(self, ms):
         b = bytearray(b"v,")
         b += ms.encode('utf-8')
         b += b'.;'
-        send(b)
+        self.send(b, 10)
             
         

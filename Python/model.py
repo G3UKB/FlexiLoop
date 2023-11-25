@@ -51,8 +51,8 @@ flexi_loop_model = {
             EVNT_PORT: 10003,
         },
         CAL: {
-            HOME: 0,
-            MAX: 1023,
+            HOME: -1,
+            MAX: -1,
             CAL_L1: [],
             CAL_L2: [],
             CAL_L3: [],
