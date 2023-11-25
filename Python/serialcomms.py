@@ -128,7 +128,7 @@ class SerialComms:
             
     def move(self, pos):
         b = bytearray(b"m,")
-        b += pos.encode('utf-8')
+        b += str(pos).encode('utf-8')
         b += b'.;'
         self.send(b, 30)
     

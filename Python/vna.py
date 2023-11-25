@@ -21,9 +21,13 @@
 #     bob@bobcowdery.plus.com
 #
 
+# Python imports
 import os, sys
 import subprocess
+
+# Application imports
 from defs import *
+import decode
 
 """
     Perform a sweep using the command line utility from vna/j.
@@ -33,6 +37,12 @@ from defs import *
 """
 
 class VNA:
+    
+    def __init__(self, simulate=False):
+        self.__simulate = simulate
+        
+        # Create decoder
+        self.__dec = decode.Decode()
     
     def fres(self, startFreq, stopFreq):
         """
@@ -48,7 +58,10 @@ class VNA:
             # Good to go
             # Step every 250Hz
             steps = int((stopFreq - startFreq)/250)
-            return self.__sweep(startFreq, stopFreq, steps)
+            if self.__sweep(startFreq, stopFreq, steps):
+                return True, self.__dec.decode_fres()
+            else:
+                return False, []
     
     def fswr(self, freq):
         
@@ -61,7 +74,10 @@ class VNA:
         """
         
         # Minimum separation is 1KHz and minimum steps is 2
-        return self.__sweep(freq, freq + 1000, 2)
+        if self.__sweep(freq, freq + 1000, 2):
+            return True, self.__dec.decode_fswr()
+        else:
+            return False, []
     
     def scan(self, startFreq, stopFreq):
         
@@ -78,7 +94,10 @@ class VNA:
             # Good to go
             # Step every 10KHz
             steps = int((stopFreq - startFreq)/10000)
-            return self.__sweep(startFreq, stopFreq, steps)
+            if self.__sweep(startFreq, stopFreq, steps):
+                return True, self.__dec.decode_scan()
+            else:
+                return False, []
     
     def __sweep(self, startFreq, stopFreq, steps):
         

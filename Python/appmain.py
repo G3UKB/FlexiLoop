@@ -59,6 +59,8 @@ class AppMain:
         # Dummy calibration.
         cal = cal.calibrate(1, 10)
         print (cal)
+        # Go to location
+        serial_comms.move(550)
         
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)
