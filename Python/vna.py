@@ -39,12 +39,20 @@ import decode
 class VNA:
     
     def __init__(self, simulate=False):
+        # Simulation setup
         self.__simulate = simulate
+        if self.__simulate:
+            self.__sim_step = 20    # step by this % of full travel
+            self.__sim_f = 3.5
+            self.__step_f = 1.0
+            self.__min_f = 3.5
+            self.__max_f = self.__sim_f + 5*self.__step_f
+            self.__swr = 1.0
         
         # Create decoder
         self.__dec = decode.Decode()
     
-    def fres(self, startFreq, stopFreq):
+    def fres(self, startFreq, stopFreq, hint = HOME):
         """
         Sweep between start and end frequencies.
         Target is to determine resonant frequency.
@@ -52,7 +60,19 @@ class VNA:
         Arguments:
             startFreq   --  start freq in Hz
             stopFreq    --  stop freq in Hz
+            optional hint -- MIN, MAX, FREE (used in simulation)
         """
+        if self.__simulate:
+            if hint == MIN:
+                return self.__min_f
+            elif hint == MAX:
+                return self.__max_f
+            else:
+                if (self.__sim_f + self.__step_f) >= self.__max_f:
+                    self.__sim_f = 3.5
+                else:
+                    self.__sim_f += self.__step_f
+                return (self.__sim_f, self.__swr)
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go
@@ -72,6 +92,8 @@ class VNA:
         Arguments:
             freq   --  freq in Hz
         """
+        if self.__simulate:
+            return (freq, self.__swr)
         
         # Minimum separation is 1KHz and minimum steps is 2
         if self.__sweep(freq, freq + 1000, 2):

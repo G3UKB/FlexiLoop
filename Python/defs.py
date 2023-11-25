@@ -23,6 +23,8 @@
 
 #=======================================================================
 # Model defs
+MIN_FREQ = 1800000
+MAX_FREQ = 30000000
 CONFIG = 'CONFIG'
 STATE = 'STATE'
 # RPi section
@@ -34,6 +36,7 @@ EVNT_PORT = 'EVNT-PORT'
 CAL = 'CAL'
 HOME = 'HOME'
 MAX = 'MAX'
+FREE = 'FREE'
 CAL_L1 = 'CAL_L1'
 CAL_L2 = 'CAL_L1'
 CAL_L3 = 'CAL_L3'
@@ -47,5 +50,8 @@ CONFIG_PATH = '../config/auto_tuner.cfg'
 IDLE_TICKER = 100
 HEARTBEAT_TIMER = 10 # 10 * IDLE_TICKER = 1s ; heartbeats should be every 0.5s
 
-
+#=======================================================================
+# General
+SIMULATE = 'SIMULATE'
+NORMAL = 'NORMAL'
 

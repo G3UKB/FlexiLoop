@@ -48,8 +48,9 @@ import vna
 #===================================================== 
 class Calibrate:
 
-    def __init__(self, serial_comms, model):
+    def __init__(self, serial_comms, vna, model):
         self.__comms = serial_comms
+        self.__vna = vna
         self.__model = model
         
     def calibrate(self, loop, interval):
@@ -108,9 +109,29 @@ class Calibrate:
         return h,m
     
     def retrieve_map(self, loop):
-        return []
+        if loop == 1:
+            return True, self.__model[CONFIG][CAL][CAL_L1]
+        elif loop == 2:
+            return True, self.__model[CONFIG][CAL][CAL_L2]
+        elif loop == 3:
+            return True, self.__model[CONFIG][CAL][CAL_L3]
+        else:
+            return False, []
 
     def create_map(self, loop, interval, end_points):
+        # Move home and take a reading
+        self.__comms.home()
+        fhome, swr = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME):
+        
+        # Move incrementally and take readings
+        
+        # Move max and take a reading
+        self.__comms.max()
+        fmax, swr = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX):
+        
+        # Populate the model
+        
+        # Return the map
         return True, "", [1,2]
         
         

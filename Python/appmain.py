@@ -33,7 +33,10 @@ import model
 import persist
 import serialcomms
 import calibrate
+import vna
 
+MODE = SIMULATE
+# MODE = NORMAL
 #=====================================================
 # The main application class
 #===================================================== 
@@ -53,8 +56,11 @@ class AppMain:
         # Create a SerialComms instance
         serial_comms = serialcomms.SerialComms('COM5')
         
+        # Create a VNA instance
+        vna = vna.VNA(MODE)
+        
         # Create a Calibration instance
-        cal = calibrate.Calibrate(serial_comms, self.__model)
+        cal = calibrate.Calibrate(serial_comms, vna, self.__model)
         
         # Dummy calibration.
         cal = cal.calibrate(1, 10)
