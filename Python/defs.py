@@ -37,6 +37,10 @@ CAL = 'CAL'
 HOME = 'HOME'
 MAX = 'MAX'
 FREE = 'FREE'
+LOOP_1 = 1
+LOOP_2 = 2
+LOOP_3 = 3
+STEPS = 10
 CAL_L1 = 'CAL_L1'
 CAL_L2 = 'CAL_L1'
 CAL_L3 = 'CAL_L3'
@@ -54,4 +58,6 @@ HEARTBEAT_TIMER = 10 # 10 * IDLE_TICKER = 1s ; heartbeats should be every 0.5s
 # General
 SIMULATE = 'SIMULATE'
 NORMAL = 'NORMAL'
+FWD = 'FWD'
+REV = 'REV'
 

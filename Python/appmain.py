@@ -31,18 +31,14 @@ import traceback
 from defs import *
 import model
 import persist
-import serialcomms
-import calibrate
-import vna
+import api
 
-MODE = SIMULATE
-# MODE = NORMAL
 #=====================================================
 # The main application class
 #===================================================== 
 class AppMain:
     
-    def run(self, path):
+    def run(self, path, port):
         # Manage configuration
         self.__configured = True
         CONFIG_PATH = path
@@ -53,20 +49,11 @@ class AppMain:
             self.__configured = False
         #print(self.__model)
         
-        # Create a SerialComms instance
-        serial_comms = serialcomms.SerialComms('COM5')
+        # Create an API instance
+        interface = api.API(self.__model, port)
         
-        # Create a VNA instance
-        vna = vna.VNA(MODE)
-        
-        # Create a Calibration instance
-        cal = calibrate.Calibrate(serial_comms, vna, self.__model)
-        
-        # Dummy calibration.
-        cal = cal.calibrate(1, 10)
-        print (cal)
-        # Go to location
-        serial_comms.move(550)
+        # Test code until we have a GUI
+        interface.calibrate()
         
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)
@@ -76,12 +63,12 @@ class AppMain:
 def main():
     
         try:
-            if len(sys.argv) != 2:
-                print("Please supply a configuration filename!")
-                print("python tuner_client.py <path>/filename")
+            if len(sys.argv) != 3:
+                print("Please supply a configuration filename and port for Arduino!")
+                print("python tuner_client.py <path>/filename port")
             else:
                 app = AppMain()
-                sys.exit(app.run(sys.argv[1])) 
+                sys.exit(app.run(sys.argv[1], sys.argv[2])) 
         except Exception as e:
             print ('Exception [%s][%s]' % (str(e), traceback.format_exc()))
  

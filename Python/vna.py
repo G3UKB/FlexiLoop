@@ -63,16 +63,16 @@ class VNA:
             optional hint -- MIN, MAX, FREE (used in simulation)
         """
         if self.__simulate:
-            if hint == MIN:
-                return self.__min_f
+            if hint == HOME:
+                return True, self.__min_f
             elif hint == MAX:
-                return self.__max_f
+                return True, self.__max_f
             else:
                 if (self.__sim_f + self.__step_f) >= self.__max_f:
                     self.__sim_f = 3.5
                 else:
                     self.__sim_f += self.__step_f
-                return (self.__sim_f, self.__swr)
+                return True, self.__sim_f
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go

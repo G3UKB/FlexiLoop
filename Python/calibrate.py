@@ -65,12 +65,16 @@ class Calibrate:
                 return "Unable to retrieve or create end points!", False
         
         # Create a calibration map for loop
-        cal_map = self.retrieve_map(loop)
-        if len(cal_map) == 0:
-            r,t,cal_map = self.create_map(loop, interval, end_points)
-            if not r:
-                # We have a problem
-                return False, "Unable to create a calibration map for loop: {}!".format(loop), []
+        r, cal_map = self.retrieve_map(loop)
+        if r:
+            if len(cal_map) == 0:
+                r,t,cal_map = self.create_map(loop, interval, end_points)
+                if not r:
+                    # We have a problem
+                    return False, "Unable to create a calibration map for loop: {}!".format(loop), []
+        else:
+            print ("Invalid loop id: " % loop)
+            return False, "Invalid loop id: " % loop, []
         return True, "", cal_map
     
     def re_calibrate_end_points(self):
@@ -119,19 +123,53 @@ class Calibrate:
             return False, []
 
     def create_map(self, loop, interval, end_points):
-        # Move home and take a reading
-        self.__comms.home()
-        fhome, swr = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME):
         
-        # Move incrementally and take readings
+        # Get map for model
+        r, m = self.retrieve_map(loop)
+        if not r:
+            print("Invalid loop id: %d" % loop)
+            return False, "Invalid loop id: %d" % loop, []
+        m.clear()
         
         # Move max and take a reading
         self.__comms.max()
-        fmax, swr = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX):
+        r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX)
+        if not r:
+            print("Failed to get max frequency!")
+            return False, "Failed to get max frequency!", []
+            
+        # Move home and take a reading
+        self.__comms.home()
+        r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME)
+        if not r:
+            print("Failed to get min frequency!")
+            return False, "Failed to get min frequency!", []
         
-        # Populate the model
+        # Save limits for this loop
+        m = [fhome, fmax, []]
+        
+        # Move incrementally and take readings
+        # We move from home to max by interval
+        # Interval is a %age of the difference between feedback readings for home and max
+        home, maximum = end_points
+        
+        # Frig here is motor not running
+        #home = 200
+        #maximum = 900
+        
+        d = maximum - home
+        step = (interval/100) * d
+        next_step = home + step
+        while next_step < maximum:
+            # Comment out if motor not running
+            self.__comms.move(next_step)
+            r, f = self.__vna.fres(fhome, fmax, hint = FREE)
+            if not r:
+                print("Failed to get resonant frequency!")
+                return False, "Failed to get resonant frequency!", m
+            m[2].append([next_step, f])
+            next_step += step
         
         # Return the map
-        return True, "", [1,2]
-        
+        return True, "", m
         
