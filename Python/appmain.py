@@ -27,11 +27,15 @@
 import sys
 import traceback
 
+# Qt5 imports
+from PyQt5.QtWidgets import QApplication
+
 # Application imports
 from defs import *
 import model
 import persist
 import api
+import ui
 
 #=====================================================
 # The main application class
@@ -52,8 +56,11 @@ class AppMain:
         # Create an API instance
         interface = api.API(self.__model, port)
         
-        # Test code until we have a GUI
-        interface.calibrate()
+        # Create the UI instance
+        # The one and only QApplication 
+        self.__qt_app = QApplication(sys.argv)
+        ui_inst = ui.UI(self.__model, self.__qt_app)
+        ui_inst.run()
         
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)

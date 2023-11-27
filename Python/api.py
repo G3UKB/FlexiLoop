@@ -81,7 +81,7 @@ class API:
     
     # Get position as a %age of full travel
     def get_pos(self):
-        pos self.__serial_comms.pos()
+        pos = self.__serial_comms.pos()
         # Get calibration
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
@@ -136,7 +136,7 @@ class API:
                 if try_for <= 0:
                     print("Unable to reduce SWR to less than 1.5 {}".format(swr))
                     return True, "Unable to reduce SWR to less than 1.5 {}".format(swr)
-                if dir = FWD:
+                if dir == FWD:
                     self.__serial_comms.nudge_fwd()
                 else:
                     self.__serial_comms.nudge_rev()
@@ -157,4 +157,4 @@ class API:
     
     # Switch between TX and VNA
     def switch_target(target):
-        
+        pass
