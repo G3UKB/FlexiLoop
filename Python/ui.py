@@ -104,24 +104,36 @@ class UI(QMainWindow):
         self.setCentralWidget(w)
         self.__grid = QGridLayout()
         w.setLayout(self.__grid)
-        self.__grid.setColumnStretch(0,0)
-        self.__grid.setColumnStretch(1,1)
+        #self.__grid.setColumnStretch(0,0)
+        #self.__grid.setColumnStretch(1,1)
         
         # -------------------------------------------
         # Selection area
-        self.__selgrid = QGridLayout()
+        self.__loopgrid = QGridLayout()
         w1 = QGroupBox('Selection')
-        w1.setLayout(self.__selgrid)
-        self.__grid.addWidget(w1, 0,1,2,1)
+        w1.setLayout(self.__loopgrid)
+        self.__grid.addWidget(w1, 0,0,1,1)
         
+        looplabel = QLabel('Select Loop')
+        self.__loopgrid.addWidget(looplabel, 0, 0)
         self.__loop_sel = QComboBox()
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
-        self.__selgrid.addWidget(self.__loop_sel, 0,0)
+        self.__loopgrid.addWidget(self.__loop_sel, 0,1)
+        
+        minlabel = QLabel('Min freq')
+        self.__loopgrid.addWidget(minlabel, 0, 2)
+        minvalue = QLabel('0.0')
+        self.__loopgrid.addWidget(minvalue, 0, 3)
+        maxlabel = QLabel('Max freq')
+        self.__loopgrid.addWidget(maxlabel, 0, 4)
+        maxvalue = QLabel('0.0')
+        self.__loopgrid.addWidget(maxvalue, 0, 5)
         
         # -------------------------------------------
         # Button area
+        """
         self.__btngrid = QGridLayout()
         w2 = QGroupBox('Function')
         w2.setLayout(self.__btngrid)
@@ -138,7 +150,7 @@ class UI(QMainWindow):
         self.__btngrid.addWidget(self.__tune, 1,0)
         self.__tune.clicked.connect(self.__do_tune)
         self.__tune.setMaximumHeight(20)
-    
+        """
     #=======================================================
     # Window events
     def closeEvent(self, event):

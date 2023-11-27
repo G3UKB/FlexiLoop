@@ -33,7 +33,12 @@ class SerialComms:
 
     # Initialise class
     def __init__(self, port):
-        self.__ser = serial.Serial(port, 9600, timeout=1)
+        try:
+            self.__ser = serial.Serial(port, 9600, timeout=1)
+        except:
+            print("Failed to initialise Arduino port. Is the Arduino connected?")
+            return
+        
         self.__ser.reset_input_buffer()
         self.__first_run = True
 
