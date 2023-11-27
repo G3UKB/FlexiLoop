@@ -154,4 +154,7 @@ class API:
         else:
             print("Failed to obtain a SWR reading for freq {}".format(freq))
             return False, "Failed to obtain a SWR reading for freq {}".format(freq), None
-            
+    
+    # Switch between TX and VNA
+    def switch_target(target):
+        
