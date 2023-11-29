@@ -31,7 +31,7 @@ import traceback
 from PyQt5.QtWidgets import QMainWindow, QApplication, QToolTip
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QHBoxLayout, QTableWidgetItem
 
 # Application imports
 from defs import *
@@ -108,9 +108,9 @@ class UI(QMainWindow):
         #self.__grid.setColumnStretch(1,1)
         
         # -------------------------------------------
-        # Selection area
+        # Loop area
         self.__loopgrid = QGridLayout()
-        w1 = QGroupBox('Selection')
+        w1 = QGroupBox('Loop')
         w1.setLayout(self.__loopgrid)
         self.__grid.addWidget(w1, 0,0,1,1)
         
@@ -130,6 +130,43 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(maxlabel, 0, 4)
         maxvalue = QLabel('0.0')
         self.__loopgrid.addWidget(maxvalue, 0, 5)
+        
+        self.__cal = QPushButton("(Re)Calibrate...")
+        self.__cal.setToolTip('Calibrate for loop...')
+        self.__loopgrid.addWidget(self.__cal, 0,6)
+        self.__cal.clicked.connect(self.__do_cal)
+        self.__cal.setMaximumHeight(20)
+        
+        w2 = QGroupBox('Status')
+        hbox = QHBoxLayout()
+        #hbox.addStretch(1)
+        #hbox.addStretch(2)
+        #hbox.addStretch(3)
+        self.__l1label = QLabel('Loop-1')
+        hbox.addWidget(self.__l1label)
+        self.__l1label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 12px}")
+        self.__l2label = QLabel('Loop-2')
+        hbox.addWidget(self.__l2label)
+        self.__l2label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 12px}")
+        self.__l3label = QLabel('Loop-3')
+        hbox.addWidget(self.__l3label)
+        self.__l3label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 12px}")
+        w2.setLayout(hbox)
+        self.__loopgrid.addWidget(w2, 1,0, 1, 7)
+        
+        # -------------------------------------------
+        # Auto area
+        self.__loopgrid = QGridLayout()
+        w1 = QGroupBox('Auto')
+        w1.setLayout(self.__loopgrid)
+        self.__grid.addWidget(w1, 1,0,1,1)
+        
+        # -------------------------------------------
+        # Manual area
+        self.__loopgrid = QGridLayout()
+        w1 = QGroupBox('Manual')
+        w1.setLayout(self.__loopgrid)
+        self.__grid.addWidget(w1, 2,0,1,1)
         
         # -------------------------------------------
         # Button area
