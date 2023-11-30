@@ -162,6 +162,7 @@ class UI(QMainWindow):
         w1 = QGroupBox('Auto')
         w1.setLayout(self.__autogrid)
         self.__grid.addWidget(w1, 1,0,1,4)
+        self.__autogrid.setColumnMinimumWidth(5,300)
         
         freqlabel = QLabel('Freq')
         self.__autogrid.addWidget(freqlabel, 0, 0)
@@ -174,6 +175,7 @@ class UI(QMainWindow):
         
         swrlabel = QLabel('SWR')
         self.__autogrid.addWidget(swrlabel, 0, 2)
+        swrlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__swrval = QLabel('?.?')
         self.__swrval.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
         self.__autogrid.addWidget(self.__swrval, 0, 3)
@@ -201,7 +203,7 @@ class UI(QMainWindow):
         self.__relay_sel.setMinimumHeight(30)
         self.__relay_sel.addItem("TX")
         self.__relay_sel.addItem("VNA")
-        self.__mangrid.addWidget(self.__relay_sel, 0, 1, 1, 2)
+        self.__mangrid.addWidget(self.__relay_sel, 0, 2, 1, 1)
         
         #----------------------------------
         # Get current
@@ -210,18 +212,19 @@ class UI(QMainWindow):
         self.__swrres = QLabel('?.?')
         self.__swrres.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
         self.__swrres.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__swrres, 1, 1)
+        self.__mangrid.addWidget(self.__swrres, 1, 2)
         
         res2label = QLabel('Freq')
-        self.__mangrid.addWidget(res2label, 1, 2)
+        res2label.setAlignment(QtCore.Qt.AlignCenter)
+        self.__mangrid.addWidget(res2label, 1, 3)
         self.__freqval = QLabel('?.?')
         self.__freqval.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
         self.__freqval.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__freqval, 1, 3)
+        self.__mangrid.addWidget(self.__freqval, 1, 4)
         
         self.__getres = QPushButton("Get Current")
         self.__getres.setToolTip('Get current SWR and Frequency...')
-        self.__mangrid.addWidget(self.__getres, 1,4)
+        self.__mangrid.addWidget(self.__getres, 1,5)
         self.__getres.clicked.connect(self.__do_res)
         self.__getres.setMinimumHeight(30)
         self.__getres.setMinimumWidth(100)
