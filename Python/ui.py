@@ -85,10 +85,6 @@ class UI(QMainWindow):
     # Basic initialisation
     def __initUI(self):
         
-        """ Configure the GUI interface """
-            
-        self.setToolTip('Remote Auto-Tuner')
-        
         # Arrange window
         x,y,w,h = self.__model[STATE][MAIN_WIN]
         self.setGeometry(x,y,w,h)
@@ -104,15 +100,13 @@ class UI(QMainWindow):
         self.setCentralWidget(w)
         self.__grid = QGridLayout()
         w.setLayout(self.__grid)
-        #self.__grid.setColumnStretch(0,0)
-        #self.__grid.setColumnStretch(1,1)
         
         # -------------------------------------------
         # Loop area
         self.__loopgrid = QGridLayout()
         w1 = QGroupBox('Loop')
         w1.setLayout(self.__loopgrid)
-        self.__grid.addWidget(w1, 0,0,1,1)
+        self.__grid.addWidget(w1, 0,0,1,4)
         
         looplabel = QLabel('Select Loop')
         self.__loopgrid.addWidget(looplabel, 0, 0)
@@ -120,74 +114,196 @@ class UI(QMainWindow):
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
+        self.__loop_sel.setMinimumHeight(30)
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
         
         minlabel = QLabel('Min freq')
         self.__loopgrid.addWidget(minlabel, 0, 2)
-        minvalue = QLabel('0.0')
-        self.__loopgrid.addWidget(minvalue, 0, 3)
+        minlabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.__minvalue = QLabel('0.0')
+        self.__minvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__minvalue.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
+        self.__loopgrid.addWidget(self.__minvalue, 0, 3)
         maxlabel = QLabel('Max freq')
         self.__loopgrid.addWidget(maxlabel, 0, 4)
-        maxvalue = QLabel('0.0')
-        self.__loopgrid.addWidget(maxvalue, 0, 5)
+        maxlabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.__maxvalue = QLabel('0.0')
+        self.__maxvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__maxvalue.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
+        self.__loopgrid.addWidget(self.__maxvalue, 0, 5)
         
         self.__cal = QPushButton("(Re)Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
-        self.__loopgrid.addWidget(self.__cal, 0,6)
+        self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
-        self.__cal.setMaximumHeight(20)
+        self.__cal.setMinimumHeight(30)
+        self.__cal.setMinimumWidth(100)
         
         w2 = QGroupBox('Status')
         hbox = QHBoxLayout()
-        #hbox.addStretch(1)
-        #hbox.addStretch(2)
-        #hbox.addStretch(3)
         self.__l1label = QLabel('Loop-1')
         hbox.addWidget(self.__l1label)
         self.__l1label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 12px}")
+        self.__l1label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l2label = QLabel('Loop-2')
         hbox.addWidget(self.__l2label)
         self.__l2label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 12px}")
+        self.__l2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l3label = QLabel('Loop-3')
         hbox.addWidget(self.__l3label)
         self.__l3label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 12px}")
+        self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         w2.setLayout(hbox)
-        self.__loopgrid.addWidget(w2, 1,0, 1, 7)
+        self.__loopgrid.addWidget(w2, 1, 1, 1, 3)
         
         # -------------------------------------------
         # Auto area
-        self.__loopgrid = QGridLayout()
+        self.__autogrid = QGridLayout()
         w1 = QGroupBox('Auto')
-        w1.setLayout(self.__loopgrid)
-        self.__grid.addWidget(w1, 1,0,1,1)
+        w1.setLayout(self.__autogrid)
+        self.__grid.addWidget(w1, 1,0,1,4)
+        
+        freqlabel = QLabel('Freq')
+        self.__autogrid.addWidget(freqlabel, 0, 0)
+        self.freqtxt = QLineEdit()
+        self.freqtxt.setToolTip('Set tune frequency')
+        self.freqtxt.setInputMask('000.000;_')
+        self.freqtxt.setStyleSheet("QLineEdit {color: rgb(255,100,0); font: 20px}")
+        self.freqtxt.setMaximumWidth(80)
+        self.__autogrid.addWidget(self.freqtxt, 0, 1)
+        
+        swrlabel = QLabel('SWR')
+        self.__autogrid.addWidget(swrlabel, 0, 2)
+        self.__swrval = QLabel('?.?')
+        self.__swrval.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
+        self.__autogrid.addWidget(self.__swrval, 0, 3)
+        
+        self.__tune = QPushButton("Tune...")
+        self.__tune.setToolTip('Tune to freq...')
+        self.__autogrid.addWidget(self.__tune, 0,4)
+        self.__tune.clicked.connect(self.__do_tune)
+        self.__tune.setMinimumHeight(30)
+        self.__tune.setMinimumWidth(100)
+        self.__tune.setMaximumWidth(100)
         
         # -------------------------------------------
         # Manual area
-        self.__loopgrid = QGridLayout()
+        self.__mangrid = QGridLayout()
         w1 = QGroupBox('Manual')
-        w1.setLayout(self.__loopgrid)
-        self.__grid.addWidget(w1, 2,0,1,1)
+        w1.setLayout(self.__mangrid)
+        self.__grid.addWidget(w1, 2,0,1,4)
         
-        # -------------------------------------------
-        # Button area
-        """
-        self.__btngrid = QGridLayout()
-        w2 = QGroupBox('Function')
-        w2.setLayout(self.__btngrid)
-        self.__grid.addWidget(w2, 0,0,2,1)
+        #----------------------------------
+        # Target select
+        relaylabel = QLabel('Select TX/VNA')
+        self.__mangrid.addWidget(relaylabel, 0, 0)
+        self.__relay_sel = QComboBox()
+        self.__relay_sel.setMinimumHeight(30)
+        self.__relay_sel.addItem("TX")
+        self.__relay_sel.addItem("VNA")
+        self.__mangrid.addWidget(self.__relay_sel, 0, 1, 1, 2)
         
-        self.__cal = QPushButton("(Re)Calibrate...")
-        self.__cal.setToolTip('Calibrate for loop...')
-        self.__btngrid.addWidget(self.__cal, 0,0)
-        self.__cal.clicked.connect(self.__do_cal)
-        self.__cal.setMaximumHeight(20)
+        #----------------------------------
+        # Get current
+        res1label = QLabel('SWR')
+        self.__mangrid.addWidget(res1label, 1, 0)
+        self.__swrres = QLabel('?.?')
+        self.__swrres.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
+        self.__swrres.setMaximumWidth(100)
+        self.__mangrid.addWidget(self.__swrres, 1, 1)
         
-        self.__tune = QPushButton("Tune...")
-        self.__tune.setToolTip('Tune to frequency...')
-        self.__btngrid.addWidget(self.__tune, 1,0)
-        self.__tune.clicked.connect(self.__do_tune)
-        self.__tune.setMaximumHeight(20)
-        """
+        res2label = QLabel('Freq')
+        self.__mangrid.addWidget(res2label, 1, 2)
+        self.__freqval = QLabel('?.?')
+        self.__freqval.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
+        self.__freqval.setMaximumWidth(100)
+        self.__mangrid.addWidget(self.__freqval, 1, 3)
+        
+        self.__getres = QPushButton("Get Current")
+        self.__getres.setToolTip('Get current SWR and Frequency...')
+        self.__mangrid.addWidget(self.__getres, 1,4)
+        self.__getres.clicked.connect(self.__do_res)
+        self.__getres.setMinimumHeight(30)
+        self.__getres.setMinimumWidth(100)
+        self.__getres.setMaximumWidth(100)
+        
+        #----------------------------------
+        # Move position
+        movelabel = QLabel('Move to')
+        self.__mangrid.addWidget(movelabel, 2, 0)
+        self.movetxt = QLineEdit()
+        self.movetxt.setToolTip('Move position 0-100%')
+        self.movetxt.setInputMask('000;_')
+        self.movetxt.setStyleSheet("QLineEdit {color: rgb(255,100,0); font: 20px}")
+        self.movetxt.setMaximumWidth(80)
+        self.__mangrid.addWidget(self.movetxt, 2, 2)
+        
+        self.__movepos = QPushButton("Move")
+        self.__movepos.setToolTip('Move to given position 0-100%...')
+        self.__mangrid.addWidget(self.__movepos, 2,3)
+        self.__movepos.clicked.connect(self.__do_pos)
+        self.__movepos.setMinimumHeight(30)
+        self.__movepos.setMinimumWidth(100)
+        self.__movepos.setMaximumWidth(100)
+        
+        curr1label = QLabel('Current Pos')
+        self.__mangrid.addWidget(curr1label, 2, 4)
+        self.__currpos = QLabel('???')
+        self.__currpos.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
+        self.__currpos.setMaximumWidth(100)
+        self.__mangrid.addWidget(self.__currpos, 2, 5)
+        
+        #----------------------------------
+        # Increment
+        inclabel = QLabel('Increment ms')
+        self.__mangrid.addWidget(inclabel, 3, 0)
+        self.inctxt = QLineEdit()
+        self.inctxt.setToolTip('Increment time in ms')
+        self.inctxt.setInputMask('0000;_')
+        self.inctxt.setStyleSheet("QLineEdit {color: rgb(255,100,0); font: 20px}")
+        self.inctxt.setMaximumWidth(80)
+        self.__mangrid.addWidget(self.inctxt, 3, 2)
+        
+        self.__movepos = QPushButton("Move")
+        self.__movepos.setToolTip('Move to given position 0-100%...')
+        self.__mangrid.addWidget(self.__movepos, 3 ,3)
+        self.__movepos.clicked.connect(self.__do_ms)
+        self.__movepos.setMinimumHeight(30)
+        self.__movepos.setMinimumWidth(100)
+        self.__movepos.setMaximumWidth(100)
+        
+        self.__runpos = QPushButton("Move Forward")
+        self.__runpos.setToolTip('Move forward for given ms...')
+        self.__mangrid.addWidget(self.__runpos, 3,3)
+        self.__runpos.clicked.connect(self.__do_move_fwd)
+        self.__runpos.setMinimumHeight(30)
+        self.__runpos.setMinimumWidth(100)
+        self.__runpos.setMaximumWidth(100)
+        
+        self.__runrev = QPushButton("Move Reverse")
+        self.__runrev.setToolTip('Move reverse for given ms...')
+        self.__mangrid.addWidget(self.__runrev, 3,4)
+        self.__runrev.clicked.connect(self.__do_move_rev)
+        self.__runrev.setMinimumHeight(30)
+        self.__runrev.setMinimumWidth(100)
+        self.__runrev.setMaximumWidth(100)
+        
+        self.__nudgefwd = QPushButton("Nudge Forward")
+        self.__nudgefwd.setToolTip('Nudge forward...')
+        self.__mangrid.addWidget(self.__nudgefwd, 3,5)
+        self.__nudgefwd.clicked.connect(self.__do_nudge_fwd)
+        self.__nudgefwd.setMinimumHeight(30)
+        self.__nudgefwd.setMinimumWidth(100)
+        self.__nudgefwd.setMaximumWidth(100)
+        
+        self.__nudgerev = QPushButton("Nudge Reverse")
+        self.__nudgerev.setToolTip('Nudge reverse...')
+        self.__mangrid.addWidget(self.__nudgerev, 3,6)
+        self.__nudgerev.clicked.connect(self.__do_nudge_rev)
+        self.__nudgerev.setMinimumHeight(30)
+        self.__nudgerev.setMinimumWidth(100)
+        self.__nudgerev.setMaximumWidth(100)
+        
     #=======================================================
     # Window events
     def closeEvent(self, event):
@@ -214,6 +330,27 @@ class UI(QMainWindow):
     def __do_tune(self):
         pass
     
+    def __do_res(self):
+        pass
+    
+    def __do_pos(self):
+        pass
+    
+    def __do_ms(self):
+        pass
+    
+    def __do_move_fwd(self):
+        pass
+    
+    def __do_move_rev(self):
+        pass
+    
+    def __do_nudge_fwd(self):
+        pass
+    
+    def __do_nudge_rev(self):
+        pass
+
     #=======================================================
     # Background activities
     def __idleProcessing(self):
