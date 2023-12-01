@@ -46,6 +46,9 @@ class UI(QMainWindow):
         self.__api = api
         
         self.__qt_app = qt_app
+        
+        #Loop status
+        self.__loop_status = [False, False, False]
     
         # Set the back colour
         palette = QtGui.QPalette()
@@ -65,6 +68,19 @@ class UI(QMainWindow):
         
         # Populate
         self.__populate()
+        
+        # Get loop status
+        home = self.__model[CONFIG][CAL][HOME]
+        maximum = self.__model[CONFIG][CAL][MAX]
+        if home != -1 and maximum != -1:
+            # Something has been configured
+            # Check loops
+            if len(self.__model[CONFIG][CAL][CAL_L1]) > 0:
+                self.__loop_status[0] = True
+            elif len(self.__model[CONFIG][CAL][CAL_L2]) > 0:
+                self.__loop_status[1] = True
+            elif len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
+                self.__loop_status[2] = True 
         
     #=======================================================
     # PUBLIC
@@ -332,10 +348,22 @@ class UI(QMainWindow):
     #=======================================================
     # Button events
     def __do_cal(self):
-        pass
+        loop = int(self.__loop_sel.currentText())
+        if self.__api.calibrate(loop):
+            if loop == 1:
+                self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                self.__loop_status[0] = True
+            elif loop == 2:
+                self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                self.__loop_status[1] = True
+            elif loop == 3:
+                self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                self.__loop_status[2] = True
     
     def __do_tune(self):
-        pass
+        loop = int(self.__loop_sel.currentText())
+        freq = self.freqtxt.displayText()
+        self.__api.move_to_freq(loop, freq)
     
     def __do_res(self):
         pos = self.__api.get_pos()
@@ -364,6 +392,14 @@ class UI(QMainWindow):
         pos = self.__api.get_pos()
         self.__currpos.setText(str(pos))
         
+        # Update loop status
+        if self.__loop_status[0]:
+            self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+        elif self.__loop_status[1]:
+            self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+        elif self.__loop_status[2]:
+            self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
         

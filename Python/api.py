@@ -88,11 +88,12 @@ class API:
         # Get calibration
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
-        if home == -1 or max == -1:
+        if home == -1 or maximum == -1:
             if VERB: print("Failed to get position as limits are not set!")
             return '???'
         span = maximum - home
         offset = pos - home
+        print("Offset: ", offset, " Span: ", span)
         return int(offset/span)
         
     # Move to lowest SWR for loop on given frequency
