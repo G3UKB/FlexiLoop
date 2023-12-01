@@ -35,13 +35,16 @@ from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGro
 
 # Application imports
 from defs import *
+import api
 
 class UI(QMainWindow):
     
-    def __init__(self, model, qt_app):
+    def __init__(self, model, qt_app, api, port):
         super(UI, self).__init__()
 
-        self.__model = model 
+        self.__model = model
+        self.__api = api
+        
         self.__qt_app = qt_app
     
         # Set the back colour
@@ -62,19 +65,20 @@ class UI(QMainWindow):
         
         # Populate
         self.__populate()
-    
+        
     #=======================================================
     # PUBLIC
     #
     # Run application
     def run(self, ):
-        # Start idle processing
-        QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
         
         # Show the GUI
         self.show()
         self.repaint()
             
+        # Start idle processing
+        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
+        
         # Enter event loop
         # Returns when GUI exits
         return self.__qt_app.exec_()
@@ -270,7 +274,7 @@ class UI(QMainWindow):
         self.__movepos = QPushButton("Move")
         self.__movepos.setToolTip('Move to given position 0-100%...')
         self.__mangrid.addWidget(self.__movepos, 3 ,3)
-        self.__movepos.clicked.connect(self.__do_ms)
+        self.__movepos.clicked.connect(self.__do_pos)
         self.__movepos.setMinimumHeight(30)
         self.__movepos.setMinimumWidth(100)
         self.__movepos.setMaximumWidth(100)
@@ -334,30 +338,32 @@ class UI(QMainWindow):
         pass
     
     def __do_res(self):
-        pass
+        pos = self.__api.get_pos()
+        self.__currpos.setText(str(pos))
     
     def __do_pos(self):
-        pass
-    
-    def __do_ms(self):
-        pass
+        self.__api.move_to_position(self.movetxt.displayText())
     
     def __do_move_fwd(self):
-        pass
+        self.__api.move_fwd(self.inctxt.displayText())
     
     def __do_move_rev(self):
-        pass
+        self.__api.move_rev(self.inctxt.displayText())
     
     def __do_nudge_fwd(self):
-        pass
+        self.__api.nudge_fwd()
     
     def __do_nudge_rev(self):
-        pass
+        self.__api.nudge_rev()
 
     #=======================================================
     # Background activities
     def __idleProcessing(self):
         
-        # Set timer
+        # Update current position
+        pos = self.__api.get_pos()
+        self.__currpos.setText(str(pos))
+        
+        # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
         

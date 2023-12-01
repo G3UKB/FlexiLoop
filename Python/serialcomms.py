@@ -26,6 +26,9 @@
 import serial
 import time
 
+# Verbose flag
+VERB = False
+
 #=====================================================
 # Manage all serial comms to the Arduino
 #===================================================== 
@@ -61,7 +64,7 @@ class SerialComms:
                 if resp_timeout <= 0 or self.__first_run:
                     # Timeout on waiting for a response
                     self.__first_run = False
-                    print("Response timeout!")
+                    if VERB: print("Response timeout!")
                     break
                 else:
                     # Continue waiting
@@ -77,11 +80,11 @@ class SerialComms:
                     acc = ""
                     continue
                 # Otherwise its a response to the command
-                print("Response: ", acc)
+                if VERB: print("Response: ", acc)
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
-                    print("More data available - collecting... ", ser.in_waiting)
+                    if VERB: print("More data available - collecting... ", ser.in_waiting)
                     acc = ""
                     continue
                 success = True
@@ -104,14 +107,14 @@ class SerialComms:
     def send(self, cmd, timeout):
         val = 0
         while(1):
-            print("Sending ", cmd)
+            if VERB: print("Sending ", cmd)
             self.__ser.write(cmd)
             self.__ser.flush()
             time.sleep(0.1)
             r, val = self.read_resp(timeout)
             if r == False:
                 time.sleep(0.2)
-                print("Command failed, retrying...")
+                if VERB: print("Command failed, retrying...")
                 continue
             else:
                 break
@@ -129,7 +132,7 @@ class SerialComms:
         self.send(b"x;", 30)
             
     def pos(self):
-        return self.send(b"p;", 1)
+        return self.send(b"p;", 2)
             
     def move(self, pos):
         b = bytearray(b"m,")

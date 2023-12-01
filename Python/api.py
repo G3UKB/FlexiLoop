@@ -38,6 +38,9 @@ import vna
 MODE = SIMULATE
 # MODE = NORMAL
 
+# Verbose flag
+VERB = False
+
 #=====================================================
 # The Programming Interface class
 #===================================================== 
@@ -85,6 +88,9 @@ class API:
         # Get calibration
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
+        if home == -1 or max == -1:
+            if VERB: print("Failed to get position as limits are not set!")
+            return '???'
         span = maximum - home
         offset = pos - home
         return int(offset/span)
@@ -156,5 +162,33 @@ class API:
             return False, "Failed to obtain a SWR reading for freq {}".format(freq), None
     
     # Switch between TX and VNA
-    def switch_target(target):
+    def switch_target(self, target):
         pass
+    
+    def get_current_res(self):
+        pass
+    
+    def move_to_position(self, pos):
+        # pos is given as 0-100%
+        # convert this into the corresponding analog value
+        home = self.__model[CONFIG][CAL][HOME]
+        maximum = self.__model[CONFIG][CAL][HOME]
+        if home == -1 or max == -1:
+            print("Failed to move as limits are not set!")
+            return
+        span = maximum - home
+        frac = (pos/100)*span
+        self.__serial_comms.move(home+frac)
+    
+    def move_fwd_for_ms(self, ms):
+        self.__serial_comms.run_fwd(ms)
+    
+    def move_rev_for_ms(self, ms):
+        self.__serial_comms.run_rev(ms)
+    
+    def nudge_fwd(self):
+        self.__serial_comms.nudge_fwd()
+    
+    def nudge_rev(self):
+        self.__serial_comms.nudge_rev()
+        

@@ -51,7 +51,7 @@ MEM_WIN = 'MEM_WIN'
 #=======================================================================
 # UI
 CONFIG_PATH = '../config/auto_tuner.cfg'
-IDLE_TICKER = 100
+IDLE_TICKER = 300
 HEARTBEAT_TIMER = 10 # 10 * IDLE_TICKER = 1s ; heartbeats should be every 0.5s
 
 #=======================================================================
