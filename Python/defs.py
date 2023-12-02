@@ -45,9 +45,12 @@ CAL_L1 = 'CAL_L1'
 CAL_L2 = 'CAL_L1'
 CAL_L3 = 'CAL_L3'
 # State section
+WINDOWS = 'WINDOWS'
 MAIN_WIN = 'MAIN_WIN'
 CONFIG_WIN = 'CONFIG_WIN'
 MEM_WIN = 'MEM_WIN'
+ARDUINO = 'ARDUINO'
+ONLINE = 'ONLINE'
 #=======================================================================
 # UI
 CONFIG_PATH = '../config/auto_tuner.cfg'

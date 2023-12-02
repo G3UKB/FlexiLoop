@@ -23,8 +23,12 @@
 #     bob@bobcowdery.plus.com
 #
 
+# Python imports
 import serial
 import time
+
+# Application imports
+from defs import *
 
 # Verbose flag
 VERB = False
@@ -35,13 +39,18 @@ VERB = False
 class SerialComms:
 
     # Initialise class
-    def __init__(self, port):
+    def __init__(self, model, port):
+        
+        self.__model = model
+        
         try:
             self.__ser = serial.Serial(port, 9600, timeout=1)
         except:
             print("Failed to initialise Arduino port. Is the Arduino connected?")
+            self.__model[STATE][ARDUINO][ONLINE] = False
             return
         
+        self.__model[STATE][ARDUINO][ONLINE] = True
         self.__ser.reset_input_buffer()
         self.__first_run = True
 

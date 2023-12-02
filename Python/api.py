@@ -52,7 +52,7 @@ class API:
         self.__model = model
         
         # Create a SerialComms instance
-        self.__serial_comms = serialcomms.SerialComms(port)
+        self.__serial_comms = serialcomms.SerialComms(model, port)
         
         # Create a VNA instance
         self.__vna = vna.VNA(MODE)

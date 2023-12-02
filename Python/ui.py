@@ -106,7 +106,7 @@ class UI(QMainWindow):
     def __initUI(self):
         
         # Arrange window
-        x,y,w,h = self.__model[STATE][MAIN_WIN]
+        x,y,w,h = self.__model[STATE][WINDOWS][MAIN_WIN]
         self.setGeometry(x,y,w,h)
                          
         self.setWindowTitle('Flexi-Loop')
@@ -135,6 +135,7 @@ class UI(QMainWindow):
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
         self.__loop_sel.setMinimumHeight(30)
+        self.__loop_sel.setStyleSheet("QComboBox {color: rgb(255,100,0); font: 20px}")
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
         
         minlabel = QLabel('Min freq')
@@ -223,6 +224,7 @@ class UI(QMainWindow):
         self.__relay_sel.setMinimumHeight(30)
         self.__relay_sel.addItem("TX")
         self.__relay_sel.addItem("VNA")
+        self.__relay_sel.setStyleSheet("QComboBox {color: rgb(255,100,0); font: 20px}")
         self.__mangrid.addWidget(self.__relay_sel, 0, 2, 1, 1)
         
         #----------------------------------
@@ -252,12 +254,13 @@ class UI(QMainWindow):
         
         #----------------------------------
         # Move position
-        movelabel = QLabel('Move to')
+        movelabel = QLabel('Move to (%)')
         self.__mangrid.addWidget(movelabel, 2, 0)
-        self.movetxt = QLineEdit()
+        self.movetxt = QSpinBox()
         self.movetxt.setToolTip('Move position 0-100%')
-        self.movetxt.setInputMask('000;_')
-        self.movetxt.setStyleSheet("QLineEdit {color: rgb(255,100,0); font: 20px}")
+        self.movetxt.setRange(0,100)
+        self.movetxt.setValue(50)
+        self.movetxt.setStyleSheet("QSpinBox {color: rgb(255,100,0); font: 20px}")
         self.movetxt.setMaximumWidth(80)
         self.__mangrid.addWidget(self.movetxt, 2, 2)
         
@@ -278,22 +281,15 @@ class UI(QMainWindow):
         
         #----------------------------------
         # Increment
-        inclabel = QLabel('Increment ms')
+        inclabel = QLabel('Increment (ms)')
         self.__mangrid.addWidget(inclabel, 3, 0)
-        self.inctxt = QLineEdit()
+        self.inctxt = QSpinBox()
         self.inctxt.setToolTip('Increment time in ms')
-        self.inctxt.setInputMask('0000;_')
-        self.inctxt.setStyleSheet("QLineEdit {color: rgb(255,100,0); font: 20px}")
+        self.inctxt.setRange(0,1000)
+        self.inctxt.setValue(500)
+        self.inctxt.setStyleSheet("QSpinBox {color: rgb(255,100,0); font: 20px}")
         self.inctxt.setMaximumWidth(80)
         self.__mangrid.addWidget(self.inctxt, 3, 2)
-        
-        self.__movepos = QPushButton("Move")
-        self.__movepos.setToolTip('Move to given position 0-100%...')
-        self.__mangrid.addWidget(self.__movepos, 3 ,3)
-        self.__movepos.clicked.connect(self.__do_pos)
-        self.__movepos.setMinimumHeight(30)
-        self.__movepos.setMinimumWidth(100)
-        self.__movepos.setMaximumWidth(100)
         
         self.__runpos = QPushButton("Move Forward")
         self.__runpos.setToolTip('Move forward for given ms...')
@@ -337,13 +333,13 @@ class UI(QMainWindow):
 
     def resizeEvent(self, event):
         # Update config
-        x,y,w,h = self.__model[STATE][MAIN_WIN]
+        x,y,w,h = self.__model[STATE][WINDOWS][MAIN_WIN]
         self.__model[STATE][MAIN_WIN] = [x,y,event.size().width(),event.size().height()]
         
     def moveEvent(self, event):
         # Update config
-        x,y,w,h = self.__model[STATE][MAIN_WIN]
-        self.__model[STATE][MAIN_WIN] = [event.pos().x(),event.pos().y(),w,h]
+        x,y,w,h = self.__model[STATE][WINDOWS][MAIN_WIN]
+        self.__model[STATE][WINDOWS][MAIN_WIN] = [event.pos().x(),event.pos().y(),w,h]
      
     #=======================================================
     # Button events
@@ -370,13 +366,13 @@ class UI(QMainWindow):
         self.__currpos.setText(str(pos))
     
     def __do_pos(self):
-        self.__api.move_to_position(self.movetxt.displayText())
+        self.__api.move_to_position(self.movetxt.Value())
     
     def __do_move_fwd(self):
-        self.__api.move_fwd(self.inctxt.displayText())
+        self.__api.move_fwd(self.inctxt.Value())
     
     def __do_move_rev(self):
-        self.__api.move_rev(self.inctxt.displayText())
+        self.__api.move_rev(self.inctxt.Value())
     
     def __do_nudge_fwd(self):
         self.__api.nudge_fwd()
@@ -388,17 +384,18 @@ class UI(QMainWindow):
     # Background activities
     def __idleProcessing(self):
         
-        # Update current position
-        pos = self.__api.get_pos()
-        self.__currpos.setText(str(pos))
-        
-        # Update loop status
-        if self.__loop_status[0]:
-            self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
-        elif self.__loop_status[1]:
-            self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
-        elif self.__loop_status[2]:
-            self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+        if self.__model[STATE][ARDUINO][ONLINE]:
+            # Update current position
+            pos = self.__api.get_pos()
+            self.__currpos.setText(str(pos))
+            
+            # Update loop status
+            if self.__loop_status[0]:
+                self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+            elif self.__loop_status[1]:
+                self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+            elif self.__loop_status[2]:
+                self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
                 
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
