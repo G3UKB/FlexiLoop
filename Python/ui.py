@@ -52,7 +52,7 @@ class UI(QMainWindow):
     
         # Set the back colour
         palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Background,QtGui.QColor(195,195,195,255))
+        palette.setColor(QtGui.QPalette.Background,QtGui.QColor(134,134,134,255))
         self.setPalette(palette)
 
         # Set the tooltip style
@@ -129,16 +129,18 @@ class UI(QMainWindow):
         self.__grid.addWidget(w1, 0,0,1,4)
         
         looplabel = QLabel('Select Loop')
+        looplabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__loopgrid.addWidget(looplabel, 0, 0)
         self.__loop_sel = QComboBox()
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
         self.__loop_sel.setMinimumHeight(30)
-        self.__loop_sel.setStyleSheet("QComboBox {color: rgb(255,100,0); font: 20px}")
+        self.__loop_sel.setStyleSheet("QComboBox {color: rgb(255,100,0); font: 16px}")
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
         
         minlabel = QLabel('Min freq')
+        minlabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__loopgrid.addWidget(minlabel, 0, 2)
         minlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue = QLabel('0.0')
@@ -146,6 +148,7 @@ class UI(QMainWindow):
         self.__minvalue.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
         self.__loopgrid.addWidget(self.__minvalue, 0, 3)
         maxlabel = QLabel('Max freq')
+        maxlabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__loopgrid.addWidget(maxlabel, 0, 4)
         maxlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__maxvalue = QLabel('0.0')
@@ -186,6 +189,7 @@ class UI(QMainWindow):
         self.__autogrid.setColumnMinimumWidth(5,300)
         
         freqlabel = QLabel('Freq')
+        freqlabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__autogrid.addWidget(freqlabel, 0, 0)
         self.freqtxt = QLineEdit()
         self.freqtxt.setToolTip('Set tune frequency')
@@ -195,6 +199,7 @@ class UI(QMainWindow):
         self.__autogrid.addWidget(self.freqtxt, 0, 1)
         
         swrlabel = QLabel('SWR')
+        swrlabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__autogrid.addWidget(swrlabel, 0, 2)
         swrlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__swrval = QLabel('?.?')
@@ -219,17 +224,19 @@ class UI(QMainWindow):
         #----------------------------------
         # Target select
         relaylabel = QLabel('Select TX/VNA')
+        relaylabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__mangrid.addWidget(relaylabel, 0, 0)
         self.__relay_sel = QComboBox()
         self.__relay_sel.setMinimumHeight(30)
         self.__relay_sel.addItem("TX")
         self.__relay_sel.addItem("VNA")
-        self.__relay_sel.setStyleSheet("QComboBox {color: rgb(255,100,0); font: 20px}")
+        self.__relay_sel.setStyleSheet("QComboBox {color: rgb(255,100,0); font: 16px}")
         self.__mangrid.addWidget(self.__relay_sel, 0, 2, 1, 1)
         
         #----------------------------------
         # Get current
         res1label = QLabel('SWR')
+        res1label.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__mangrid.addWidget(res1label, 1, 0)
         self.__swrres = QLabel('?.?')
         self.__swrres.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
@@ -237,6 +244,7 @@ class UI(QMainWindow):
         self.__mangrid.addWidget(self.__swrres, 1, 2)
         
         res2label = QLabel('Freq')
+        res2label.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         res2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__mangrid.addWidget(res2label, 1, 3)
         self.__freqval = QLabel('?.?')
@@ -255,6 +263,7 @@ class UI(QMainWindow):
         #----------------------------------
         # Move position
         movelabel = QLabel('Move to (%)')
+        movelabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__mangrid.addWidget(movelabel, 2, 0)
         self.movetxt = QSpinBox()
         self.movetxt.setToolTip('Move position 0-100%')
@@ -273,6 +282,7 @@ class UI(QMainWindow):
         self.__movepos.setMaximumWidth(100)
         
         curr1label = QLabel('Current Pos')
+        curr1label.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__mangrid.addWidget(curr1label, 2, 4)
         self.__currpos = QLabel('???')
         self.__currpos.setStyleSheet("QLabel {color: rgb(255,100,0); font: 20px}")
@@ -282,6 +292,7 @@ class UI(QMainWindow):
         #----------------------------------
         # Increment
         inclabel = QLabel('Increment (ms)')
+        inclabel.setStyleSheet("QLabel {color: rgb(24,74,101); font: 14px}")
         self.__mangrid.addWidget(inclabel, 3, 0)
         self.inctxt = QSpinBox()
         self.inctxt.setToolTip('Increment time in ms')
