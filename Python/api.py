@@ -91,7 +91,7 @@ class API:
         if home == -1 or maximum == -1:
             if VERB: print("Failed to get position as limits are not set!")
             return '???'
-        span = maximum - home
+        span = home - maximum
         offset = pos - home
         print("Offset: ", offset, " Span: ", span)
         return int(offset/span)

@@ -52,44 +52,47 @@ class Calibrate:
         self.__comms = serial_comms
         self.__vna = vna
         self.__model = model
+        self.__end_points = [-1,-1]
         
     def calibrate(self, loop, interval):
         # Retrieve the end points
-        r, end_points = self.retrieve_end_points()
+        r, self.__end_points = self.retrieve_end_points()
         if not r:
             # Calibrate end points
             self.cal_end_points()
-            r, end_points = self.retrieve_end_points()
+            r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
                 return "Unable to retrieve or create end points!", False
         
         # Create a calibration map for loop
         r, cal_map = self.retrieve_map(loop)
+        """
         if r:
             if len(cal_map) == 0:
-                r,t,cal_map = self.create_map(loop, interval, end_points)
+                r,t,cal_map = self.create_map(loop, interval, self.__end_points)
                 if not r:
                     # We have a problem
                     return False, "Unable to create a calibration map for loop: {}!".format(loop), []
         else:
             print ("Invalid loop id: " % loop)
             return False, "Invalid loop id: " % loop, []
+        """
         return True, "", cal_map
     
     def re_calibrate_end_points(self):
         self.cal_end_points()
         
     def re_calibrate_loop(loop, interval):
-        r, end_points = retrieve_end_points()
+        r, self.__end_points = retrieve_end_points()
         if not r:
             # Calibrate end points
             self.cal_end_points()
-            r, end_points = self.retrieve_end_points()
+            r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
                 return "Unable to retrieve or create end points!", False
-        r,t,cal_map = self.create_map(loop, interval, end_points)
+        r,t,cal_map = self.create_map(loop, interval, self.__end_points)
         if not r:
             # We have a problem
             return False, "Unable to create a calibration map for loop: {}!".format(loop), []
@@ -106,8 +109,10 @@ class Calibrate:
     def cal_end_points(self):
         self.__comms.home()
         h = self.__comms.pos()
+        print("Home pos: ", h)
         self.__comms.max()
         m = self.__comms.pos()
+        print("Max pos: ", m)
         self.__model[CONFIG][CAL][HOME] = h
         self.__model[CONFIG][CAL][MAX] = m
         return h,m
@@ -122,7 +127,7 @@ class Calibrate:
         else:
             return False, []
 
-    def create_map(self, loop, interval, end_points):
+    def create_map(self, loop, interval):
         
         # Get map for model
         r, m = self.retrieve_map(loop)
@@ -136,8 +141,7 @@ class Calibrate:
         r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX)
         if not r:
             print("Failed to get max frequency!")
-            return False, "Failed to get max frequency!", []
-            
+            return False, "Failed to get max frequency!", []    
         # Move home and take a reading
         self.__comms.home()
         r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME)
@@ -151,14 +155,17 @@ class Calibrate:
         # Move incrementally and take readings
         # We move from home to max by interval
         # Interval is a %age of the difference between feedback readings for home and max
-        home, maximum = end_points
+        home, maximum = self.__end_points
+        print("Home: ", home, " Max: ", maximum)
         
         # Frig here is motor not running
         #home = 200
         #maximum = 900
         
         d = maximum - home
+        print("Diff: ", d)
         step = (interval/100) * d
+        print("Step: ", step)
         next_step = home + step
         while next_step < maximum:
             # Comment out if motor not running

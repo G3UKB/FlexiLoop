@@ -169,6 +169,7 @@ class UI(QMainWindow):
         self.__cal.setStyleSheet(PBSTYLE)
         self.__cal.setToolTip('Calibrate for loop...')
         self.__loopgrid.addWidget(self.__cal, 1, 0)
+        self.__cal.clicked.connect(self.__do_cal)
         
         s = QGroupBox('Status')
         s.setStyleSheet("QGroupBox {color: rgb(65,62,56); font: 14px}")
@@ -391,6 +392,7 @@ class UI(QMainWindow):
     # Background activities
     def __idleProcessing(self):
         
+        """
         if self.__model[STATE][ARDUINO][ONLINE]:
             # Update current position
             pos = self.__api.get_pos()
@@ -403,7 +405,8 @@ class UI(QMainWindow):
                 self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
             elif self.__loop_status[2]:
                 self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
-                
+        """
+        
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
         
