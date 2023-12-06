@@ -70,7 +70,7 @@ class SerialComms:
             if chr == '':
                 # Timeout on read
                 #print("Waiting response...")
-                if resp_timeout <= 0 or self.__first_run:
+                if resp_timeout <= 0: # or self.__first_run:
                     # Timeout on waiting for a response
                     self.__first_run = False
                     if VERB: print("Response timeout!")
@@ -157,14 +157,16 @@ class SerialComms:
        
     def run_fwd(self, ms):
         b = bytearray(b"w,")
-        b += ms.encode('utf-8')
+        b += str(ms).encode('utf-8')
         b += b'.;'
         self.send(b, 10)
             
     def run_rev(self, ms):
         b = bytearray(b"v,")
-        b += ms.encode('utf-8')
+        b += str(ms).encode('utf-8')
         b += b'.;'
         self.send(b, 10)
-            
+
+if __name__ == '__main__':
+    pass         
         

@@ -88,13 +88,13 @@ class API:
         # Get calibration
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
+        #print('get_pos: ', home, maximum)
         if home == -1 or maximum == -1:
             if VERB: print("Failed to get position as limits are not set!")
             return '???'
-        span = home - maximum
+        span = maximum - home
         offset = pos - home
-        print("Offset: ", offset, " Span: ", span)
-        return int(offset/span)
+        return str(int((offset/span)*100))
         
     # Move to lowest SWR for loop on given frequency
     def move_to_freq(self, loop, freq):
@@ -173,13 +173,13 @@ class API:
         # pos is given as 0-100%
         # convert this into the corresponding analog value
         home = self.__model[CONFIG][CAL][HOME]
-        maximum = self.__model[CONFIG][CAL][HOME]
+        maximum = self.__model[CONFIG][CAL][MAX]
         if home == -1 or max == -1:
             print("Failed to move as limits are not set!")
             return
         span = maximum - home
-        frac = (pos/100)*span
-        self.__serial_comms.move(home+frac)
+        frac = (int(pos)/100)*span
+        self.__serial_comms.move(int(home+frac))
     
     def move_fwd_for_ms(self, ms):
         self.__serial_comms.run_fwd(ms)

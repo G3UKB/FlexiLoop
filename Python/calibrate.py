@@ -67,7 +67,6 @@ class Calibrate:
         
         # Create a calibration map for loop
         r, cal_map = self.retrieve_map(loop)
-        """
         if r:
             if len(cal_map) == 0:
                 r,t,cal_map = self.create_map(loop, interval, self.__end_points)
@@ -77,7 +76,6 @@ class Calibrate:
         else:
             print ("Invalid loop id: " % loop)
             return False, "Invalid loop id: " % loop, []
-        """
         return True, "", cal_map
     
     def re_calibrate_end_points(self):

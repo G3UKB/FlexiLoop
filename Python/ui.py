@@ -374,13 +374,13 @@ class UI(QMainWindow):
         self.__currpos.setText(str(pos))
     
     def __do_pos(self):
-        self.__api.move_to_position(self.movetxt.Value())
+        self.__api.move_to_position(self.movetxt.value())
     
     def __do_move_fwd(self):
-        self.__api.move_fwd(self.inctxt.Value())
+        self.__api.move_fwd_for_ms(self.inctxt.value())
     
     def __do_move_rev(self):
-        self.__api.move_rev(self.inctxt.Value())
+        self.__api.move_rev_for_ms(self.inctxt.value())
     
     def __do_nudge_fwd(self):
         self.__api.nudge_fwd()
@@ -392,11 +392,10 @@ class UI(QMainWindow):
     # Background activities
     def __idleProcessing(self):
         
-        """
         if self.__model[STATE][ARDUINO][ONLINE]:
             # Update current position
             pos = self.__api.get_pos()
-            self.__currpos.setText(str(pos))
+            self.__currpos.setText(pos + '%')
             
             # Update loop status
             if self.__loop_status[0]:
@@ -405,7 +404,6 @@ class UI(QMainWindow):
                 self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
             elif self.__loop_status[2]:
                 self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
-        """
         
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
