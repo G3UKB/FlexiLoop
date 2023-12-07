@@ -25,43 +25,178 @@
 
 # Python imports
 import serial
-import time
+import os,sys
+from time import sleep
+import queue
+import threading
+import traceback
 
 # Application imports
 from defs import *
 
 # Verbose flag
-VERB = False
+VERB = True
+# Set False when testing
+MODEL = False
 
 #=====================================================
 # Manage all serial comms to the Arduino
 #===================================================== 
-class SerialComms:
+class SerialComms(threading.Thread):
 
+    # =============================================================== 
     # Initialise class
-    def __init__(self, model, port):
+    def __init__(self, model, port, q, main_callback):
+        """
+        Constructor
+        
+        Arguments:
+            q           --  queue to accept commands on
+            callback    --  on status or error
+        
+        """
+        
+        super(SerialComms, self).__init__()
         
         self.__model = model
+        self.__q = q
+        self.__cb = main_callback
+        self.__originalcb = main_callback
         
         try:
             self.__ser = serial.Serial(port, 9600, timeout=1)
         except:
             print("Failed to initialise Arduino port. Is the Arduino connected?")
-            self.__model[STATE][ARDUINO][ONLINE] = False
+            if MODEL: self.__model[STATE][ARDUINO][ONLINE] = False
             return
         
-        self.__model[STATE][ARDUINO][ONLINE] = True
+        if MODEL: self.__model[STATE][ARDUINO][ONLINE] = True
         self.__ser.reset_input_buffer()
-        self.__first_run = True
+        self.term = False
 
+    def steal_callback( self, new_callback) :
+        """ Steal the dispatcher callback """
+        self.__cb = new_callback
+    
+    def restore_callback(self) :
+        """ Restore the dispatcher callback """
+        self.__cb = self.__originalcb
+        
+    # Terminate instance
+    def terminate(self):
+        """ Thread terminating """
+        self.term = True
+    
+    # Thread entry point
+    def run(self):
+        while not self.term:
+            try:
+                #print(self.__q.qsize())
+                if self.__q.qsize() > 0:
+                    while self.__q.qsize() > 0:
+                        name, args = self.__q.get()
+                        print(name, args)
+                        # By default this is synchronous so will wait for the response
+                        # Response goes to main code callback, we don't care here
+                        self.__dispatch(name, args)
+                        self.__q.task_done()
+                else:
+                    sleep(0.02)
+            except Exception as e:
+                # Something went wrong
+                print(str(e))
+                #self.__cb('fatal: {0}'.format(e))
+                break
+        print("Comms thread exiting...")
+    
+    # ===============================================================
+    # PRIVATE
+    # Command execution
+    # Switcher
+    def __dispatch(self, name, args):
+        disp_tab = {
+            'speed': self.__speed,
+            'home': self.__home,
+            'max': self.__maximum,
+            'pos': self.__pos,
+            'move': self.__move,
+            'nudge_fwd': self.__nudge_fwd,
+            'nudge_rev': self.__nudge_rev,
+            'run_fwd': self.__run_fwd,
+            'run_rev': self.__run_rev,
+        }
+        # Execute and return response
+        self.__cb(disp_tab[name](args))
+        
+    def __speed(self, args):
+        return self.send(b"s;", 1)
+            
+    def __home(self, args):
+        return self.send(b"h;", 30)
+            
+    def __maximum(self, args):
+        return self.send(b"x;", 30)
+            
+    def __pos(self, args):
+        return self.send(b"p;", 2)
+            
+    def __move(self, args):
+        pos = args[0]
+        b = bytearray(b"m,")
+        b += str(pos).encode('utf-8')
+        b += b'.;'
+        return self.send(b, 30)
+    
+    def __nudge_fwd(self, args):
+        return self.send(b"f;", 2)
+    
+    def __nudge_rev(self, args):
+        return self.send(b"r;", 2)
+       
+    def __run_fwd(self, args):
+        ms = args[0]
+        b = bytearray(b"w,")
+        b += str(ms).encode('utf-8')
+        b += b'.;'
+        return self.send(b, 10)
+            
+    def __run_rev(self, args):
+        ms = args[0]
+        b = bytearray(b"v,")
+        b += str(ms).encode('utf-8')
+        b += b'.;'
+        return self.send(b, 10)
+    
+    # ===============================================================
+    # Send a command to the Arduino
+    def send(self, cmd, timeout):
+        val = 0
+        while(1):
+            if VERB: print("Sending ", cmd)
+            self.__ser.write(cmd)
+            self.__ser.flush()
+            sleep(0.1)
+            r, resp, val = self.read_resp(timeout)
+            if r == False:
+                sleep(0.2)
+                if VERB: print("Command failed, retrying...")
+                continue
+            else:
+                break
+            sleep(1)
+        return (r, resp, val)
+    
+    # ===============================================================
     # Read all responses for a command.
-    # Wait for a response.
-    # Print all STATUS responses
-    # Print and return RESPONSE responses
     def read_resp(self, timeout):
+        # Wait for a response.
+        # Send all STATUS responses
+        # Return RESPONSE responses
         acc = ""
         val = 0
         success = False
+        name = ""
+        val = []
         # timeout is secs to wait for a response
         resp_timeout = timeout*2
         while(1):
@@ -69,23 +204,23 @@ class SerialComms:
             chr = self.__ser.read().decode('utf-8')
             if chr == '':
                 # Timeout on read
-                #print("Waiting response...")
-                if resp_timeout <= 0: # or self.__first_run:
+                #if VERB: print("Waiting response...")
+                if resp_timeout <= 0:
                     # Timeout on waiting for a response
-                    self.__first_run = False
                     if VERB: print("Response timeout!")
                     break
                 else:
                     # Continue waiting
                     resp_timeout -= 1
-                    time.sleep(0.5)
+                    sleep(0.5)
                     continue
             acc = acc + chr
             if chr == ";":
                 # Found terminator character
                 if "Status" in acc:
-                    # Its a status message so just print and continue waiting
-                    print(acc)
+                    # Its a status message so return this directly
+                    if VERB: print("Status: ", acc)
+                    self.__cb(self.__encode(acc))
                     acc = ""
                     continue
                 # Otherwise its a response to the command
@@ -99,6 +234,7 @@ class SerialComms:
                 success = True
                 break
         if success:
+            return(self.__encode(acc))
             # We have good response data
             # Strip data from text
             n = acc.find(":")
@@ -110,63 +246,50 @@ class SerialComms:
                     val = int(p)
                 else:
                     print("Invalid value for position (not int): ", p)
-        return success, val
-    
-    # Send a command to the Arduino
-    def send(self, cmd, timeout):
-        val = 0
-        while(1):
-            if VERB: print("Sending ", cmd)
-            self.__ser.write(cmd)
-            self.__ser.flush()
-            time.sleep(0.1)
-            r, val = self.read_resp(timeout)
-            if r == False:
-                time.sleep(0.2)
-                if VERB: print("Command failed, retrying...")
-                continue
+        else:
+            return (success, name, val)
+
+    # ===============================================================
+    # Encode response
+    def __encode(self, data):
+        # Called when we have a good response
+        success = False
+        name = ""
+        val = []
+        
+        # Strip data from text
+        n = data.find(":")
+        if n == -1:
+            # No parameters
+            success = True
+            name = data[:len(data) - 1]
+        else:
+            # There are parameters
+            success = True
+            # We only expect one parameter at the moment
+            name = data[:n]
+            param = data[n+1:len(data)-1]
+            param = param.strip()
+            if param.isdigit():
+                val.append(int(param))
             else:
-                break
-            time.sleep(1)
-        return val
-    
-    # Command execution                        
-    def speed(self):
-        self.send(b"s;", 1)
-            
-    def home(self):
-        self.send(b"h;", 30)
-            
-    def max(self):
-        self.send(b"x;", 30)
-            
-    def pos(self):
-        return self.send(b"p;", 2)
-            
-    def move(self, pos):
-        b = bytearray(b"m,")
-        b += str(pos).encode('utf-8')
-        b += b'.;'
-        self.send(b, 30)
-    
-    def nudge_fwd(self):
-        self.send(b"f;", 2)
-    
-    def nudge_rev(self):
-        self.send(b"r;", 2)
-       
-    def run_fwd(self, ms):
-        b = bytearray(b"w,")
-        b += str(ms).encode('utf-8')
-        b += b'.;'
-        self.send(b, 10)
-            
-    def run_rev(self, ms):
-        b = bytearray(b"v,")
-        b += str(ms).encode('utf-8')
-        b += b'.;'
-        self.send(b, 10)
+                print("Invalid value for position (not int): ", p)
+        return (success, name, val)
+
+# ===============================================================
+# TESTING
+def callback(data):
+    print (data)
 
 if __name__ == '__main__':
-    pass         
+    
+    q = queue.Queue(10)
+    comms = SerialComms(None, 'COM5', q, callback)
+    comms.start()
+    q.put(('pos', []))
+    #print(q.qsize())
+    sleep(5)
+    comms.terminate()
+    comms.join()
+    
         

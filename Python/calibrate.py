@@ -23,10 +23,21 @@
 #     bob@bobcowdery.plus.com
 #
 
+# Python imports
+import os,sys
+from time import sleep
+import queue
+import threading
+import traceback
+
+# Application imports
 from defs import *
 import model
 import serialcomms
 import vna
+
+# Set False when testing
+MODEL = False
 
 # This is a relatively slow process.
 # 1.    Establish the travel end points as feedback analogue values from the Arduino.
@@ -46,15 +57,70 @@ import vna
 #=====================================================
 # The main application class
 #===================================================== 
-class Calibrate:
+class Calibrate(threading.Thread):
 
-    def __init__(self, serial_comms, vna, model):
-        self.__comms = serial_comms
+    def __init__(self, comms, comms_q, cal_q, vna, model, callback):
+        super(Calibrate, self).__init__()
+        
+        self.__comms = comms
+        self.__comms_q = comms_q
+        self.__cal_q = cal_q
         self.__vna = vna
         self.__model = model
-        self.__end_points = [-1,-1]
+        self.__cb = callback
         
-    def calibrate(self, loop, interval):
+        self.__end_points = [-1,-1]
+        self.term = False
+        
+        self.__event = threading.Event()
+        self.__wait_for = ""
+        self.__args = []
+    
+    # Terminate instance
+    def terminate(self):
+        """ Thread terminating """
+        self.term = True
+    
+    # Thread entry point
+    def run(self):
+        while not self.term:
+            try:
+                if self.__cal_q.qsize() > 0:
+                    while self.__cal_q.qsize() > 0:
+                        name, args = self.__cal_q.get()
+                        # By default this is synchronous so will wait for the response
+                        # Response goes to main code callback, we don't care here
+                        self.__dispatch(name, args)
+                        self.__cal_q.task_done()
+                else:
+                    sleep(0.02)
+            except Exception as e:
+                # Something went wrong
+                print(str(e))
+                #self.__cb('fatal: {0}'.format(e))
+                break
+        print("Calibrate thread exiting...")
+    
+    # ===============================================================
+    # PRIVATE
+    # Command execution
+    # Switcher
+    def __dispatch(self, name, args):
+        disp_tab = {
+            'calibrate': self.__calibrate,
+            're_calibrate_end_points': self.__re_calibrate_end_points,
+            're_calibrate_loop': self.__re_calibrate_loop,
+        }
+        # Execute and return response
+        # We need to steal the callback for the comms thread
+        self.__comms.steal_callback(self.callback)
+        self.__cb(disp_tab[name](args))
+        # Restore the callback for the comms thread
+        self.__comms.restore_callback()
+        
+    def __calibrate(self, args):
+        loop, interval = args
+        
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
         if not r:
@@ -63,9 +129,13 @@ class Calibrate:
             r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
-                return "Unable to retrieve or create end points!", False
+                if MODEL:
+                    return "Unable to retrieve or create end points!", False
+                else:
+                    return "", True
         
         # Create a calibration map for loop
+        """
         r, cal_map = self.retrieve_map(loop)
         if r:
             if len(cal_map) == 0:
@@ -76,12 +146,15 @@ class Calibrate:
         else:
             print ("Invalid loop id: " % loop)
             return False, "Invalid loop id: " % loop, []
-        return True, "", cal_map
+        """
+        return (True, "", cal_map)
     
-    def re_calibrate_end_points(self):
+    def __re_calibrate_end_points(self):
         self.cal_end_points()
         
-    def re_calibrate_loop(loop, interval):
+    def __re_calibrate_loop(args):
+        loop, interval = args
+        
         r, self.__end_points = retrieve_end_points()
         if not r:
             # Calibrate end points
@@ -97,33 +170,63 @@ class Calibrate:
         return True, "", cal_map
         
     def retrieve_end_points(self):
-        h = self.__model[CONFIG][CAL][HOME]
-        m = self.__model[CONFIG][CAL][MAX]
+        
+        if MODEL:
+            h = self.__model[CONFIG][CAL][HOME]
+            m = self.__model[CONFIG][CAL][MAX]
+        else:
+            h = -1
+            m = -1
+            
         if h==-1 or m==-1:
             return False, [h, m]
         else:
             return True, [h, m]
         
     def cal_end_points(self):
-        self.__comms.home()
-        h = self.__comms.pos()
-        print("Home pos: ", h)
-        self.__comms.max()
-        m = self.__comms.pos()
-        print("Max pos: ", m)
-        self.__model[CONFIG][CAL][HOME] = h
-        self.__model[CONFIG][CAL][MAX] = m
+        self.__comms_q.put(('home', []))
+        # Wait response
+        self.__wait_for = 'Home'
+        self.__event.wait()
+        self.__event.clear()
+        
+        self.__comms_q.put(('pos', []))
+        # Wait response
+        self.__wait_for = 'Pos'
+        self.__event.wait()
+        self.__event.clear()
+        h = self.__args[0]
+        
+        self.__comms_q.put(('max', []))
+        # Wait response
+        self.__wait_for = 'Max'
+        self.__event.wait()
+        self.__event.clear()
+        
+        self.__comms_q.put(('pos', []))
+        # Wait response
+        self.__wait_for = 'Pos'
+        self.__event.wait()
+        self.__event.clear()
+        m = self.__args[0]
+        
+        if MODEL:
+            self.__model[CONFIG][CAL][HOME] = h
+            self.__model[CONFIG][CAL][MAX] = m
         return h,m
     
     def retrieve_map(self, loop):
-        if loop == 1:
-            return True, self.__model[CONFIG][CAL][CAL_L1]
-        elif loop == 2:
-            return True, self.__model[CONFIG][CAL][CAL_L2]
-        elif loop == 3:
-            return True, self.__model[CONFIG][CAL][CAL_L3]
+        if MODEL:
+            if loop == 1:
+                return True, self.__model[CONFIG][CAL][CAL_L1]
+            elif loop == 2:
+                return True, self.__model[CONFIG][CAL][CAL_L2]
+            elif loop == 3:
+                return True, self.__model[CONFIG][CAL][CAL_L3]
+            else:
+                return False, []
         else:
-            return False, []
+            return True, []
 
     def create_map(self, loop, interval):
         
@@ -135,13 +238,23 @@ class Calibrate:
         m.clear()
         
         # Move max and take a reading
-        self.__comms.max()
+        #self.__comms.max()
+        self.__comms_q.put(('max', []))
+        # Wait response
+        self.__wait_for = 'Max'
+        self.__event.wait()
+        
         r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX)
         if not r:
             print("Failed to get max frequency!")
             return False, "Failed to get max frequency!", []    
         # Move home and take a reading
-        self.__comms.home()
+        self.__comms_q.put(('home', []))
+        # Wait response
+        self.__wait_for = 'Home'
+        self.__event.wait()
+        self.__event.clear()
+        
         r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME)
         if not r:
             print("Failed to get min frequency!")
@@ -154,20 +267,22 @@ class Calibrate:
         # We move from home to max by interval
         # Interval is a %age of the difference between feedback readings for home and max
         home, maximum = self.__end_points
-        print("Home: ", home, " Max: ", maximum)
         
-        # Frig here is motor not running
+        # Frig here for testing with actuator power off
         #home = 200
         #maximum = 900
         
         d = maximum - home
-        print("Diff: ", d)
         step = (interval/100) * d
-        print("Step: ", step)
         next_step = home + step
         while next_step < maximum:
             # Comment out if motor not running
-            self.__comms.move(next_step)
+            self.__comms_q.put(('move', [next_step]))
+            # Wait response
+            self.__wait_for = 'Move'
+            self.__event.wait()
+            self.__event.clear()
+        
             r, f = self.__vna.fres(fhome, fmax, hint = FREE)
             if not r:
                 print("Failed to get resonant frequency!")
@@ -177,4 +292,42 @@ class Calibrate:
         
         # Return the map
         return True, "", m
+    
+    # =========================================================================
+    # Callback from comms module
+    # Note this is called on the comms thread
+    def callback(self, data):
         
+        success, name, val = data
+        if name == self.__wait_for:
+            # Extract args and release thread
+            self.__args = val
+            self.__event.set()
+ 
+# ===============================================================
+# TESTING
+def comms_callback(data):
+    print("Main comms cb: ", data)
+
+def cal_callback(data):
+    print("Main cal cb: ", data)
+    
+if __name__ == '__main__':
+    
+    s_q = queue.Queue(10)
+    comms = serialcomms.SerialComms(None, 'COM5', s_q, comms_callback)
+    comms.start()
+    # This just kicks the Arduino into life
+    s_q.put(('pos', []))
+    sleep(10)
+    
+    c_q = queue.Queue(10)
+    cal = Calibrate(comms, s_q, c_q, None, None, cal_callback)
+    cal.start()
+    c_q.put(('calibrate', [1, 10]))
+    
+    sleep(10)
+    comms.terminate()
+    comms.join()
+    cal.terminate()
+    cal.join()

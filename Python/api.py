@@ -52,7 +52,10 @@ class API:
         self.__model = model
         
         # Create a SerialComms instance
-        self.__serial_comms = serialcomms.SerialComms(model, port)
+        self.__q = queue.Queue(10)
+        self.__serial_comms = SerialComms(model, port, self.__q, self.__callback)
+        # and start the thread
+        self.__serial_comms.start()
         
         # Create a VNA instance
         self.__vna = vna.VNA(MODE)
@@ -192,4 +195,12 @@ class API:
     
     def nudge_rev(self):
         self.__serial_comms.nudge_rev()
+    
+    # =========================================================================    
+    # Callback
+    def callback(self, data):
+        # Receive status and responses from the comms thread
+        
+        print(pos)
+        
         
