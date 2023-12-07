@@ -52,8 +52,8 @@ class API:
         self.__model = model
         
         # Create a SerialComms instance
-        self.__q = queue.Queue(10)
-        self.__serial_comms = SerialComms(model, port, self.__q, self.__callback)
+        self.__s_q = queue.Queue(10)
+        self.__serial_comms = SerialComms(model, port, self.__s_q, self.__serial_callback)
         # and start the thread
         self.__serial_comms.start()
         
@@ -61,33 +61,44 @@ class API:
         self.__vna = vna.VNA(MODE)
         
         # Create a Calibration instance
-        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__vna, model)
+        self.__c_q = queue.Queue(10)
+        self.__cal = calibrate.Calibrate(self.__serial_comms, s_q, c_q, self.__vna, model, self.__cal_callback)
+        # and start the thread
+        self.__cal.start()
     
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
-        r, m, cal = self.__cal.calibrate(loop, STEPS)
+        #r, m, cal = self.__cal.calibrate(loop, STEPS)
+        self.__c_q.put(('calibrate', [loop, STEPS]))
+        """
         if r:
             print("Calibration complete: {}".format(cal))
             return True, m
         else:
             print("Calibration failed! {}".format(cal))
             return False, m
+        """
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
-        r, m, cal = self.__cal.re_calibrate(loop, STEPS)
+        #r, m, cal = self.__cal.re_calibrate(loop, STEPS)
+        self.__c_q.put(('re_calibrate_loop', [loop, STEPS]))
+        """
         if r:
             print("Re-calibration complete: {}".format(cal))
             return True, m
         else:
             print("Re-calibration failed! {}".format(cal))
             return False, m
-    
+        """
+        
     # Get position as a %age of full travel
     def get_pos(self):
-        pos = self.__serial_comms.pos()
+        #pos = self.__serial_comms.pos()
+        self.__s_q.put(('pos', []))
+        """
         # Get calibration
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
@@ -98,8 +109,10 @@ class API:
         span = maximum - home
         offset = pos - home
         return str(int((offset/span)*100))
+        """
         
     # Move to lowest SWR for loop on given frequency
+    # This has to be threaded as its long running
     def move_to_freq(self, loop, freq):
         # Get calibration
         cal = self.__model[CONFIG][CAL][loop]
@@ -182,25 +195,33 @@ class API:
             return
         span = maximum - home
         frac = (int(pos)/100)*span
-        self.__serial_comms.move(int(home+frac))
+        #self.__serial_comms.move(int(home+frac))
+        self.__s_q.put(('move', [int(home+frac)]))
     
     def move_fwd_for_ms(self, ms):
-        self.__serial_comms.run_fwd(ms)
+        #self.__serial_comms.run_fwd(ms)
+        self.__s_q.put(('run_fwd', [ms]))
     
     def move_rev_for_ms(self, ms):
-        self.__serial_comms.run_rev(ms)
+        #self.__serial_comms.run_rev(ms)
+        self.__s_q.put(('run_rev', [ms]))
     
     def nudge_fwd(self):
-        self.__serial_comms.nudge_fwd()
+        #self.__serial_comms.nudge_fwd()
+        self.__s_q.put(('nudge_fwd', []))
     
     def nudge_rev(self):
-        self.__serial_comms.nudge_rev()
+        #self.__serial_comms.nudge_rev()
+        self.__s_q.put(('nudge_rev', []))
     
     # =========================================================================    
     # Callback
-    def callback(self, data):
+    def serial_callback(self, data):
         # Receive status and responses from the comms thread
+        print('Serial CB: ', data)
         
-        print(pos)
+    def cal_callback(self, data):
+        # Receive status and responses from the calibrate thread
+        print('Calibrate CB: ', data)
         
         

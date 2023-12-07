@@ -37,7 +37,7 @@ import serialcomms
 import vna
 
 # Set False when testing
-MODEL = False
+MODEL = True
 
 # This is a relatively slow process.
 # 1.    Establish the travel end points as feedback analogue values from the Arduino.

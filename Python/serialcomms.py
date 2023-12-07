@@ -37,7 +37,7 @@ from defs import *
 # Verbose flag
 VERB = True
 # Set False when testing
-MODEL = False
+MODEL = True
 
 #=====================================================
 # Manage all serial comms to the Arduino
