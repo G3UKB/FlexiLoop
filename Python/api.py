@@ -110,10 +110,14 @@ class API:
         offset = pos - home
         return str(int((offset/span)*100))
         """
-        
+    
     # Move to lowest SWR for loop on given frequency
-    # This has to be threaded as its long running
     def move_to_freq(self, loop, freq):
+        t = Thread(target=t_move_to_freq, args=[loop, freq])
+        t.run()
+        
+    # This has to be threaded as its long running
+    def t_move_to_freq(self, loop, freq):
         # Get calibration
         cal = self.__model[CONFIG][CAL][loop]
         if freq < cal[0] or freq > cal[1]:
