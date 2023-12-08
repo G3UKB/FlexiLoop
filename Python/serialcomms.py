@@ -171,20 +171,27 @@ class SerialComms(threading.Thread):
     # Send a command to the Arduino
     def send(self, cmd, timeout):
         val = 0
+        msg = ""
+        retries = 5
         while(1):
             if VERB: print("Sending ", cmd)
             self.__ser.write(cmd)
             self.__ser.flush()
             sleep(0.1)
-            r, resp, val = self.read_resp(timeout)
-            if r == False:
+            resp = self.read_resp(timeout)
+            if resp[1][0] == False:
                 sleep(0.2)
                 if VERB: print("Command failed, retrying...")
+                if retries <= 0:
+                    msg = "Command failed after %d retries" % retries
+                    return (resp[0], (False, msg, []))
+                else:
+                    retries -= 1
                 continue
             else:
                 break
             sleep(1)
-        return (r, resp, val)
+        return resp
     
     # ===============================================================
     # Read all responses for a command.
@@ -196,6 +203,7 @@ class SerialComms(threading.Thread):
         val = 0
         success = False
         name = ""
+        msg = ""
         val = []
         # timeout is secs to wait for a response
         resp_timeout = timeout*2
@@ -208,6 +216,7 @@ class SerialComms(threading.Thread):
                 if resp_timeout <= 0:
                     # Timeout on waiting for a response
                     if VERB: print("Response timeout!")
+                    msg = "Response timeout!"
                     break
                 else:
                     # Continue waiting
@@ -235,19 +244,8 @@ class SerialComms(threading.Thread):
                 break
         if success:
             return(self.__encode(acc))
-            # We have good response data
-            # Strip data from text
-            n = acc.find(":")
-            if n != -1:
-                # There is some data
-                p = acc[n+1:len(acc)-1]
-                p = p.strip()
-                if p.isdigit():
-                    val = int(p)
-                else:
-                    print("Invalid value for position (not int): ", p)
         else:
-            return (success, name, val)
+            return (name, (success, msg, val))
 
     # ===============================================================
     # Encode response
@@ -255,6 +253,7 @@ class SerialComms(threading.Thread):
         # Called when we have a good response
         success = False
         name = ""
+        msg = ""
         val = []
         
         # Strip data from text
@@ -274,7 +273,9 @@ class SerialComms(threading.Thread):
                 val.append(int(param))
             else:
                 print("Invalid value for position (not int): ", p)
-        return (success, name, val)
+                msg = "Invalid value for position (not int): %d" % param
+                success = False
+        return (name, (success, msg, val))
 
 # ===============================================================
 # TESTING

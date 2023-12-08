@@ -70,6 +70,10 @@ class API:
         self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, self.__vna, model, self.cal_callback)
         # and start the thread
         self.__cal.start()
+        
+        self.__event = threading.Event()
+        self.__wait_for = ""
+        self.__args = []
     
     # Termination
     def terminate(self):
@@ -124,19 +128,25 @@ class API:
         """
     
     # Move to lowest SWR for loop on given frequency
+    # This has to be threaded as its long running
+    # A transient thread is used for this rather than a permanent thread
     def move_to_freq(self, loop, freq):
         t = Thread(target=t_move_to_freq, args=[loop, freq])
         t.run()
         
-    # This has to be threaded as its long running
+    # Runs once  and then exits
     def t_move_to_freq(self, loop, freq):
+        # Need to steal the serial comms callback
+        self.__comms.steal_callback(t_move_to_freq_cb)
+        
         # Get calibration
         cal = self.__model[CONFIG][CAL][loop]
         if freq < cal[0] or freq > cal[1]:
             # Not covered by this loop
             print ("Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1]))
-            return False, "Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1])
-        
+            self.__cb.put('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1]), [])
+            self.__comms.restore_callback()
+            return
         # Stage 1: move as close to frequency as possible
         # Find the two points this frequency falls between
         index = 0
@@ -162,7 +172,11 @@ class API:
         offset_frac = offset_span*frac
         target_pos = high_offset + offset_frac
         # We now have a position to move to
-        self.__serial_comms.move(pos)
+        #self.__serial_comms.move(pos)
+        self.__s_q.put(('move', [pos]))
+        self.__wait_for('move')
+        self.__event.wait()
+        self.__event.clear()
         
         # Stage 2 tweak SWR
         r, swr = self.__vna.fswr(freq)
@@ -174,11 +188,16 @@ class API:
             while swr > 1.5:
                 if try_for <= 0:
                     print("Unable to reduce SWR to less than 1.5 {}".format(swr))
-                    return True, "Unable to reduce SWR to less than 1.5 {}".format(swr)
+                    self.__cb.put (("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
+                    break
                 if dir == FWD:
-                    self.__serial_comms.nudge_fwd()
+                    #self.__serial_comms.nudge_fwd()
+                    self.__s_q.put(('nudge_fwd', []))
+                    sleep(1)
                 else:
-                    self.__serial_comms.nudge_rev()
+                    #self.__serial_comms.nudge_rev()
+                    self.__s_q.put(('nudge_rev', []))
+                    sleep(1)
                 r, swr = self.__vna.fswr(freq)
                 if swr < last_swr:
                     last_swr = swr
@@ -189,11 +208,20 @@ class API:
                     last_swr = swr
                     try_for -= 1
                     continue               
-            return True, "", swr
+            self.__cb.put (("Tune", (True, "", swr)))
         else:
             print("Failed to obtain a SWR reading for freq {}".format(freq))
-            return False, "Failed to obtain a SWR reading for freq {}".format(freq), None
+            self.__cb.put (("Tune", (False, "Failed to obtain a SWR reading for freq {}".format(freq), [])))
+        self.__comms.restore_callback()
     
+    # Stolen callback for move to freq    
+    def t_move_to_freq_cb(self, data):
+        (name, (success, msg, val)) = data
+        if name == self.__wait_for:
+            # Extract args and release thread
+            self.__args = val
+            self.__event.set()
+                       
     # Switch between TX and VNA
     def switch_target(self, target):
         pass
@@ -234,6 +262,7 @@ class API:
     # Callback
     def serial_callback(self, data):
         # Receive status and responses from the comms thread
+        # Need to do some work on data here as may need to be modified
         print('Serial CB: ', data)
         self.__cb(data)
         
@@ -257,6 +286,8 @@ if __name__ == '__main__':
     api = API(model, 'COM5', api_callback)
     api.calibrate(1)
     sleep(15)
+    api.get_pos()
+    sleep(1)
     api.terminate()
     print("API test exit")
         

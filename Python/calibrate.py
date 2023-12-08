@@ -130,9 +130,9 @@ class Calibrate(threading.Thread):
             if not r:
                 # We have a problem
                 if MODEL:
-                    return ('Calibrate', (False, "Unable to retrieve or create end points!", cal_map))
+                    return ('Calibrate', (False, "Unable to retrieve or create end points!", self.__end_points, cal_map))
                 else:
-                    return ('Calibrate', (True, "Test, no model", cal_map))
+                    return ('Calibrate', (True, "Test, no model", self.__end_points, cal_map))
         
         # Create a calibration map for loop
         """
@@ -147,7 +147,7 @@ class Calibrate(threading.Thread):
             print ("Invalid loop id: " % loop)
             return ('Calibrate', (False, "Invalid loop id: " % loop, cal_map))
         """
-        return ('Calibrate', (True, "", cal_map))
+        return ('Calibrate', (True, "", self.__end_points, cal_map))
         
     def __re_calibrate_loop(args):
         loop, interval = args
@@ -159,12 +159,12 @@ class Calibrate(threading.Thread):
             r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
-                return ('ReCalibrateLoop', (False, "Unable to retrieve or create end points!", cal_map))
+                return ('ReCalibrateLoop', (False, "Unable to retrieve or create end points!", self.__end_points, cal_map))
         r,t,cal_map = self.create_map(loop, interval, self.__end_points)
         if not r:
             # We have a problem
-            return ('ReCalibrateLoop', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
-        return ('ReCalibrateLoop', (True, "", cal_map))
+            return ('ReCalibrateLoop', (False, "Unable to create a calibration map for loop: {}!".format(loop), self.__end_points, cal_map))
+        return ('ReCalibrateLoop', (True, "", self.__end_points, cal_map))
         
     def retrieve_end_points(self):
         
@@ -295,7 +295,7 @@ class Calibrate(threading.Thread):
     # Note this is called on the comms thread
     def callback(self, data):
         
-        success, name, val = data
+        (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
             self.__args = val
