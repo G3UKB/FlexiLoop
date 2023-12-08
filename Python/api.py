@@ -24,7 +24,11 @@
 #
 
 # Python imports
-import sys
+# Python imports
+import os,sys
+from time import sleep
+import queue
+import threading
 import traceback
 
 # Application imports
@@ -47,13 +51,14 @@ VERB = False
 class API:
     
     # Initialisation
-    def __init__(self, model, port):
+    def __init__(self, model, port, callback):
         
         self.__model = model
+        self.__cb = callback
         
         # Create a SerialComms instance
         self.__s_q = queue.Queue(10)
-        self.__serial_comms = SerialComms(model, port, self.__s_q, self.__serial_callback)
+        self.__serial_comms = serialcomms.SerialComms(model, port, self.__s_q, self.serial_callback)
         # and start the thread
         self.__serial_comms.start()
         
@@ -62,10 +67,17 @@ class API:
         
         # Create a Calibration instance
         self.__c_q = queue.Queue(10)
-        self.__cal = calibrate.Calibrate(self.__serial_comms, s_q, c_q, self.__vna, model, self.__cal_callback)
+        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, self.__vna, model, self.cal_callback)
         # and start the thread
         self.__cal.start()
     
+    # Termination
+    def terminate(self):
+        self.__serial_comms.terminate()
+        self.__serial_comms.join()
+        self.__cal.terminate()
+        self.__cal.join()
+        
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
@@ -223,9 +235,29 @@ class API:
     def serial_callback(self, data):
         # Receive status and responses from the comms thread
         print('Serial CB: ', data)
+        self.__cb(data)
         
     def cal_callback(self, data):
         # Receive status and responses from the calibrate thread
         print('Calibrate CB: ', data)
+        self.__cb(data)
+        
+# ===============================================================
+# TESTING
+def api_callback(data):
+    print("API cb: ", data)
+    
+if __name__ == '__main__':
+    
+    model = persist.getSavedCfg('../config/flexi-loop.cfg')
+    if model == None:
+        print ('Configuration not found, using defaults')
+        model = model.flexi_loop_model
+            
+    api = API(model, 'COM5', api_callback)
+    api.calibrate(1)
+    sleep(15)
+    api.terminate()
+    print("API test exit")
         
         

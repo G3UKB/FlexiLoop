@@ -108,7 +108,6 @@ class Calibrate(threading.Thread):
     def __dispatch(self, name, args):
         disp_tab = {
             'calibrate': self.__calibrate,
-            're_calibrate_end_points': self.__re_calibrate_end_points,
             're_calibrate_loop': self.__re_calibrate_loop,
         }
         # Execute and return response
@@ -120,6 +119,7 @@ class Calibrate(threading.Thread):
         
     def __calibrate(self, args):
         loop, interval = args
+        cal_map = []
         
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
@@ -130,9 +130,9 @@ class Calibrate(threading.Thread):
             if not r:
                 # We have a problem
                 if MODEL:
-                    return "Unable to retrieve or create end points!", False
+                    return ('Calibrate', (False, "Unable to retrieve or create end points!", cal_map))
                 else:
-                    return "", True
+                    return ('Calibrate', (True, "Test, no model", cal_map))
         
         # Create a calibration map for loop
         """
@@ -142,15 +142,12 @@ class Calibrate(threading.Thread):
                 r,t,cal_map = self.create_map(loop, interval, self.__end_points)
                 if not r:
                     # We have a problem
-                    return False, "Unable to create a calibration map for loop: {}!".format(loop), []
+                    return ('Calibrate', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
             print ("Invalid loop id: " % loop)
-            return False, "Invalid loop id: " % loop, []
+            return ('Calibrate', (False, "Invalid loop id: " % loop, cal_map))
         """
-        return (True, "", cal_map)
-    
-    def __re_calibrate_end_points(self):
-        self.cal_end_points()
+        return ('Calibrate', (True, "", cal_map))
         
     def __re_calibrate_loop(args):
         loop, interval = args
@@ -162,12 +159,12 @@ class Calibrate(threading.Thread):
             r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
-                return "Unable to retrieve or create end points!", False
+                return ('ReCalibrateLoop', (False, "Unable to retrieve or create end points!", cal_map))
         r,t,cal_map = self.create_map(loop, interval, self.__end_points)
         if not r:
             # We have a problem
-            return False, "Unable to create a calibration map for loop: {}!".format(loop), []
-        return True, "", cal_map
+            return ('ReCalibrateLoop', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
+        return ('ReCalibrateLoop', (True, "", cal_map))
         
     def retrieve_end_points(self):
         
