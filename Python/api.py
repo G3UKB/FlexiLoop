@@ -144,7 +144,7 @@ class API:
         if freq < cal[0] or freq > cal[1]:
             # Not covered by this loop
             print ("Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1]))
-            self.__cb.put('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1]), [])
+            self.__cb.put('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1]), []))
             self.__comms.restore_callback()
             return
         # Stage 1: move as close to frequency as possible
