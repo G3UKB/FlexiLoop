@@ -200,9 +200,9 @@ int go_home_or_max(int pos) {
     int last_val = -1;
     delay(200);
     while (get_feedback_value() != last_val) {
-      //Serial.print("Status: ");
-      //Serial.print(get_feedback_value());
-      //Serial.print(";");
+      Serial.print("Status: ");
+      Serial.print(get_feedback_value());
+      Serial.print(";");
       last_val = get_feedback_value();
       delay(500);
     }
@@ -233,10 +233,16 @@ int move_to_feedback_value(int target) {
   } else {
     if (dir == FORWARD) {
       while(get_feedback_value() < target) {
+        Serial.print("Status: ");
+        Serial.print(get_feedback_value());
+        Serial.print(";");
         delay(500);
       }
     } else {
       while(get_feedback_value() > target){
+        Serial.print("Status: ");
+        Serial.print(get_feedback_value());
+        Serial.print(";");
         delay(500);
       }
     }
@@ -262,6 +268,9 @@ int move_ms(int ms, int pos) {
   } else {
     delay (ms);
     md.setM1Speed(0);
+    Serial.print("Status: ");
+    Serial.print(get_feedback_value());
+    Serial.print(";");
   }
   return TRUE;
 }

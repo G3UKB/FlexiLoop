@@ -135,7 +135,6 @@ class Calibrate(threading.Thread):
                     return ('Calibrate', (True, "Test, no model", self.__end_points, cal_map))
         
         # Create a calibration map for loop
-        """
         r, cal_map = self.retrieve_map(loop)
         if r:
             if len(cal_map) == 0:
@@ -146,7 +145,7 @@ class Calibrate(threading.Thread):
         else:
             print ("Invalid loop id: " % loop)
             return ('Calibrate', (False, "Invalid loop id: " % loop, cal_map))
-        """
+        
         return ('Calibrate', (True, "", self.__end_points, cal_map))
         
     def __re_calibrate_loop(args):

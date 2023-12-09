@@ -85,47 +85,16 @@ class API:
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
-        #r, m, cal = self.__cal.calibrate(loop, STEPS)
         self.__c_q.put(('calibrate', [loop, STEPS]))
-        """
-        if r:
-            print("Calibration complete: {}".format(cal))
-            return True, m
-        else:
-            print("Calibration failed! {}".format(cal))
-            return False, m
-        """
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
-        #r, m, cal = self.__cal.re_calibrate(loop, STEPS)
         self.__c_q.put(('re_calibrate_loop', [loop, STEPS]))
-        """
-        if r:
-            print("Re-calibration complete: {}".format(cal))
-            return True, m
-        else:
-            print("Re-calibration failed! {}".format(cal))
-            return False, m
-        """
         
     # Get position as a %age of full travel
     def get_pos(self):
-        #pos = self.__serial_comms.pos()
         self.__s_q.put(('pos', []))
-        """
-        # Get calibration
-        home = self.__model[CONFIG][CAL][HOME]
-        maximum = self.__model[CONFIG][CAL][MAX]
-        #print('get_pos: ', home, maximum)
-        if home == -1 or maximum == -1:
-            if VERB: print("Failed to get position as limits are not set!")
-            return '???'
-        span = maximum - home
-        offset = pos - home
-        return str(int((offset/span)*100))
-        """
     
     # Move to lowest SWR for loop on given frequency
     # This has to be threaded as its long running
@@ -134,7 +103,7 @@ class API:
         t = Thread(target=t_move_to_freq, args=[loop, freq])
         t.run()
         
-    # Runs once  and then exits
+    # Runs once and then exits
     def t_move_to_freq(self, loop, freq):
         # Need to steal the serial comms callback
         self.__comms.steal_callback(t_move_to_freq_cb)
@@ -172,7 +141,6 @@ class API:
         offset_frac = offset_span*frac
         target_pos = high_offset + offset_frac
         # We now have a position to move to
-        #self.__serial_comms.move(pos)
         self.__s_q.put(('move', [pos]))
         self.__wait_for('move')
         self.__event.wait()
@@ -239,36 +207,43 @@ class API:
             return
         span = maximum - home
         frac = (int(pos)/100)*span
-        #self.__serial_comms.move(int(home+frac))
         self.__s_q.put(('move', [int(home+frac)]))
     
     def move_fwd_for_ms(self, ms):
-        #self.__serial_comms.run_fwd(ms)
         self.__s_q.put(('run_fwd', [ms]))
     
     def move_rev_for_ms(self, ms):
-        #self.__serial_comms.run_rev(ms)
         self.__s_q.put(('run_rev', [ms]))
     
     def nudge_fwd(self):
-        #self.__serial_comms.nudge_fwd()
         self.__s_q.put(('nudge_fwd', []))
     
     def nudge_rev(self):
-        #self.__serial_comms.nudge_rev()
         self.__s_q.put(('nudge_rev', []))
     
     # =========================================================================    
     # Callback
     def serial_callback(self, data):
         # Receive status and responses from the comms thread
-        # Need to do some work on data here as may need to be modified
-        print('Serial CB: ', data)
-        self.__cb(data)
+        (name, (r, msg, args)) = data
+        if name == 'pos':
+            # Calculate and return position
+            home = self.__model[CONFIG][CAL][HOME]
+            maximum = self.__model[CONFIG][CAL][MAX]
+            #print('get_pos: ', home, maximum)
+            if home == -1 or maximum == -1:
+                if VERB: print("Failed to get position as limits are not set!")
+                self.__cb(name, (False, "Failed to get position as limits are not set!", [])
+            else:
+                span = maximum - home
+                offset = args[0] - home
+                self.__cb((name, (True, "", [str(int((offset/span)*100)])))
+        else:
+            self.__cb(data)
         
     def cal_callback(self, data):
         # Receive status and responses from the calibrate thread
-        print('Calibrate CB: ', data)
+        # Just pass up to UI
         self.__cb(data)
         
 # ===============================================================
