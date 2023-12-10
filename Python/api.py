@@ -226,18 +226,18 @@ class API:
     def serial_callback(self, data):
         # Receive status and responses from the comms thread
         (name, (r, msg, args)) = data
-        if name == 'pos':
+        if name == 'Pos':
             # Calculate and return position
             home = self.__model[CONFIG][CAL][HOME]
             maximum = self.__model[CONFIG][CAL][MAX]
             #print('get_pos: ', home, maximum)
             if home == -1 or maximum == -1:
                 if VERB: print("Failed to get position as limits are not set!")
-                self.__cb(name, (False, "Failed to get position as limits are not set!", [])
+                self.__cb((name, (False, "Failed to get position as limits are not set!", [])))
             else:
                 span = maximum - home
                 offset = args[0] - home
-                self.__cb((name, (True, "", [str(int((offset/span)*100)])))
+                self.__cb((name, (True, "", [str(int((offset/span)*100))])))
         else:
             self.__cb(data)
         

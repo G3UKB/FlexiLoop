@@ -51,15 +51,11 @@ class AppMain:
             print ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
             self.__configured = False
-        #print(self.__model)
-        
-        # Create the API instance
-        self.__api = api.API(self.__model, port)
         
         # Create the UI instance
         # The one and only QApplication 
         self.__qt_app = QApplication(sys.argv)
-        ui_inst = ui.UI(self.__model, self.__qt_app, self.__api, port)
+        ui_inst = ui.UI(self.__model, self.__qt_app, port)
         ui_inst.run()
         
         # Save model

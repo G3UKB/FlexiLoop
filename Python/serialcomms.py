@@ -35,7 +35,7 @@ import traceback
 from defs import *
 
 # Verbose flag
-VERB = True
+VERB = False
 # Set False when testing
 MODEL = True
 
@@ -62,6 +62,7 @@ class SerialComms(threading.Thread):
         self.__q = q
         self.__cb = main_callback
         self.__originalcb = main_callback
+        self.term = False
         
         try:
             self.__ser = serial.Serial(port, 9600, timeout=1)
@@ -72,7 +73,6 @@ class SerialComms(threading.Thread):
         
         if MODEL: self.__model[STATE][ARDUINO][ONLINE] = True
         self.__ser.reset_input_buffer()
-        self.term = False
 
     def steal_callback( self, new_callback) :
         """ Steal the dispatcher callback """
@@ -95,7 +95,7 @@ class SerialComms(threading.Thread):
                 if self.__q.qsize() > 0:
                     while self.__q.qsize() > 0:
                         name, args = self.__q.get()
-                        print(name, args)
+                        #print(name, args)
                         # By default this is synchronous so will wait for the response
                         # Response goes to main code callback, we don't care here
                         self.__dispatch(name, args)

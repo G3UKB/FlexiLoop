@@ -47,13 +47,14 @@ LBL1STYLE = "QLabel {color: rgb(24,74,101); font: 14px}"
 
 class UI(QMainWindow):
     
-    def __init__(self, model, qt_app, api, port):
+    def __init__(self, model, qt_app, port):
         super(UI, self).__init__()
 
         self.__model = model
-        self.__api = api
-        
         self.__qt_app = qt_app
+        
+        # Create the API instance
+        self.__api = api.API(model, port, self.callback)
         
         #Loop status
         self.__loop_status = [False, False, False]
@@ -88,7 +89,9 @@ class UI(QMainWindow):
             elif len(self.__model[CONFIG][CAL][CAL_L2]) > 0:
                 self.__loop_status[1] = True
             elif len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
-                self.__loop_status[2] = True 
+                self.__loop_status[2] = True
+                
+        self.__current_pos = ""
         
     #=======================================================
     # PUBLIC
@@ -108,6 +111,29 @@ class UI(QMainWindow):
         return self.__qt_app.exec_()
     
     #=======================================================
+    # CALLBACK
+    #
+    def callback(self, data):
+        # We get callbacks here from calibration and serial comms
+        # Everything south of the API is threaded so as not to block
+        # the UI. That means event callbacks must be managed to update the UI
+        # and prevent invalid commands being issues during long running
+        # operations, except for ABORT to stop the current operation.
+        #
+        # Callback format is:
+        #   (command-name, (success, failure-message, [response data for command]))
+        #
+        # Callbacks are on the thread of the caller and cannot directly call UI methods
+        # which must be called on the main thread. Therefore flags are set which are
+        # interpreted by the idle time function to manage the UI state.
+        # print("UI callback: ", data)
+        
+        (name, (success, msg, args)) = data
+        if success:
+            if name == 'Pos':
+                self.__current_pos = args[0]
+        
+    #=======================================================
     # PRIVATE
     #
     # Basic initialisation
@@ -118,16 +144,33 @@ class UI(QMainWindow):
         self.setGeometry(x,y,w,h)
                          
         self.setWindowTitle('Flexi-Loop')
+        
+        #======================================================================================
+        # Configure the status bar
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+        # Right align a permanent status indicator
+        self.st_lbl = QLabel()
+        self.st_lbl.setText('Arduino: ')       
+        self.statusBar.addPermanentWidget(self.st_lbl)
+        self.__st_ard = QLabel()
+        self.__st_ard.setText('off-line')       
+        self.statusBar.addPermanentWidget(self.__st_ard)
+        # Set the style sheets
+        self.st_lbl.setStyleSheet("QLabel {color: rgb(232,75,0); font: 14px}")
+        self.__st_ard.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
+        self.statusBar.setStyleSheet("QStatusBar::item{border: none;}")       
+        
     
     #=======================================================
     # Create all widgets
     def __populate(self):
         #=======================================================
         # Set main layout
-        w = QWidget()
-        self.setCentralWidget(w)
+        self.__central_widget = QWidget()
+        self.setCentralWidget(self.__central_widget)
         self.__grid = QGridLayout()
-        w.setLayout(self.__grid)
+        self.__central_widget.setLayout(self.__grid)
         
         # -------------------------------------------
         # Loop area
@@ -337,7 +380,7 @@ class UI(QMainWindow):
         self.__close()
     
     def __close(self):
-        pass
+        self.__api.terminate()
 
     def resizeEvent(self, event):
         # Update config
@@ -393,9 +436,13 @@ class UI(QMainWindow):
     def __idleProcessing(self):
         
         if self.__model[STATE][ARDUINO][ONLINE]:
+            # on-line indicator
+            self.__st_ard.setText('on-line')
+            self.__st_ard.setStyleSheet("QLabel {color: rgb(0,255,0); font: 14px}")
+            
             # Update current position
-            pos = self.__api.get_pos()
-            self.__currpos.setText(pos + '%')
+            self.__api.get_pos()
+            self.__currpos.setText(str(self.__current_pos) + '%')
             
             # Update loop status
             if self.__loop_status[0]:
@@ -404,6 +451,11 @@ class UI(QMainWindow):
                 self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
             elif self.__loop_status[2]:
                 self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+        else:
+            self.__central_widget.setEnabled(False)
+            # off-line indicator
+            self.__st_ard.setText('off-line')
+            self.__st_ard.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
         
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
