@@ -54,8 +54,31 @@ ONLINE = 'ONLINE'
 #=======================================================================
 # UI
 CONFIG_PATH = '../config/auto_tuner.cfg'
-IDLE_TICKER = 300
+IDLE_TICKER = 250
 HEARTBEAT_TIMER = 10 # 10 * IDLE_TICKER = 1s ; heartbeats should be every 0.5s
+
+# Current activities
+NONE = 'None'
+CALIBRATE = 'Calibrate'
+SPEED = 'Speed'
+HOME = 'Home'
+MAX = 'Max'
+POS = 'Pos'
+NUDGEFWD = 'NudgeFwd'
+NUDGEREV = 'NudgeRev'
+MSFWD = 'msFwd'
+MSREV = 'msRev'
+MOVETO = 'MoveTo'
+TUNE = 'Tune'
+RESONANCE = 'Resonance'
+
+STATUS = 'Status'
+
+CALIBRATE_TIMEOUT = 120 * (1000/250)
+TUNE_TIMEOUT = 120 * (1000/250)
+RES_TIMEOUT = 60 * (1000/250)
+MOVE_TIMEOUT = 30 * (1000/250)
+SHORT_TIMEOUT = 2 * (1000/250)
 
 #=======================================================================
 # General

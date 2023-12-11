@@ -82,7 +82,7 @@ void process(String data) {
   // Switch on command type
   switch (cmd) {
     case 's':
-      Serial.print("Set speed;");
+      Serial.print("Speed;");
       break;
 
     case 'h':
@@ -107,7 +107,7 @@ void process(String data) {
 
     case 'f':
       if (move_ms(100, FORWARD)) {
-        Serial.print("Nudge fwd;");
+        Serial.print("NudgeFwd;");
       } else {
         Serial.println("Motor fault on nudge!;");
       }
@@ -115,7 +115,7 @@ void process(String data) {
 
     case 'r':
       if (move_ms(100, REVERSE)) {
-        Serial.print("Nudge rev;");
+        Serial.print("NudgeRev;");
       } else {
         Serial.print("Motor fault on nudge!;");
       }
@@ -126,7 +126,7 @@ void process(String data) {
       ms = parse_int(data, 2);
 
       if (move_ms(ms, FORWARD)) {
-        Serial.print("Moved ms forward;");
+        Serial.print("msFwd;");
       } else {
         Serial.print("Motor fault on forward ms!;");
       }
@@ -137,7 +137,7 @@ void process(String data) {
       ms = parse_int(data, 2);
 
       if (move_ms(ms, REVERSE)) {
-        Serial.print("Moved ms reverse;");
+        Serial.print("msRev;");
       } else {
         Serial.print("Motor fault on reverse ms!;");
       }
@@ -148,7 +148,7 @@ void process(String data) {
       int val = parse_int(data, 2);
       
       if (move_to_feedback_value(val)) {
-        Serial.print("Moved to ");
+        Serial.print("MoveTo ");
         Serial.print(val);
         Serial.print(';');
       } else {

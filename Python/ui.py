@@ -78,7 +78,11 @@ class UI(QMainWindow):
         # Populate
         self.__populate()
         
-        # Get loop status
+        # Local state holders
+        # Current (long running) activity
+        self.__current_activity = NONE
+        self.__activity_timer = SHORT_TIMEOUT
+        # Loop status
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
         if home != -1 and maximum != -1:
@@ -90,8 +94,8 @@ class UI(QMainWindow):
                 self.__loop_status[1] = True
             elif len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
                 self.__loop_status[2] = True
-                
-        self.__current_pos = ""
+        # Current actuator position        
+        self.__current_pos = -1
         
     #=======================================================
     # PUBLIC
@@ -128,11 +132,33 @@ class UI(QMainWindow):
         # interpreted by the idle time function to manage the UI state.
         # print("UI callback: ", data)
         
-        (name, (success, msg, args)) = data
-        if success:
-            if name == 'Pos':
-                self.__current_pos = args[0]
-        
+        # Are we waiting for an activity to complete
+        if self.__current_activity == NONE:
+            self.__activity_timer = SHORT_TIMEOUT
+        else:
+            # Activity in progress
+            self.__activity_timer -= 1
+            if self.__activity_timer <= 0:
+                print ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!', self.__current_activity)
+                self.__current_activity == NONE
+                self.__activity_timer = SHORT_TIMEOUT
+                return
+            
+            # Get current event data
+            (name, (success, msg, args)) = data
+            if name == self.__current_activity:
+                if success:
+                    # Action any data
+                    if name == 'Pos':
+                        self.__current_pos = args[0]
+                    print ('Activity %s completed successfully', self.__current_activity)
+                    self.__current_activity == NONE
+                    self.__activity_timer = SHORT_TIMEOUT
+                else:
+                    print ('Activity %s completed but failed!', self.__current_activity)
+            else:
+                print ('Waiting for activity %s to completed but got activity %s! Contibuing to wait', self.__current_activity, name)
+                
     #=======================================================
     # PRIVATE
     #
@@ -151,17 +177,28 @@ class UI(QMainWindow):
         self.setStatusBar(self.statusBar)
         # Right align a permanent status indicator
         self.st_lbl = QLabel()
-        self.st_lbl.setText('Arduino: ')       
-        self.statusBar.addPermanentWidget(self.st_lbl)
-        self.__st_ard = QLabel()
-        self.__st_ard.setText('off-line')       
-        self.statusBar.addPermanentWidget(self.__st_ard)
-        # Set the style sheets
+        self.st_lbl.setText('Arduino: ')
         self.st_lbl.setStyleSheet("QLabel {color: rgb(232,75,0); font: 14px}")
+        self.statusBar.addPermanentWidget(self.st_lbl)
+        
+        self.__st_ard = QLabel()
+        self.__st_ard.setText('off-line')
         self.__st_ard.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
+        self.statusBar.addPermanentWidget(self.__st_ard)
+        
+        self.st_lblact= QLabel()
+        self.st_lblact.setText('Activity: ')
+        self.st_lblact.setStyleSheet("QLabel {color: rgb(232,75,0); font: 14px}")
+        self.st_lblact.setAlignment(QtCore.Qt.AlignLeft)
+        self.statusBar.addPermanentWidget(self.st_lblact)
+        self.__st_act = QLabel()
+        self.__st_act.setText(NONE)
+        self.__st_act.setStyleSheet("QLabel {color: rgb(232,75,0); font: 14px}")
+        self.__st_act.setAlignment(QtCore.Qt.AlignLeft)
+        self.statusBar.addPermanentWidget(self.__st_act)
+        
         self.statusBar.setStyleSheet("QStatusBar::item{border: none;}")       
         
-    
     #=======================================================
     # Create all widgets
     def __populate(self):
@@ -396,6 +433,9 @@ class UI(QMainWindow):
     # Button events
     def __do_cal(self):
         loop = int(self.__loop_sel.currentText())
+        self.__current_activity = CALIBRATE
+        self.__activity_timer = CALIBRATE_TIMEOUT
+        self.__st_act.setText(CALIBRATE)
         if self.__api.calibrate(loop):
             if loop == 1:
                 self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
@@ -406,52 +446,86 @@ class UI(QMainWindow):
             elif loop == 3:
                 self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
                 self.__loop_status[2] = True
-    
+        
     def __do_tune(self):
         loop = int(self.__loop_sel.currentText())
         freq = self.freqtxt.displayText()
+        self.__st_act.setText(CALIBRATE)
+        self.__current_activity = TUNE
+        self.__activity_timer = TUNE_TIMEOUT
         self.__api.move_to_freq(loop, freq)
     
     def __do_res(self):
-        pos = self.__api.get_pos()
-        self.__currpos.setText(str(pos))
+        self.__current_activity = RESONANCE
+        self.__st_act.setText(RESONANCE)
+        self.__activity_timer = RES_TIMEOUT
+        self.__api.get_current_res()
     
     def __do_pos(self):
+        self.__current_activity = MOVETO
+        self.__st_act.setText(MOVETO)
+        self.__activity_timer = MOVE_TIMEOUT
         self.__api.move_to_position(self.movetxt.value())
     
     def __do_move_fwd(self):
+        self.__current_activity = MSFWD
+        self.__st_act.setText(MSFWD)
+        self.__activity_timer = SHORT_TIMEOUT
         self.__api.move_fwd_for_ms(self.inctxt.value())
     
     def __do_move_rev(self):
+        self.__current_activity = MSREV
+        self.__st_act.setText(MSREV)
+        self.__activity_timer = SHORT_TIMEOUT
         self.__api.move_rev_for_ms(self.inctxt.value())
     
     def __do_nudge_fwd(self):
+        self.__current_activity = NUDGEFWD
+        self.__st_act.setText(NUDGEFWD)
+        self.__activity_timer = SHORT_TIMEOUT
         self.__api.nudge_fwd()
     
     def __do_nudge_rev(self):
+        self.__current_activity = NUDGEREV
+        self.__st_act.setText(NUDGEREV)
+        self.__activity_timer = SHORT_TIMEOUT
         self.__api.nudge_rev()
 
     #=======================================================
     # Background activities
     def __idleProcessing(self):
-        
+        # Here we update the UI according to current activity and the status set by the callback
         if self.__model[STATE][ARDUINO][ONLINE]:
             # on-line indicator
             self.__st_ard.setText('on-line')
             self.__st_ard.setStyleSheet("QLabel {color: rgb(0,255,0); font: 14px}")
+            self.__central_widget.setEnabled(True)
             
             # Update current position
-            self.__api.get_pos()
-            self.__currpos.setText(str(self.__current_pos) + '%')
+            # We don't really want to call here as its updated by status events when things are moving
+            # However, if we don't have a position then we will call as nothing else is happening
+            if self.__current_pos == -1:
+                self.__api.get_pos()
+            else:
+                self.__currpos.setText(str(self.__current_pos) + '%')
             
-            # Update loop status
+            # Update loop status for configured loops
             if self.__loop_status[0]:
                 self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
             elif self.__loop_status[1]:
                 self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
             elif self.__loop_status[2]:
                 self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                
+            # Check activity state
+            if self.__current_activity != NONE:
+                # Activity current
+                self.__central_widget.setEnabled(False)
+            else:
+                self.__central_widget.setEnabled(True)
+                
         else:
+            # Not online so we can't do anything except exit
             self.__central_widget.setEnabled(False)
             # off-line indicator
             self.__st_ard.setText('off-line')
