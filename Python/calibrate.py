@@ -130,23 +130,23 @@ class Calibrate(threading.Thread):
             if not r:
                 # We have a problem
                 if MODEL:
-                    return ('Calibrate', (False, "Unable to retrieve or create end points!", self.__end_points, cal_map))
+                    return ('Calibrate', (False, "Unable to retrieve or create end points!", cal_map))
                 else:
-                    return ('Calibrate', (True, "Test, no model", self.__end_points, cal_map))
+                    return ('Calibrate', (True, "Test, no model", cal_map))
         
         # Create a calibration map for loop
         r, cal_map = self.retrieve_map(loop)
         if r:
             if len(cal_map) == 0:
-                r,t,cal_map = self.create_map(loop, interval, self.__end_points)
+                r, msg, cal_map = self.create_map(loop, interval)
                 if not r:
                     # We have a problem
                     return ('Calibrate', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
-            print ("Invalid loop id: " % loop)
-            return ('Calibrate', (False, "Invalid loop id: " % loop, cal_map))
+            print ("Error in calibration map: " % msg)
+            return ('Calibrate', (False, msg, cal_map))
         
-        return ('Calibrate', (True, "", self.__end_points, cal_map))
+        return ('Calibrate', (True, "", cal_map))
         
     def __re_calibrate_loop(args):
         loop, interval = args
@@ -158,12 +158,12 @@ class Calibrate(threading.Thread):
             r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
-                return ('ReCalibrateLoop', (False, "Unable to retrieve or create end points!", self.__end_points, cal_map))
-        r,t,cal_map = self.create_map(loop, interval, self.__end_points)
+                return ('ReCalibrateLoop', (False, "Unable to retrieve or create end points!", cal_map))
+        r, msg, cal_map = self.create_map(loop, interval)
         if not r:
             # We have a problem
-            return ('ReCalibrateLoop', (False, "Unable to create a calibration map for loop: {}!".format(loop), self.__end_points, cal_map))
-        return ('ReCalibrateLoop', (True, "", self.__end_points, cal_map))
+            return ('ReCalibrateLoop', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
+        return ('ReCalibrateLoop', (True, "", cal_map))
         
     def retrieve_end_points(self):
         
@@ -234,11 +234,11 @@ class Calibrate(threading.Thread):
         m.clear()
         
         # Move max and take a reading
-        #self.__comms.max()
         self.__comms_q.put(('max', []))
         # Wait response
         self.__wait_for = 'Max'
         self.__event.wait()
+        self.__event.clear()
         
         r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX)
         if not r:
@@ -267,7 +267,6 @@ class Calibrate(threading.Thread):
         # Frig here for testing with actuator power off
         #home = 200
         #maximum = 900
-        
         d = maximum - home
         step = (interval/100) * d
         next_step = home + step
@@ -275,7 +274,7 @@ class Calibrate(threading.Thread):
             # Comment out if motor not running
             self.__comms_q.put(('move', [next_step]))
             # Wait response
-            self.__wait_for = 'Move'
+            self.__wait_for = 'MoveTo'
             self.__event.wait()
             self.__event.clear()
         
@@ -294,11 +293,14 @@ class Calibrate(threading.Thread):
     # Note this is called on the comms thread
     def callback(self, data):
         
+        print("Got event: ", data)
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
             self.__args = val
             self.__event.set()
+        #else:
+        #    print ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
  
 # ===============================================================
 # TESTING

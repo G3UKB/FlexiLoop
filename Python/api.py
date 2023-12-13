@@ -39,9 +39,6 @@ import serialcomms
 import calibrate
 import vna
 
-MODE = SIMULATE
-# MODE = NORMAL
-
 # Verbose flag
 VERB = False
 
@@ -63,7 +60,7 @@ class API:
         self.__serial_comms.start()
         
         # Create a VNA instance
-        self.__vna = vna.VNA(MODE)
+        self.__vna = vna.VNA()
         
         # Create a Calibration instance
         self.__c_q = queue.Queue(10)

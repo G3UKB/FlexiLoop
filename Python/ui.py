@@ -157,7 +157,7 @@ class UI(QMainWindow):
                 else:
                     print ('Activity %s completed but failed!', self.__current_activity)
             else:
-                print ('Waiting for activity %s to completed but got activity %s! Contibuing to wait', self.__current_activity, name)
+                print ('Waiting for activity %s to completed but got activity %s! Contibuing to wait' % (self.__current_activity, name))
                 
     #=======================================================
     # PRIVATE
@@ -503,8 +503,8 @@ class UI(QMainWindow):
             
             # Update current position
             # We don't really want to call here as its updated by status events when things are moving
-            # However, if we don't have a position then we will call as nothing else is happening
-            if self.__current_pos == -1:
+            # However, if we don't have a position or activity then we will call as nothing else is happening
+            if self.__current_pos == -1 or self.__current_activity == NONE:
                 self.__api.get_pos()
             else:
                 self.__currpos.setText(str(self.__current_pos) + '%')

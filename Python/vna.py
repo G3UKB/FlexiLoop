@@ -29,6 +29,8 @@ import subprocess
 from defs import *
 import decode
 
+SIMULATE = True
+
 """
     Perform a sweep using the command line utility from vna/j.
     The sweep has a start and stop frequency and number of steps.
@@ -38,10 +40,9 @@ import decode
 
 class VNA:
     
-    def __init__(self, simulate=False):
+    def __init__(self):
         # Simulation setup
-        self.__simulate = simulate
-        if self.__simulate:
+        if SIMULATE:
             self.__sim_step = 20    # step by this % of full travel
             self.__sim_f = 3.5
             self.__step_f = 1.0
@@ -62,7 +63,7 @@ class VNA:
             stopFreq    --  stop freq in Hz
             optional hint -- MIN, MAX, FREE (used in simulation)
         """
-        if self.__simulate:
+        if SIMULATE:
             if hint == HOME:
                 return True, self.__min_f
             elif hint == MAX:
@@ -92,7 +93,7 @@ class VNA:
         Arguments:
             freq   --  freq in Hz
         """
-        if self.__simulate:
+        if SIMULATE:
             return (freq, self.__swr)
         
         # Minimum separation is 1KHz and minimum steps is 2

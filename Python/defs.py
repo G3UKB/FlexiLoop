@@ -82,8 +82,6 @@ SHORT_TIMEOUT = 2 * (1000/250)
 
 #=======================================================================
 # General
-SIMULATE = 'SIMULATE'
-NORMAL = 'NORMAL'
 FWD = 'FWD'
 REV = 'REV'
 
