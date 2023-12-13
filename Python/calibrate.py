@@ -38,6 +38,7 @@ import vna
 
 # Set False when testing
 MODEL = True
+VERB = False
 
 # This is a relatively slow process.
 # 1.    Establish the travel end points as feedback analogue values from the Arduino.
@@ -293,14 +294,14 @@ class Calibrate(threading.Thread):
     # Note this is called on the comms thread
     def callback(self, data):
         
-        print("Got event: ", data)
+        if VERB: print("Calibrate: got event: ", data)
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
             self.__args = val
             self.__event.set()
-        #else:
-        #    print ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
+        else:
+            if VERB: print ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
  
 # ===============================================================
 # TESTING

@@ -139,7 +139,7 @@ class UI(QMainWindow):
             # Activity in progress
             self.__activity_timer -= 1
             if self.__activity_timer <= 0:
-                print ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!', self.__current_activity)
+                print ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!' % (self.__current_activity))
                 self.__current_activity == NONE
                 self.__activity_timer = SHORT_TIMEOUT
                 return
@@ -151,11 +151,13 @@ class UI(QMainWindow):
                     # Action any data
                     if name == 'Pos':
                         self.__current_pos = args[0]
-                    print ('Activity %s completed successfully', self.__current_activity)
-                    self.__current_activity == NONE
+                    print ('Activity %s completed successfully' % (self.__current_activity))
+                    # Update position
+                    # self.__api.get_pos()
+                    self.__current_activity = NONE
                     self.__activity_timer = SHORT_TIMEOUT
                 else:
-                    print ('Activity %s completed but failed!', self.__current_activity)
+                    print ('Activity %s completed but failed!' % (self.__current_activity))
             else:
                 print ('Waiting for activity %s to completed but got activity %s! Contibuing to wait' % (self.__current_activity, name))
                 
@@ -504,10 +506,9 @@ class UI(QMainWindow):
             # Update current position
             # We don't really want to call here as its updated by status events when things are moving
             # However, if we don't have a position or activity then we will call as nothing else is happening
-            if self.__current_pos == -1 or self.__current_activity == NONE:
-                self.__api.get_pos()
-            else:
-                self.__currpos.setText(str(self.__current_pos) + '%')
+            #if self.__current_pos == -1:
+            #    self.__api.get_pos()
+            self.__currpos.setText(str(self.__current_pos) + '%')
             
             # Update loop status for configured loops
             if self.__loop_status[0]:
@@ -523,7 +524,7 @@ class UI(QMainWindow):
                 self.__central_widget.setEnabled(False)
             else:
                 self.__central_widget.setEnabled(True)
-                
+            self.__st_act.setText(self.__current_activity)
         else:
             # Not online so we can't do anything except exit
             self.__central_widget.setEnabled(False)
