@@ -286,6 +286,14 @@ class Calibrate(threading.Thread):
             m[2].append([next_step, f])
             next_step += step
         
+        if MODEL:
+            if loop == 1:
+                self.__model[CONFIG][CAL][CAL_L1] = m
+            elif loop == 2:
+                self.__model[CONFIG][CAL][CAL_L2] = m
+            elif loop == 3:
+                self.__model[CONFIG][CAL][CAL_L3] = m
+            
         # Return the map
         return True, "", m
     

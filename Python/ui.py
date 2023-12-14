@@ -57,7 +57,7 @@ class UI(QMainWindow):
         self.__api = api.API(model, port, self.callback)
         
         #Loop status
-        self.__selected_loop = -1
+        self.__selected_loop = 1
         self.__loop_status = [False, False, False]
     
         # Set the back colour
@@ -156,7 +156,7 @@ class UI(QMainWindow):
                     elif name == CALIBRATE:
                         # Update the loop status
                         if self.__selected_loop != -1:
-                            self.__loop_status[self.__selected_loop] = True
+                            self.__loop_status[self.__selected_loop-1] = True
                     print ('Activity %s completed successfully' % (self.__current_activity))
                     # Update position
                     # self.__api.get_pos()
@@ -431,7 +431,7 @@ class UI(QMainWindow):
     def resizeEvent(self, event):
         # Update config
         x,y,w,h = self.__model[STATE][WINDOWS][MAIN_WIN]
-        self.__model[STATE][MAIN_WIN] = [x,y,event.size().width(),event.size().height()]
+        self.__model[STATE][WINDOWS][MAIN_WIN] = [x,y,event.size().width(),event.size().height()]
         
     def moveEvent(self, event):
         # Update config
@@ -505,12 +505,13 @@ class UI(QMainWindow):
     # Combo box events
     def __loop_change(self, index):
         # Set loop selection needed by the callback as it cant access widgets
-        self.__selected_loop = index
+        # Index is zero based, loops are 1 based
+        self.__selected_loop = index + 1
         # Set the min/max frequencies
         loop = self.__model_for_loop(self.__selected_loop)
         if len(loop) > 0:
-            self.__minvalue.setText(loop[0])
-            self.__maxvalue.setText(loop[1])
+            self.__minvalue.setText(str(loop[0]))
+            self.__maxvalue.setText(str(loop[1]))
         
     #=======================================================
     # Background activities
@@ -555,8 +556,8 @@ class UI(QMainWindow):
         # Update min/max frequencies
         loop = self.__model_for_loop(self.__selected_loop)
         if len(loop) > 0:
-            self.__minvalue.setText(loop[0])
-            self.__maxvalue.setText(loop[1])
+            self.__minvalue.setText(str(loop[0]))
+            self.__maxvalue.setText(str(loop[1]))
             
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)

@@ -42,7 +42,7 @@ LOOP_2 = 2
 LOOP_3 = 3
 STEPS = 10
 CAL_L1 = 'CAL_L1'
-CAL_L2 = 'CAL_L1'
+CAL_L2 = 'CAL_L2'
 CAL_L3 = 'CAL_L3'
 # State section
 WINDOWS = 'WINDOWS'
