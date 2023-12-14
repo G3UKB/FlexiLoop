@@ -54,7 +54,7 @@ flexi_loop_model = {
             # Feedback values for min and max
             HOME: -1,
             MAX: -1,
-            # Loop 1-3 [f at min. f at max, [[f, feedback value], [...], ...]]
+            # Loop 1-3 [f at min, f at max, [[f, feedback value], [...], ...]]
             CAL_L1: [],
             CAL_L2: [],
             CAL_L3: [],

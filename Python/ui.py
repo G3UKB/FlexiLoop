@@ -57,6 +57,7 @@ class UI(QMainWindow):
         self.__api = api.API(model, port, self.callback)
         
         #Loop status
+        self.__selected_loop = -1
         self.__loop_status = [False, False, False]
     
         # Set the back colour
@@ -150,7 +151,12 @@ class UI(QMainWindow):
                 if success:
                     # Action any data
                     if name == 'Pos':
+                        # Update position
                         self.__current_pos = args[0]
+                    elif name == CALIBRATE:
+                        # Update the loop status
+                        if self.__selected_loop != -1:
+                            self.__loop_status[self.__selected_loop] = True
                     print ('Activity %s completed successfully' % (self.__current_activity))
                     # Update position
                     # self.__api.get_pos()
@@ -229,6 +235,7 @@ class UI(QMainWindow):
         self.__loop_sel.addItem("3")
         self.__loop_sel.setMinimumHeight(30)
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
+        self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
         minlabel = QLabel('Min freq')
         minlabel.setStyleSheet(LBL1STYLE)
@@ -435,6 +442,7 @@ class UI(QMainWindow):
     # Button events
     def __do_cal(self):
         loop = int(self.__loop_sel.currentText())
+        self.__selected_loop = loop
         self.__current_activity = CALIBRATE
         self.__activity_timer = CALIBRATE_TIMEOUT
         self.__st_act.setText(CALIBRATE)
@@ -494,6 +502,17 @@ class UI(QMainWindow):
         self.__api.nudge_rev()
 
     #=======================================================
+    # Combo box events
+    def __loop_change(self, index):
+        # Set loop selection needed by the callback as it cant access widgets
+        self.__selected_loop = index
+        # Set the min/max frequencies
+        loop = self.__model_for_loop(self.__selected_loop)
+        if len(loop) > 0:
+            self.__minvalue.setText(loop[0])
+            self.__maxvalue.setText(loop[1])
+        
+    #=======================================================
     # Background activities
     def __idleProcessing(self):
         # Here we update the UI according to current activity and the status set by the callback
@@ -510,13 +529,7 @@ class UI(QMainWindow):
             #    self.__api.get_pos()
             self.__currpos.setText(str(self.__current_pos) + '%')
             
-            # Update loop status for configured loops
-            if self.__loop_status[0]:
-                self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
-            elif self.__loop_status[1]:
-                self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
-            elif self.__loop_status[2]:
-                self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+            
                 
             # Check activity state
             if self.__current_activity != NONE:
@@ -532,6 +545,32 @@ class UI(QMainWindow):
             self.__st_ard.setText('off-line')
             self.__st_ard.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
         
+        # Update loop status for configured loops
+        if self.__loop_status[0]:
+            self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+        elif self.__loop_status[1]:
+            self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+        elif self.__loop_status[2]:
+            self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+        # Update min/max frequencies
+        loop = self.__model_for_loop(self.__selected_loop)
+        if len(loop) > 0:
+            self.__minvalue.setText(loop[0])
+            self.__maxvalue.setText(loop[1])
+            
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
+    
+    #=======================================================
+    # Utils
+    def __model_for_loop(self, loop):
         
+        if loop == 1:
+            return self.__model[CONFIG][CAL][CAL_L1]
+        elif loop == 2:
+            return self.__model[CONFIG][CAL][CAL_L2]
+        elif loop == 3:
+            return self.__model[CONFIG][CAL][CAL_L3]
+        else:
+            return []
+            
