@@ -93,12 +93,15 @@ class UI(QMainWindow):
             # Check loops
             if len(self.__model[CONFIG][CAL][CAL_L1]) > 0:
                 self.__loop_status[0] = True
-            elif len(self.__model[CONFIG][CAL][CAL_L2]) > 0:
+            if len(self.__model[CONFIG][CAL][CAL_L2]) > 0:
                 self.__loop_status[1] = True
-            elif len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
+            if len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
                 self.__loop_status[2] = True
         # Last actuator position (may not be correct if its been moved outside app)
-        self.__current_pos = self.__model[STATE][ARDUINO][ACT_POS]
+        pos = self.__model[STATE][ARDUINO][ACT_POS]
+        if pos == -1:
+            pos = '-'
+        self.__current_pos = pos
         
     #=======================================================
     # PUBLIC
@@ -160,8 +163,6 @@ class UI(QMainWindow):
                         if self.__selected_loop != -1:
                             self.__loop_status[self.__selected_loop-1] = True
                     print ('Activity %s completed successfully' % (self.__current_activity))
-                    # Update position
-                    # self.__api.get_pos()
                     self.__current_activity = NONE
                     self.__activity_timer = SHORT_TIMEOUT
                 else:
@@ -183,7 +184,7 @@ class UI(QMainWindow):
         x,y,w,h = self.__model[STATE][WINDOWS][MAIN_WIN]
         self.setGeometry(x,y,w,h)
                          
-        self.setWindowTitle('Flexi-Loop')
+        self.setWindowTitle('Flexi-Loop Controller')
         
         #======================================================================================
         # Configure the status bar
@@ -307,7 +308,7 @@ class UI(QMainWindow):
         swrlabel.setStyleSheet(LBL1STYLE)
         self.__autogrid.addWidget(swrlabel, 0, 2)
         swrlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__swrval = QLabel('?.?')
+        self.__swrval = QLabel('-.-')
         self.__swrval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__autogrid.addWidget(self.__swrval, 0, 3)
         
@@ -342,7 +343,7 @@ class UI(QMainWindow):
         res1label = QLabel('SWR')
         res1label.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(res1label, 1, 0)
-        self.__swrres = QLabel('?.?')
+        self.__swrres = QLabel('-.-')
         self.__swrres.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__swrres.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__swrres, 1, 2)
@@ -351,7 +352,7 @@ class UI(QMainWindow):
         res2label.setStyleSheet(LBL1STYLE)
         res2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__mangrid.addWidget(res2label, 1, 3)
-        self.__freqval = QLabel('?.?')
+        self.__freqval = QLabel('-.-')
         self.__freqval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__freqval.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__freqval, 1, 4)
@@ -384,7 +385,7 @@ class UI(QMainWindow):
         curr1label = QLabel('Current Pos')
         curr1label.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(curr1label, 2, 4)
-        self.__currpos = QLabel('???')
+        self.__currpos = QLabel('-')
         self.__currpos.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__currpos.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__currpos, 2, 5)
@@ -518,6 +519,9 @@ class UI(QMainWindow):
         if len(loop) > 0:
             self.__minvalue.setText(str(loop[0]))
             self.__maxvalue.setText(str(loop[1]))
+        else:
+            self.__minvalue.setText('0.0')
+            self.__maxvalue.setText('0.0')
         
     #=======================================================
     # Background activities
@@ -535,9 +539,7 @@ class UI(QMainWindow):
             #if self.__current_pos == -1:
             #    self.__api.get_pos()
             self.__currpos.setText(str(self.__current_pos) + '%')
-            
-            
-                
+              
             # Check activity state
             if self.__current_activity != NONE:
                 # Activity current
@@ -555,9 +557,9 @@ class UI(QMainWindow):
         # Update loop status for configured loops
         if self.__loop_status[0]:
             self.__l1label.setStyleSheet(LBLSTACSTYLE)
-        elif self.__loop_status[1]:
+        if self.__loop_status[1]:
             self.__l2label.setStyleSheet(LBLSTACSTYLE)
-        elif self.__loop_status[2]:
+        if self.__loop_status[2]:
             self.__l3label.setStyleSheet(LBLSTACSTYLE)
         # Update min/max frequencies
         loop = self.__model_for_loop(self.__selected_loop)

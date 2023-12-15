@@ -181,19 +181,6 @@ class Calibrate(threading.Thread):
             return True, [h, m]
         
     def cal_end_points(self):
-        self.__comms_q.put(('home', []))
-        # Wait response
-        self.__wait_for = 'Home'
-        self.__event.wait()
-        self.__event.clear()
-        
-        self.__comms_q.put(('pos', []))
-        # Wait response
-        self.__wait_for = 'Pos'
-        self.__event.wait()
-        self.__event.clear()
-        h = self.__args[0]
-        
         self.__comms_q.put(('max', []))
         # Wait response
         self.__wait_for = 'Max'
@@ -206,6 +193,19 @@ class Calibrate(threading.Thread):
         self.__event.wait()
         self.__event.clear()
         m = self.__args[0]
+        
+        self.__comms_q.put(('home', []))
+        # Wait response
+        self.__wait_for = 'Home'
+        self.__event.wait()
+        self.__event.clear()
+        
+        self.__comms_q.put(('pos', []))
+        # Wait response
+        self.__wait_for = 'Pos'
+        self.__event.wait()
+        self.__event.clear()
+        h = self.__args[0]
         
         if MODEL:
             self.__model[CONFIG][CAL][HOME] = h
