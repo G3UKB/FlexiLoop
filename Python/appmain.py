@@ -37,26 +37,32 @@ import persist
 import api
 import ui
 
+# We expect to find the config file here otherwise it will be created.
+CONFIG_PATH = '../config/flexi-loop.cfg'
+
 #=====================================================
 # The main application class
 #===================================================== 
 class AppMain:
     
-    def run(self, path, port):
+    def run(self):
         # Manage configuration
         self.__configured = True
-        CONFIG_PATH = path
         self.__model = persist.getSavedCfg(CONFIG_PATH)
         if self.__model == None:
             print ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
             self.__configured = False
         #print(self.__model)
-        # Create the UI instance
+        
+        # Extract required fields
+        port = self.__model[CONFIG][SERIAL][PORT]
+        
         # The one and only QApplication 
         self.__qt_app = QApplication(sys.argv)
         ui_inst = ui.UI(self.__model, self.__qt_app, port)
         ui_inst.run()
+        # Return here when UI is closed
         
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)
@@ -66,15 +72,12 @@ class AppMain:
 def main():
     
         try:
-            if len(sys.argv) != 3:
-                print("Please supply a configuration filename and port for Arduino!")
-                print("python tuner_client.py <path>/filename port")
-            else:
-                app = AppMain()
-                sys.exit(app.run(sys.argv[1], sys.argv[2])) 
+            app = AppMain()
+            sys.exit(app.run()) 
         except Exception as e:
             print ('Exception [%s][%s]' % (str(e), traceback.format_exc()))
  
 # Entry point       
 if __name__ == '__main__':
     main()
+    

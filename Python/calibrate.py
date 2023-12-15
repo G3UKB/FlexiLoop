@@ -299,7 +299,7 @@ class Calibrate(threading.Thread):
     
     # =========================================================================
     # Callback from comms module
-    # Note this is called on the comms thread
+    # Note this is called on the comms thread and stolen from api.py
     def callback(self, data):
         
         if VERB: print("Calibrate: got event: ", data)
@@ -307,7 +307,15 @@ class Calibrate(threading.Thread):
         if name == self.__wait_for:
             # Extract args and release thread
             self.__args = val
-            self.__event.set()
+            self.__event.set() 
+        elif name == STATUS:
+            # Calculate position and directly event to API which has a pass-through to UI
+            home = self.__model[CONFIG][CAL][HOME]
+            maximum = self.__model[CONFIG][CAL][MAX]
+            if home > 0 and maximum > 0:
+                span = maximum - home
+                offset = val[0] - home
+                self.__cb((name, (True, "", [str(int((offset/span)*100))])))
         else:
             if VERB: print ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
  

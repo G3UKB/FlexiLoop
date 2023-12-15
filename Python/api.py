@@ -223,7 +223,7 @@ class API:
     def serial_callback(self, data):
         # Receive status and responses from the comms thread
         (name, (r, msg, args)) = data
-        if name == 'Pos':
+        if name == 'Pos' or name == 'Status':
             # Calculate and return position
             home = self.__model[CONFIG][CAL][HOME]
             maximum = self.__model[CONFIG][CAL][MAX]

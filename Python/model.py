@@ -45,10 +45,8 @@ def get_ip():
 
 flexi_loop_model = {
     CONFIG: {
-        RPi: {
-            IP: get_ip(),
-            RQST_PORT: 10002,
-            EVNT_PORT: 10003,
+        SERIAL: {
+            PORT: 'COM5',
         },
         CAL: {
             # Feedback values for min and max
@@ -68,6 +66,7 @@ flexi_loop_model = {
         },
         ARDUINO: {
             ONLINE: False,
+            ACT_POS: -1,
         }
     }
 }

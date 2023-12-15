@@ -44,6 +44,8 @@ DDSTYLE = "QComboBox {background-color: rgb(131,124,114); color: rgb(24,74,101);
 SBSTYLE = "QSpinBox {min-height: 20px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
 LESTYLE = "QLineEdit {min-height: 25px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 20px}"
 LBL1STYLE = "QLabel {color: rgb(24,74,101); font: 14px}"
+LBLSTSTYLE = "QLabel {color: rgb(191,13,13); font: 14px}"
+LBLSTACSTYLE = "QLabel {color: rgb(33,82,3); font: 14px}"
 
 class UI(QMainWindow):
     
@@ -95,8 +97,8 @@ class UI(QMainWindow):
                 self.__loop_status[1] = True
             elif len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
                 self.__loop_status[2] = True
-        # Current actuator position        
-        self.__current_pos = -1
+        # Last actuator position (may not be correct if its been moved outside app)
+        self.__current_pos = self.__model[STATE][ARDUINO][ACT_POS]
         
     #=======================================================
     # PUBLIC
@@ -164,6 +166,10 @@ class UI(QMainWindow):
                     self.__activity_timer = SHORT_TIMEOUT
                 else:
                     print ('Activity %s completed but failed!' % (self.__current_activity))
+            elif name == STATUS:
+                # We expect status at any time
+                self.__current_pos = args[0]
+                self.__model[STATE][ARDUINO][ACT_POS] = self.__current_pos
             else:
                 print ('Waiting for activity %s to completed but got activity %s! Contibuing to wait' % (self.__current_activity, name))
                 
@@ -186,22 +192,22 @@ class UI(QMainWindow):
         # Right align a permanent status indicator
         self.st_lbl = QLabel()
         self.st_lbl.setText('Arduino: ')
-        self.st_lbl.setStyleSheet("QLabel {color: rgb(232,75,0); font: 14px}")
+        self.st_lbl.setStyleSheet(LBL1STYLE)
         self.statusBar.addPermanentWidget(self.st_lbl)
         
         self.__st_ard = QLabel()
         self.__st_ard.setText('off-line')
-        self.__st_ard.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
+        self.__st_ard.setStyleSheet(LBLSTSTYLE)
         self.statusBar.addPermanentWidget(self.__st_ard)
         
         self.st_lblact= QLabel()
         self.st_lblact.setText('Activity: ')
-        self.st_lblact.setStyleSheet("QLabel {color: rgb(232,75,0); font: 14px}")
+        self.st_lblact.setStyleSheet(LBL1STYLE)
         self.st_lblact.setAlignment(QtCore.Qt.AlignLeft)
         self.statusBar.addPermanentWidget(self.st_lblact)
         self.__st_act = QLabel()
         self.__st_act.setText(NONE)
-        self.__st_act.setStyleSheet("QLabel {color: rgb(232,75,0); font: 14px}")
+        self.__st_act.setStyleSheet(LBLSTSTYLE)
         self.__st_act.setAlignment(QtCore.Qt.AlignLeft)
         self.statusBar.addPermanentWidget(self.__st_act)
         
@@ -265,15 +271,15 @@ class UI(QMainWindow):
         hbox = QHBoxLayout()
         self.__l1label = QLabel('Loop-1')
         hbox.addWidget(self.__l1label)
-        self.__l1label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
+        self.__l1label.setStyleSheet(LBLSTSTYLE)
         self.__l1label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l2label = QLabel('Loop-2')
         hbox.addWidget(self.__l2label)
-        self.__l2label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
+        self.__l2label.setStyleSheet(LBLSTSTYLE)
         self.__l2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l3label = QLabel('Loop-3')
         hbox.addWidget(self.__l3label)
-        self.__l3label.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
+        self.__l3label.setStyleSheet(LBLSTSTYLE)
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
         self.__loopgrid.addWidget(s, 1, 1, 1, 3)
@@ -520,7 +526,7 @@ class UI(QMainWindow):
         if self.__model[STATE][ARDUINO][ONLINE]:
             # on-line indicator
             self.__st_ard.setText('on-line')
-            self.__st_ard.setStyleSheet("QLabel {color: rgb(0,255,0); font: 14px}")
+            self.__st_ard.setStyleSheet(LBLSTACSTYLE)
             self.__central_widget.setEnabled(True)
             
             # Update current position
@@ -544,15 +550,15 @@ class UI(QMainWindow):
             self.__central_widget.setEnabled(False)
             # off-line indicator
             self.__st_ard.setText('off-line')
-            self.__st_ard.setStyleSheet("QLabel {color: rgb(255,0,0); font: 14px}")
+            self.__st_ard.setStyleSheet(LBLSTSTYLE)
         
         # Update loop status for configured loops
         if self.__loop_status[0]:
-            self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+            self.__l1label.setStyleSheet(LBLSTACSTYLE)
         elif self.__loop_status[1]:
-            self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+            self.__l2label.setStyleSheet(LBLSTACSTYLE)
         elif self.__loop_status[2]:
-            self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+            self.__l3label.setStyleSheet(LBLSTACSTYLE)
         # Update min/max frequencies
         loop = self.__model_for_loop(self.__selected_loop)
         if len(loop) > 0:
@@ -561,7 +567,7 @@ class UI(QMainWindow):
             
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
-    
+ 
     #=======================================================
     # Utils
     def __model_for_loop(self, loop):

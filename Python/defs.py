@@ -27,11 +27,9 @@ MIN_FREQ = 1800000
 MAX_FREQ = 30000000
 CONFIG = 'CONFIG'
 STATE = 'STATE'
-# RPi section
-RPi = 'RPi'
-IP = 'IP'
-RQST_PORT = 'RQST-PORT'
-EVNT_PORT = 'EVNT-PORT'
+# Serial section
+SERIAL = 'SERIAL'
+PORT = 'PORT'
 # Calibration section
 CAL = 'CAL'
 HOME = 'HOME'
@@ -51,6 +49,8 @@ CONFIG_WIN = 'CONFIG_WIN'
 MEM_WIN = 'MEM_WIN'
 ARDUINO = 'ARDUINO'
 ONLINE = 'ONLINE'
+ACT_POS = 'ACT_POS'
+
 #=======================================================================
 # UI
 CONFIG_PATH = '../config/auto_tuner.cfg'
