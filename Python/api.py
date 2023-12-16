@@ -217,6 +217,9 @@ class API:
     
     def nudge_rev(self):
         self.__s_q.put(('nudge_rev', []))
+        
+    def abort_activity(self):
+        self.__s_q.put(('abort', []))
     
     # =========================================================================    
     # Callback

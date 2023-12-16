@@ -171,6 +171,11 @@ class UI(QMainWindow):
                 # We expect status at any time
                 self.__current_pos = args[0]
                 self.__model[STATE][ARDUINO][ACT_POS] = self.__current_pos
+            elif name == ABORT:
+                # User hit the abort button
+                self.__current_activity = NONE
+                self.__activity_timer = SHORT_TIMEOUT
+                print("Activity aborted by user!")
             else:
                 print ('Waiting for activity %s to completed but got activity %s! Contibuing to wait' % (self.__current_activity, name))
                 
@@ -190,17 +195,34 @@ class UI(QMainWindow):
         # Configure the status bar
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
-        # Right align a permanent status indicator
+        
+        # Buttons
+        #self.__stbox = QHBoxLayout()
+        self.__abort = QPushButton("Abort!")
+        self.__abort.setStyleSheet(PBSTYLE)
+        self.__abort.setToolTip('Abort the current operation!')
+        #self.__stbox.addWidget(self.__abort)
+        self.__abort.clicked.connect(self.__do_abort)
+        self.statusBar.addPermanentWidget(self.__abort)
+        
+        self.__exit = QPushButton("Close")
+        self.__exit.setStyleSheet(PBSTYLE)
+        self.__exit.setToolTip('Close the application')
+        #self.__stbox.addWidget(self.__close)
+        self.__exit.clicked.connect(self.__do_close)
+        self.statusBar.addPermanentWidget(self.__exit)
+        
+        # Arduino status
         self.st_lbl = QLabel()
         self.st_lbl.setText('Arduino: ')
         self.st_lbl.setStyleSheet(LBL1STYLE)
         self.statusBar.addPermanentWidget(self.st_lbl)
-        
         self.__st_ard = QLabel()
         self.__st_ard.setText('off-line')
         self.__st_ard.setStyleSheet(LBLSTSTYLE)
         self.statusBar.addPermanentWidget(self.__st_ard)
         
+        # Activity Status
         self.st_lblact= QLabel()
         self.st_lblact.setText('Activity: ')
         self.st_lblact.setStyleSheet(LBL1STYLE)
@@ -447,6 +469,13 @@ class UI(QMainWindow):
      
     #=======================================================
     # Button events
+    def __do_close(self):
+        self.__close()
+        self.__qt_app.quit()
+        
+    def __do_abort(self):
+        self.__api.abort_activity()
+    
     def __do_cal(self):
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop

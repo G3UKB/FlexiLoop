@@ -72,6 +72,7 @@ class Calibrate(threading.Thread):
         
         self.__end_points = [-1,-1]
         self.term = False
+        self.__abort = False
         
         self.__event = threading.Event()
         self.__wait_for = ""
@@ -81,7 +82,7 @@ class Calibrate(threading.Thread):
     def terminate(self):
         """ Thread terminating """
         self.term = True
-    
+
     # Thread entry point
     def run(self):
         while not self.term:
@@ -126,7 +127,13 @@ class Calibrate(threading.Thread):
         r, self.__end_points = self.retrieve_end_points()
         if not r:
             # Calibrate end points
-            self.cal_end_points()
+            r = self.cal_end_points()
+            if not r[0]:
+                if self.__abort:
+                    self.__abort = False
+                    return (ABORT, (False, "Operation aborted!", []))
+                else:
+                    return ('Calibrate', (False, "Unable to retrieve or create end points!", cal_map))
             r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
@@ -141,15 +148,19 @@ class Calibrate(threading.Thread):
             if len(cal_map) == 0:
                 r, msg, cal_map = self.create_map(loop, interval)
                 if not r:
-                    # We have a problem
-                    return ('Calibrate', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
+                    if self.__abort:
+                        self.__abort = False
+                        return (ABORT, (False, "Operation aborted!", []))
+                    else:
+                        # We have a problem
+                        return ('Calibrate', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
             print ("Error in calibration map: " % msg)
             return ('Calibrate', (False, msg, cal_map))
         
         return ('Calibrate', (True, "", cal_map))
         
-    def __re_calibrate_loop(args):
+    def __re_calibrate_loop(self, args):
         loop, interval = args
         
         r, self.__end_points = retrieve_end_points()
@@ -181,36 +192,27 @@ class Calibrate(threading.Thread):
             return True, [h, m]
         
     def cal_end_points(self):
-        self.__comms_q.put(('max', []))
-        # Wait response
-        self.__wait_for = 'Max'
-        self.__event.wait()
-        self.__event.clear()
         
-        self.__comms_q.put(('pos', []))
-        # Wait response
-        self.__wait_for = 'Pos'
-        self.__event.wait()
-        self.__event.clear()
-        m = self.__args[0]
+        extents = [0, 0]    # home, max
+        # Note we do max first as that positions us at home for next phase
+        seq = (('max', 'Max', None), ('pos', 'Pos', 1), ('home', 'Home', None), ('pos', 'Pos', 0))
         
-        self.__comms_q.put(('home', []))
-        # Wait response
-        self.__wait_for = 'Home'
-        self.__event.wait()
-        self.__event.clear()
-        
-        self.__comms_q.put(('pos', []))
-        # Wait response
-        self.__wait_for = 'Pos'
-        self.__event.wait()
-        self.__event.clear()
-        h = self.__args[0]
+        for act in seq:
+            self.__comms_q.put((act[0], []))
+            # Wait response
+            self.__wait_for = act[1]
+            self.__event.wait()
+            if self.__abort:
+                self.__event.clear()
+                return False, None, None
+            self.__event.clear()
+            if act[2] != None: extents[act[2]] = self.__args[0]      
         
         if MODEL:
-            self.__model[CONFIG][CAL][HOME] = h
-            self.__model[CONFIG][CAL][MAX] = m
-        return h,m
+            self.__model[CONFIG][CAL][HOME] = extents[0]
+            self.__model[CONFIG][CAL][MAX] = extents[1]
+            
+        return True, extents[0], extents[1]
     
     def retrieve_map(self, loop):
         if MODEL:
@@ -239,6 +241,9 @@ class Calibrate(threading.Thread):
         # Wait response
         self.__wait_for = 'Max'
         self.__event.wait()
+        if self.__abort:
+            self.__event.clear()
+            return False, None, None
         self.__event.clear()
         
         r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX)
@@ -250,6 +255,9 @@ class Calibrate(threading.Thread):
         # Wait response
         self.__wait_for = 'Home'
         self.__event.wait()
+        if self.__abort:
+            self.__event.clear()
+            return False, None, None
         self.__event.clear()
         
         r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME)
@@ -277,6 +285,9 @@ class Calibrate(threading.Thread):
             # Wait response
             self.__wait_for = 'MoveTo'
             self.__event.wait()
+            if self.__abort:
+                self.__event.clear()
+                return False, None, None
             self.__event.clear()
         
             r, f = self.__vna.fres(fhome, fmax, hint = FREE)
@@ -316,6 +327,11 @@ class Calibrate(threading.Thread):
                 span = maximum - home
                 offset = val[0] - home
                 self.__cb((name, (True, "", [str(int((offset/span)*100))])))
+        elif name == ABORT:
+            # Just release whever was going on
+            # It should then pick up the abort flag
+            self.__abort = True
+            self.__event.set() 
         else:
             if VERB: print ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
  

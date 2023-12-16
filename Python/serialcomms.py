@@ -167,6 +167,9 @@ class SerialComms(threading.Thread):
         b += b'.;'
         return self.send(b, 10)
     
+    def __abort(self, args):
+        return self.send(b"z;", 1)
+        
     # ===============================================================
     # Send a command to the Arduino
     def send(self, cmd, timeout):
@@ -208,6 +211,10 @@ class SerialComms(threading.Thread):
         # timeout is secs to wait for a response
         resp_timeout = timeout*2
         while(1):
+            # Check abort
+            if self.__check_abort():
+                # We return an abort instead of the given command
+                return (ABORT, (True, "User abort!", val))
             # Read a single character
             chr = self.__ser.read().decode('utf-8')
             if chr == '':
@@ -277,6 +284,21 @@ class SerialComms(threading.Thread):
                 success = False
         return (name, (success, msg, val))
 
+    # ===============================================================
+    # Abort?
+    # This is a special command which has no response from the Arduino
+    # It causes the current activity to abort i.e. actuator stops and the current command finishes
+    def __check_abort(self):
+        #print("Check abort")
+        if self.__q.qsize() > 0:
+            name, args = self.__q.get()
+            if name == 'abort':
+                self.__ser.write(b'z;')
+                self.__ser.flush()
+                return True
+        return False
+            
+                
 # ===============================================================
 # TESTING
 def callback(data):

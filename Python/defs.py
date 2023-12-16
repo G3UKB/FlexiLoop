@@ -73,6 +73,7 @@ TUNE = 'Tune'
 RESONANCE = 'Resonance'
 
 STATUS = 'Status'
+ABORT = 'Abort'
 
 CALIBRATE_TIMEOUT = 120 * (1000/250)
 TUNE_TIMEOUT = 120 * (1000/250)

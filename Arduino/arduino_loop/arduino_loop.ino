@@ -176,6 +176,16 @@ int parse_int(String data, int start_at) {
   return val;
 }
 
+int check_abort() {
+  if (Serial.available() > 0) {
+    String data = Serial.readStringUntil(';');
+    if (data[0] == 'z') {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 // Get current feedback pot value (0-1023)
 int get_feedback_value() {
   return analogRead(POTENTIOMETER_PIN);
@@ -204,6 +214,10 @@ int go_home_or_max(int pos) {
       Serial.print(get_feedback_value());
       Serial.print(";");
       last_val = get_feedback_value();
+      if (check_abort()) {
+        md.setM1Speed(0);
+        return TRUE;
+      }
       delay(500);
     }
     delay(100);
@@ -236,6 +250,10 @@ int move_to_feedback_value(int target) {
         Serial.print("Status: ");
         Serial.print(get_feedback_value());
         Serial.print(";");
+        if (check_abort()) {
+          md.setM1Speed(0);
+          return TRUE;
+        }
         delay(500);
       }
     } else {
@@ -243,6 +261,10 @@ int move_to_feedback_value(int target) {
         Serial.print("Status: ");
         Serial.print(get_feedback_value());
         Serial.print(";");
+        if (check_abort()) {
+          md.setM1Speed(0);
+          return TRUE;
+        }
         delay(500);
       }
     }
