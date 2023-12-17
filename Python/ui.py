@@ -335,7 +335,7 @@ class UI(QMainWindow):
         self.freqtxt = QLineEdit()
         self.freqtxt.setStyleSheet(LESTYLE)
         self.freqtxt.setToolTip('Set tune frequency')
-        self.freqtxt.setInputMask('000.000;_')
+        self.freqtxt.setInputMask('000.000;0')
         self.freqtxt.setMaximumWidth(80)
         self.__autogrid.addWidget(self.freqtxt, 0, 1)
         
@@ -509,8 +509,8 @@ class UI(QMainWindow):
         
     def __do_tune(self):
         loop = int(self.__loop_sel.currentText())
-        freq = self.freqtxt.displayText()
-        self.__st_act.setText(CALIBRATE)
+        freq = float(self.freqtxt.displayText())
+        self.__st_act.setText(TUNE)
         self.__current_activity = TUNE
         self.__activity_timer = TUNE_TIMEOUT
         self.__long_running = True

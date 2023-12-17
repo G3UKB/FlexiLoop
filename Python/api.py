@@ -24,7 +24,6 @@
 #
 
 # Python imports
-# Python imports
 import os,sys
 from time import sleep
 import queue
@@ -38,6 +37,7 @@ import persist
 import serialcomms
 import calibrate
 import vna
+import tune
 
 # Verbose flag
 VERB = False
@@ -50,6 +50,7 @@ class API:
     # Initialisation
     def __init__(self, model, port, callback):
         
+        # Params
         self.__model = model
         self.__cb = callback
         
@@ -68,6 +69,12 @@ class API:
         # and start the thread
         self.__cal.start()
         
+        # Create a tune inetance
+        self.__tune = tune.Tune(self.__model, self.__serial_comms, self.__s_q, self.__cb, loop, freq)
+        # and start the thread
+        self.__tune.start()
+        
+        # State
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
@@ -94,99 +101,10 @@ class API:
         self.__s_q.put(('pos', []))
     
     # Move to lowest SWR for loop on given frequency
-    # This has to be threaded as its long running
-    # A transient thread is used for this rather than a permanent thread
+    # This is threaded separately as its long running multiple calls
     def move_to_freq(self, loop, freq):
-        t = Thread(target=t_move_to_freq, args=[loop, freq])
-        t.run()
-        
-    # Runs once and then exits
-    def t_move_to_freq(self, loop, freq):
-        # Need to steal the serial comms callback
-        self.__comms.steal_callback(t_move_to_freq_cb)
-        
-        # Get calibration
-        cal = self.__model[CONFIG][CAL][loop]
-        if freq < cal[0] or freq > cal[1]:
-            # Not covered by this loop
-            print ("Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1]))
-            self.__cb.put('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(loop, cal[0], cal[1]), []))
-            self.__comms.restore_callback()
-            return
-        # Stage 1: move as close to frequency as possible
-        # Find the two points this frequency falls between
-        index = 0
-        low = 0
-        high = 0
-        # The list is in high to low frequency order as home is fully retracted
-        for f in cal[2]:
-            if f[1] < freq:
-                # Lower than target
-                high = index-1
-                low = index
-            else:
-                index += 1
-        # Calculate where between these points the frequency should be
-        higher = high - f
-        span = high - low
-        frac = higher/span
-        # Offsets
-        high_offset = cal[2][high][0]
-        low_offset = cal[2][low][0]
-        # Amount to add
-        offset_span = high_offset - low_offset
-        offset_frac = offset_span*frac
-        target_pos = high_offset + offset_frac
-        # We now have a position to move to
-        self.__s_q.put(('move', [pos]))
-        self.__wait_for('move')
-        self.__event.wait()
-        self.__event.clear()
-        
-        # Stage 2 tweak SWR
-        r, swr = self.__vna.fswr(freq)
-        last_swr = swr
-        try_for = 10
-        dir = FWD
-        if r:
-            # Tweek if necessary
-            while swr > 1.5:
-                if try_for <= 0:
-                    print("Unable to reduce SWR to less than 1.5 {}".format(swr))
-                    self.__cb.put (("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
-                    break
-                if dir == FWD:
-                    #self.__serial_comms.nudge_fwd()
-                    self.__s_q.put(('nudge_fwd', []))
-                    sleep(1)
-                else:
-                    #self.__serial_comms.nudge_rev()
-                    self.__s_q.put(('nudge_rev', []))
-                    sleep(1)
-                r, swr = self.__vna.fswr(freq)
-                if swr < last_swr:
-                    last_swr = swr
-                    try_for -= 1
-                    continue
-                else:
-                    dir = REV
-                    last_swr = swr
-                    try_for -= 1
-                    continue               
-            self.__cb.put (("Tune", (True, "", swr)))
-        else:
-            print("Failed to obtain a SWR reading for freq {}".format(freq))
-            self.__cb.put (("Tune", (False, "Failed to obtain a SWR reading for freq {}".format(freq), [])))
-        self.__comms.restore_callback()
-    
-    # Stolen callback for move to freq    
-    def t_move_to_freq_cb(self, data):
-        (name, (success, msg, val)) = data
-        if name == self.__wait_for:
-            # Extract args and release thread
-            self.__args = val
-            self.__event.set()
-                       
+        self.__tune.one_pass()
+                          
     # Switch between TX and VNA
     def switch_target(self, target):
         pass
@@ -245,7 +163,19 @@ class API:
         # Receive status and responses from the calibrate thread
         # Just pass up to UI
         self.__cb(data)
+    
+    #=======================================================
+    # Utils
+    def __model_for_loop(self, loop):
         
+        if loop == 1:
+            return self.__model[CONFIG][CAL][CAL_L1]
+        elif loop == 2:
+            return self.__model[CONFIG][CAL][CAL_L2]
+        elif loop == 3:
+            return self.__model[CONFIG][CAL][CAL_L3]
+        else:
+            return []    
 # ===============================================================
 # TESTING
 def api_callback(data):
