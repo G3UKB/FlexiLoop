@@ -46,7 +46,17 @@ LESTYLE = "QLineEdit {min-height: 25px; background-color: rgb(131,124,114); colo
 LBL1STYLE = "QLabel {color: rgb(24,74,101); font: 14px}"
 LBLSTSTYLE = "QLabel {color: rgb(191,13,13); font: 14px}"
 LBLSTACSTYLE = "QLabel {color: rgb(33,82,3); font: 14px}"
+ABORTSTYLEON = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(191,13,13); color: rgb(0,0,0); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
+ABORTSTYLEOFF = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(180,180,180); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
+FRAMESTYLE = "QLabel {color: rgb(33,82,3)}"
 
+class VLine(QFrame):
+    # a simple VLine, like the one you get from designer
+    def __init__(self):
+        super(VLine, self).__init__()
+        self.setFrameShape(self.VLine|self.Sunken)
+        self.setStyleSheet("background-color %s" % 'black')
+        
 class UI(QMainWindow):
     
     def __init__(self, model, qt_app, port):
@@ -84,6 +94,7 @@ class UI(QMainWindow):
         # Local state holders
         # Current (long running) activity
         self.__current_activity = NONE
+        self.__long_running = False
         self.__activity_timer = SHORT_TIMEOUT
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -196,22 +207,6 @@ class UI(QMainWindow):
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         
-        # Buttons
-        #self.__stbox = QHBoxLayout()
-        self.__abort = QPushButton("Abort!")
-        self.__abort.setStyleSheet(PBSTYLE)
-        self.__abort.setToolTip('Abort the current operation!')
-        #self.__stbox.addWidget(self.__abort)
-        self.__abort.clicked.connect(self.__do_abort)
-        self.statusBar.addPermanentWidget(self.__abort)
-        
-        self.__exit = QPushButton("Close")
-        self.__exit.setStyleSheet(PBSTYLE)
-        self.__exit.setToolTip('Close the application')
-        #self.__stbox.addWidget(self.__close)
-        self.__exit.clicked.connect(self.__do_close)
-        self.statusBar.addPermanentWidget(self.__exit)
-        
         # Arduino status
         self.st_lbl = QLabel()
         self.st_lbl.setText('Arduino: ')
@@ -222,17 +217,35 @@ class UI(QMainWindow):
         self.__st_ard.setStyleSheet(LBLSTSTYLE)
         self.statusBar.addPermanentWidget(self.__st_ard)
         
+        self.statusBar.addPermanentWidget(VLine())
+
         # Activity Status
         self.st_lblact= QLabel()
         self.st_lblact.setText('Activity: ')
         self.st_lblact.setStyleSheet(LBL1STYLE)
-        self.st_lblact.setAlignment(QtCore.Qt.AlignLeft)
         self.statusBar.addPermanentWidget(self.st_lblact)
         self.__st_act = QLabel()
         self.__st_act.setText(NONE)
         self.__st_act.setStyleSheet(LBLSTSTYLE)
-        self.__st_act.setAlignment(QtCore.Qt.AlignLeft)
         self.statusBar.addPermanentWidget(self.__st_act)
+        
+        self.statusBar.addPermanentWidget(VLine())
+        
+        # Buttons
+        self.__abort = QPushButton("Abort!")
+        self.__abort.setStyleSheet(ABORTSTYLEOFF)
+        self.__abort.setToolTip('Abort the current operation!')
+        self.__abort.clicked.connect(self.__do_abort)
+        self.statusBar.addPermanentWidget(self.__abort)
+        #self.__abort.setVisible(False)
+        
+        self.statusBar.addPermanentWidget(VLine())
+        
+        self.__exit = QPushButton("Close")
+        self.__exit.setStyleSheet(PBSTYLE)
+        self.__exit.setToolTip('Close the application')
+        self.__exit.clicked.connect(self.__do_close)
+        self.statusBar.addPermanentWidget(self.__exit)
         
         self.statusBar.setStyleSheet("QStatusBar::item{border: none;}")       
         
@@ -482,6 +495,7 @@ class UI(QMainWindow):
         self.__current_activity = CALIBRATE
         self.__activity_timer = CALIBRATE_TIMEOUT
         self.__st_act.setText(CALIBRATE)
+        self.__long_running = True
         if self.__api.calibrate(loop):
             if loop == 1:
                 self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
@@ -499,6 +513,7 @@ class UI(QMainWindow):
         self.__st_act.setText(CALIBRATE)
         self.__current_activity = TUNE
         self.__activity_timer = TUNE_TIMEOUT
+        self.__long_running = True
         self.__api.move_to_freq(loop, freq)
     
     def __do_res(self):
@@ -511,6 +526,7 @@ class UI(QMainWindow):
         self.__current_activity = MOVETO
         self.__st_act.setText(MOVETO)
         self.__activity_timer = MOVE_TIMEOUT
+        self.__long_running = True
         self.__api.move_to_position(self.movetxt.value())
     
     def __do_move_fwd(self):
@@ -573,8 +589,14 @@ class UI(QMainWindow):
             if self.__current_activity != NONE:
                 # Activity current
                 self.__central_widget.setEnabled(False)
+                if self.__long_running:
+                    #self.__abort.setVisible(True)
+                    self.__abort.setStyleSheet(ABORTSTYLEON)
             else:
                 self.__central_widget.setEnabled(True)
+                self.__long_running = False
+                #self.__abort.setVisible(False)
+                self.__abort.setStyleSheet(ABORTSTYLEOFF)
             self.__st_act.setText(self.__current_activity)
         else:
             # Not online so we can't do anything except exit
