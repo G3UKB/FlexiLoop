@@ -70,7 +70,7 @@ class API:
         self.__cal.start()
         
         # Create a tune inetance
-        self.__tune = tune.Tune(self.__model, self.__serial_comms, self.__s_q, self.__cb, loop, freq)
+        self.__tune = tune.Tune(self.__model, self.__serial_comms, self.__s_q, self.__cb)
         # and start the thread
         self.__tune.start()
         
@@ -85,6 +85,8 @@ class API:
         self.__serial_comms.join()
         self.__cal.terminate()
         self.__cal.join()
+        self.__tune.terminate()
+        self.__tune.join()
         
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
@@ -103,7 +105,7 @@ class API:
     # Move to lowest SWR for loop on given frequency
     # This is threaded separately as its long running multiple calls
     def move_to_freq(self, loop, freq):
-        self.__tune.one_pass()
+        self.__tune.do_one_pass(loop, freq)
                           
     # Switch between TX and VNA
     def switch_target(self, target):

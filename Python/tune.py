@@ -32,7 +32,7 @@ import traceback
 
 # Application imports
 from defs import *
-from util import *
+from utils import *
 import model
 import persist
 import serialcomms
@@ -42,13 +42,13 @@ import vna
 # Make this a separate module with q etc.
 class Tune(threading.Thread):
     
-    def __init__(self, model, serial, s_q, cb, loop, freq):
-        super(MoveToFreq, self).__init__()
+    def __init__(self, model, serial, s_q, cb):
+        super(Tune, self).__init__()
         
         self.__model = model
         self.__serial_comms = serial
-        self.__loop = loop
-        self.__freq = freq
+        self.__loop = None
+        self.__freq = None
         self.__s_q = s_q
         self.__cb = cb
         
@@ -60,26 +60,27 @@ class Tune(threading.Thread):
         self.term = False
     
     # Allow one execution pass
-    def one_pass(self):
-        """ Thread terminating """
+    def do_one_pass(self, loop, freq):
+        self.__loop = loop
+        self.__freq = freq
         self.one_pass = True
         
     # Terminate instance
     def terminate(self):
-        """ Thread terminating """
         self.term = True
         
     def run(self):
         while not self.term:
             while not self.one_pass:
-                sleep(100)
+                sleep(0.1)
                 
-            print("Running a tune pass...")
+            print("Tuning -- this may take a while...")
             # Need to steal the serial comms callback
             self.__serial_comms.steal_callback(self.t_tune_cb)
             
             # Get calibration
             cal = model_for_loop(self.__model, self.__loop)
+            print("cal ", cal)
             if self.__freq < cal[0] or self.__freq > cal[1]:
                 # Not covered by this loop
                 print ("Requested freq {} is outside limits for this loop [{},{}]".format(self.__loop, cal[0], cal[1]))
@@ -92,8 +93,8 @@ class Tune(threading.Thread):
             low = 0
             high = 0
             # The list is in high to low frequency order as home is fully retracted
-            for (offset, ft) in cal[2]:
-                if ft < self.__freq:
+            for ft in cal[2]:
+                if ft[1] < self.__freq:
                     # Lower than target
                     high = index-1
                     low = index
@@ -103,6 +104,7 @@ class Tune(threading.Thread):
             higher = high - ft
             span = high - low
             frac = higher/span
+            print("Here")
             # Offsets
             high_offset = cal[2][high][0]
             low_offset = cal[2][low][0]
