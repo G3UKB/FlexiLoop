@@ -43,7 +43,7 @@ class VNA:
     def __init__(self):
         # Simulation setup
         if SIMULATE:
-            self.__sim_step = 20    # step by this % of full travel
+            self.__sim_step = STEPS    # step by this % of full travel
             self.__sim_f = 3.5
             self.__step_f = 1.0
             self.__min_f = 3.5
