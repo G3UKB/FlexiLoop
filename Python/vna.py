@@ -78,7 +78,7 @@ class VNA:
                     # We step from high to low frequency
                     f_now = self.__high_f - (self.__current_step * self.__inc_f)
                     self.__current_step += 1
-                    return True, f_now
+                    return True, round(f_now, 2)
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go

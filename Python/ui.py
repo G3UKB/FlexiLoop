@@ -579,10 +579,6 @@ class UI(QMainWindow):
             self.__central_widget.setEnabled(True)
             
             # Update current position
-            # We don't really want to call here as its updated by status events when things are moving
-            # However, if we don't have a position or activity then we will call as nothing else is happening
-            #if self.__current_pos == -1:
-            #    self.__api.get_pos()
             self.__currpos.setText(str(self.__current_pos) + '%')
               
             # Check activity state
@@ -590,12 +586,10 @@ class UI(QMainWindow):
                 # Activity current
                 self.__central_widget.setEnabled(False)
                 if self.__long_running:
-                    #self.__abort.setVisible(True)
                     self.__abort.setStyleSheet(ABORTSTYLEON)
             else:
                 self.__central_widget.setEnabled(True)
                 self.__long_running = False
-                #self.__abort.setVisible(False)
                 self.__abort.setStyleSheet(ABORTSTYLEOFF)
             self.__st_act.setText(self.__current_activity)
         else:
@@ -615,8 +609,8 @@ class UI(QMainWindow):
         # Update min/max frequencies
         loop = self.__model_for_loop(self.__selected_loop)
         if len(loop) > 0:
-            self.__minvalue.setText(str(loop[0]))
-            self.__maxvalue.setText(str(loop[1]))
+            self.__minvalue.setText(str(loop[1]))
+            self.__maxvalue.setText(str(loop[0]))
             
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)

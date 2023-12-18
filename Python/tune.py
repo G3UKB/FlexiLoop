@@ -156,7 +156,8 @@ class Tune(threading.Thread):
                 print("Failed to obtain a SWR reading for freq {}".format(self.__freq))
                 self.__cb.put ((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
             self.__comms.restore_callback()
-
+        print("Tune thread exiting...")
+              
     #=======================================================
     # Stolen Callback  
     def t_tune_cb(self, data):

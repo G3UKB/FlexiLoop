@@ -295,12 +295,12 @@ class Calibrate(threading.Thread):
                 return False, None, None
             self.__event.clear()
         
-            r, f = self.__vna.fres(fhome, fmax, hint = FREE)
+            r, f = self.__vna.fres(fhome, fmax, hint = MID)
             if not r:
                 print("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m
             m[2].append([int(next_inc), f])
-            next_step += step
+            next_inc += inc
         # Add the max position
         m[2].append([int(maximum), fmax])
         
