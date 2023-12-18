@@ -113,6 +113,8 @@ class UI(QMainWindow):
         if pos == -1:
             pos = '-'
         self.__current_pos = pos
+        # SWR
+        self.__swr = '_._'
         
     #=======================================================
     # PUBLIC
@@ -135,7 +137,7 @@ class UI(QMainWindow):
     # CALLBACK
     #
     def callback(self, data):
-        # We get callbacks here from calibration and serial comms
+        # We get callbacks here from calibration, tuning and serial comms
         # Everything south of the API is threaded so as not to block
         # the UI. That means event callbacks must be managed to update the UI
         # and prevent invalid commands being issues during long running
@@ -173,6 +175,8 @@ class UI(QMainWindow):
                         # Update the loop status
                         if self.__selected_loop != -1:
                             self.__loop_status[self.__selected_loop-1] = True
+                    elif name == TUNE:
+                        self.__swr = args[0]
                     print ('Activity %s completed successfully' % (self.__current_activity))
                     self.__current_activity = NONE
                     self.__activity_timer = SHORT_TIMEOUT
@@ -611,6 +615,8 @@ class UI(QMainWindow):
         if len(loop) > 0:
             self.__minvalue.setText(str(loop[1]))
             self.__maxvalue.setText(str(loop[0]))
+        # Update SWR
+        self.__swrval.setText(str(self.__swr))
             
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)

@@ -156,8 +156,8 @@ class Tune(threading.Thread):
                         dir = REV
                         last_swr = swr
                         try_for -= 1
-                        continue               
-                self.__cb((TUNE, (True, "", swr)))
+                        continue
+                self.__cb((TUNE, (True, "", [swr])))
             else:
                 print("Failed to obtain a SWR reading for freq {}".format(self.__freq))
                 self.__cb((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
@@ -167,7 +167,6 @@ class Tune(threading.Thread):
     #=======================================================
     # Stolen Callback  
     def t_tune_cb(self, data):
-        print("Got ", data)
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
