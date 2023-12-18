@@ -53,7 +53,7 @@ class AppMain:
             print ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
             self.__configured = False
-        #print(self.__model)
+        print(self.__model)
         
         # Extract required fields
         port = self.__model[CONFIG][SERIAL][PORT]

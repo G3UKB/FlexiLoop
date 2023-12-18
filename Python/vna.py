@@ -2,7 +2,7 @@
 #
 # vna.py
 # 
-# Copyright (C) 2017 by G3UKB Bob Cowdery
+# Copyright (C) 2023 by G3UKB Bob Cowdery
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -43,12 +43,12 @@ class VNA:
     def __init__(self):
         # Simulation setup
         if SIMULATE:
-            self.__sim_step = STEPS    # step by this % of full travel
-            self.__sim_f = 3.5
-            self.__step_f = 1.0
-            self.__min_f = 3.5
-            self.__max_f = self.__sim_f + 5*self.__step_f
-            self.__swr = 1.0
+            # These are just test values
+            self.__low_f = 3.0          # Lowest frequency which is at max extension
+            self.__high_f = 12.0        # Highest frequency which is at home position
+            self.__inc_f = (self.__high_f - self.__low_f)/STEPS # Freq increment on each step
+            self.__current_step = 1
+            self.__swr = 1.0            # Always return 1.0
         
         # Create decoder
         self.__dec = decode.Decode()
@@ -61,19 +61,24 @@ class VNA:
         Arguments:
             startFreq   --  start freq in Hz
             stopFreq    --  stop freq in Hz
-            optional hint -- MIN, MAX, FREE (used in simulation)
+            optional hint -- MIN, MAX, MID (used in simulation)
         """
         if SIMULATE:
             if hint == HOME:
-                return True, self.__min_f
+                self.__current_step = 1
+                return True, self.__high_f
             elif hint == MAX:
-                return True, self.__max_f
+                self.__current_step = 1
+                return True, self.__low_f
             else:
-                if (self.__sim_f + self.__step_f) >= self.__max_f:
-                    self.__sim_f = 3.5
+                if self.__current_step >= STEPS:
+                    print ("Steps %d are running off end. Restarting at 1." % (self.__current_step))
+                    self.__current_step = 1
                 else:
-                    self.__sim_f += self.__step_f
-                return True, self.__sim_f
+                    # We step from high to low frequency
+                    f_now = self.__high_f - (self.__current_step * self.__inc_f)
+                    self.__current_step += 1
+                    return True, f_now
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go

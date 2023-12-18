@@ -120,7 +120,7 @@ class Calibrate(threading.Thread):
         self.__comms.restore_callback()
         
     def __calibrate(self, args):
-        loop, interval = args
+        loop, steps = args
         cal_map = []
         
         # Retrieve the end points
@@ -146,7 +146,7 @@ class Calibrate(threading.Thread):
         r, cal_map = self.retrieve_map(loop)
         if r:
             if len(cal_map) == 0:
-                r, msg, cal_map = self.create_map(loop, interval)
+                r, msg, cal_map = self.create_map(loop, steps)
                 if not r:
                     if self.__abort:
                         self.__abort = False
@@ -161,7 +161,7 @@ class Calibrate(threading.Thread):
         return ('Calibrate', (True, "", cal_map))
         
     def __re_calibrate_loop(self, args):
-        loop, interval = args
+        loop, steps = args
         
         r, self.__end_points = retrieve_end_points()
         if not r:
@@ -171,7 +171,7 @@ class Calibrate(threading.Thread):
             if not r:
                 # We have a problem
                 return ('ReCalibrateLoop', (False, "Unable to retrieve or create end points!", cal_map))
-        r, msg, cal_map = self.create_map(loop, interval)
+        r, msg, cal_map = self.create_map(loop, steps)
         if not r:
             # We have a problem
             return ('ReCalibrateLoop', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
@@ -227,7 +227,7 @@ class Calibrate(threading.Thread):
         else:
             return True, []
 
-    def create_map(self, loop, interval):
+    def create_map(self, loop, steps):
         
         # Get map for model
         r, m = self.retrieve_map(loop)
@@ -245,11 +245,12 @@ class Calibrate(threading.Thread):
             self.__event.clear()
             return False, None, None
         self.__event.clear()
-        
+        # Get res freq
         r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX)
         if not r:
             print("Failed to get max frequency!")
-            return False, "Failed to get max frequency!", []    
+            return False, "Failed to get max frequency!", []
+        
         # Move home and take a reading
         self.__comms_q.put(('home', []))
         # Wait response
@@ -259,7 +260,7 @@ class Calibrate(threading.Thread):
             self.__event.clear()
             return False, None, None
         self.__event.clear()
-        
+        # get res freq
         r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME)
         if not r:
             print("Failed to get min frequency!")
@@ -276,12 +277,16 @@ class Calibrate(threading.Thread):
         # Frig here for testing with actuator power off
         #home = 200
         #maximum = 900
-        d = maximum - home
-        step = (interval/100) * d
-        next_step = home + step
-        while next_step < maximum:
+        span = maximum - home
+        inc = span/steps
+        
+        # Add the home position
+        m[2].append([int(home), fhome])
+        # Add intermediate positions
+        next_inc = home + inc
+        while next_inc < maximum:
             # Comment out if motor not running
-            self.__comms_q.put(('move', [next_step]))
+            self.__comms_q.put(('move', [next_inc]))
             # Wait response
             self.__wait_for = 'MoveTo'
             self.__event.wait()
@@ -294,8 +299,10 @@ class Calibrate(threading.Thread):
             if not r:
                 print("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m
-            m[2].append([next_step, f])
+            m[2].append([int(next_inc), f])
             next_step += step
+        # Add the max position
+        m[2].append([int(maximum), fmax])
         
         if MODEL:
             if loop == 1:

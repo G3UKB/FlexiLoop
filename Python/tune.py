@@ -73,7 +73,9 @@ class Tune(threading.Thread):
         while not self.term:
             while not self.one_pass:
                 sleep(0.1)
-                
+                if self.term: return
+            self.one_pass = False
+            
             print("Tuning -- this may take a while...")
             # Need to steal the serial comms callback
             self.__serial_comms.steal_callback(self.t_tune_cb)
