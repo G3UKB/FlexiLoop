@@ -42,11 +42,12 @@ import vna
 # Make this a separate module with q etc.
 class Tune(threading.Thread):
     
-    def __init__(self, model, serial, s_q, cb):
+    def __init__(self, model, serial, vna, s_q, cb):
         super(Tune, self).__init__()
         
         self.__model = model
         self.__serial_comms = serial
+        self.__vna = vna
         self.__loop = None
         self.__freq = None
         self.__s_q = s_q
@@ -82,41 +83,46 @@ class Tune(threading.Thread):
             
             # Get calibration
             cal = model_for_loop(self.__model, self.__loop)
-            print("cal ", cal)
-            if self.__freq < cal[0] or self.__freq > cal[1]:
+            if self.__freq < cal[1] or self.__freq > cal[0]:
                 # Not covered by this loop
-                print ("Requested freq {} is outside limits for this loop [{},{}]".format(self.__loop, cal[0], cal[1]))
-                self.__cb.put('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(self.__loop, cal[0], cal[1]), []))
+                print ("Requested freq {} is outside limits for this loop [{},{}]".format(self.__freq, cal[1], cal[0]))
+                self.__cb(('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(self.__freq, cal[1], cal[0]), [])))
                 self.__serial_comms.restore_callback()
                 return
             # Stage 1: move as close to frequency as possible
             # Find the two points this frequency falls between
             index = 0
-            low = 0
-            high = 0
+            idx_low = 0
+            idx_high = 0
             # The list is in high to low frequency order as home is fully retracted
             for ft in cal[2]:
                 if ft[1] < self.__freq:
                     # Lower than target
-                    high = index-1
-                    low = index
+                    idx_high = index-1 
+                    idx_low = index
                 else:
                     index += 1
+            
             # Calculate where between these points the frequency should be
-            higher = high - ft
-            span = high - low
-            frac = higher/span
-            print("Here")
-            # Offsets
-            high_offset = cal[2][high][0]
-            low_offset = cal[2][low][0]
-            # Amount to add
-            offset_span = high_offset - low_offset
-            offset_frac = offset_span*frac
-            target_pos = high_offset + offset_frac
+            # Note high is the setting for higher frequency not higher feedback value
+            # Same for low
+            #
+            # The feedback values and frequencies above and below the required frequency
+            fb_high = cal[2][idx_high][0]
+            fb_low = cal[2][idx_low][0]
+            frq_high = cal[2][idx_high][1]
+            frq_low = cal[2][idx_low][1]
+            
+            # We now need to calculate the feedback value for the required frequency
+            frq_span = frq_high - frq_low
+            frq_inc = self.__freq - frq_low
+            frq_frac = frq_inc/frq_span
+            fb_span = fb_low - fb_high
+            fb_frac = frq_inc * fb_span
+            target_pos = fb_low - fb_frac
+            
             # We now have a position to move to
-            rel_pos = absolute_pos_to_relative(self.__model, target_pos)
-            self.__s_q.put(('move', rel_pos))
+            self.__s_q.put(('move', [target_pos]))
             self.__wait_for = MOVETO
             self.__event.wait()
             self.__event.clear()
@@ -131,7 +137,7 @@ class Tune(threading.Thread):
                 while swr > 1.5:
                     if try_for <= 0:
                         print("Unable to reduce SWR to less than 1.5 {}".format(swr))
-                        self.__cb.put (("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
+                        self.__cb(("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
                         break
                     if dir == FWD:
                         #self.__serial_comms.nudge_fwd()
@@ -151,16 +157,17 @@ class Tune(threading.Thread):
                         last_swr = swr
                         try_for -= 1
                         continue               
-                self.__cb.put ((TUNE, (True, "", swr)))
+                self.__cb((TUNE, (True, "", swr)))
             else:
                 print("Failed to obtain a SWR reading for freq {}".format(self.__freq))
-                self.__cb.put ((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
-            self.__comms.restore_callback()
-        print("Tune thread exiting...")
+                self.__cb((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
+            self.__serial_comms.restore_callback()
+        print("Tune thread  exiting...")
               
     #=======================================================
     # Stolen Callback  
     def t_tune_cb(self, data):
+        print("Got ", data)
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread

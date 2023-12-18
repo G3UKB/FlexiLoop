@@ -46,6 +46,7 @@ CONFIG_PATH = '../config/flexi-loop.cfg'
 class AppMain:
     
     def run(self):
+        print("Flexi-Loop Controller running...")
         # Manage configuration
         self.__configured = True
         self.__model = persist.getSavedCfg(CONFIG_PATH)
@@ -53,7 +54,7 @@ class AppMain:
             print ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
             self.__configured = False
-        print(self.__model)
+        # print(self.__model)
         
         # Extract required fields
         port = self.__model[CONFIG][SERIAL][PORT]

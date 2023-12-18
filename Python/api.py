@@ -70,7 +70,7 @@ class API:
         self.__cal.start()
         
         # Create a tune inetance
-        self.__tune = tune.Tune(self.__model, self.__serial_comms, self.__s_q, self.__cb)
+        self.__tune = tune.Tune(self.__model, self.__serial_comms, self.__vna, self.__s_q, self.__cb)
         # and start the thread
         self.__tune.start()
         
