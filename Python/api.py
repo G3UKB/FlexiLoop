@@ -32,12 +32,14 @@ import traceback
 
 # Application imports
 from defs import *
+from utils import *
 import model
 import persist
 import serialcomms
 import calibrate
 import vna
 import tune
+import pirelay
 
 # Verbose flag
 VERB = False
@@ -87,7 +89,7 @@ class API:
         self.__cal.join()
         self.__tune.terminate()
         self.__tune.join()
-        
+    
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
@@ -106,13 +108,18 @@ class API:
     # This is threaded separately as its long running multiple calls
     def move_to_freq(self, loop, freq):
         self.__tune.do_one_pass(loop, freq)
-                          
-    # Switch between TX and VNA
-    def switch_target(self, target):
-        pass
     
-    def get_current_res(self):
-        pass
+    def get_current_res(self, loop):
+        self.__relay.vna()
+        cal = model_for_loop(self.__model, loop)
+        highf = cal[0]
+        lowf = cal[1]
+        rf, f = self.__vna.fres(int(lowf*1000000), int(highf*1000000), RANDOM)
+        rs, swr = self.__vna.fswr(f)
+        if rf and rs:
+            return True, (f, swr)
+        else:
+            return False, ()
     
     def move_to_position(self, pos):
         # pos is given as 0-100%
@@ -166,18 +173,6 @@ class API:
         # Just pass up to UI
         self.__cb(data)
     
-    #=======================================================
-    # Utils
-    def __model_for_loop(self, loop):
-        
-        if loop == 1:
-            return self.__model[CONFIG][CAL][CAL_L1]
-        elif loop == 2:
-            return self.__model[CONFIG][CAL][CAL_L2]
-        elif loop == 3:
-            return self.__model[CONFIG][CAL][CAL_L3]
-        else:
-            return []    
 # ===============================================================
 # TESTING
 def api_callback(data):

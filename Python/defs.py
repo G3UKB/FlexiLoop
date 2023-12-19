@@ -35,6 +35,7 @@ CAL = 'CAL'
 HOME = 'HOME'
 MAX = 'MAX'
 MID = 'MID'
+RANDOM = 'RANDOM'
 LOOP_1 = 1
 LOOP_2 = 2
 LOOP_3 = 3
@@ -85,4 +86,8 @@ SHORT_TIMEOUT = 2 * (1000/250)
 # General
 FWD = 'FWD'
 REV = 'REV'
+ANT_RLY = 'RELAY1'
+TX = 'TX'
+VNA = 'VNA'
+
 

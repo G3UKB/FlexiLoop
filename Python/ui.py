@@ -36,6 +36,7 @@ from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGro
 # Application imports
 from defs import *
 import api
+import pirelay
 
 # Styles
 BOXSTYLE = "QGroupBox {color: rgb(65,62,56); font: 16px}"
@@ -114,7 +115,14 @@ class UI(QMainWindow):
             pos = '-'
         self.__current_pos = pos
         # SWR
-        self.__swr = '_._'
+        self.__auto_swr = '_._'
+        self.__man_swr = '_._'
+        
+        # Create a relay instance
+        self.__relay = pirelay.Relay(ANT_RLY)
+        # Default to TX side
+        self.__relay.tx()
+        self.__relay_state = TX
         
     #=======================================================
     # PUBLIC
@@ -223,6 +231,18 @@ class UI(QMainWindow):
         
         self.statusBar.addPermanentWidget(VLine())
 
+        # Target status
+        self.tg_lbl = QLabel()
+        self.tg_lbl.setText('Target: ')
+        self.tg_lbl.setStyleSheet(LBL1STYLE)
+        self.statusBar.addPermanentWidget(self.tg_lbl)
+        self.__tg_ard = QLabel()
+        self.__tg_ard.setText('TX')
+        self.__tg_ard.setStyleSheet(LBLSTSTYLE)
+        self.statusBar.addPermanentWidget(self.__tg_ard)
+        
+        self.statusBar.addPermanentWidget(VLine())
+        
         # Activity Status
         self.st_lblact= QLabel()
         self.st_lblact.setText('Activity: ')
@@ -347,9 +367,9 @@ class UI(QMainWindow):
         swrlabel.setStyleSheet(LBL1STYLE)
         self.__autogrid.addWidget(swrlabel, 0, 2)
         swrlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__swrval = QLabel('-.-')
-        self.__swrval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
-        self.__autogrid.addWidget(self.__swrval, 0, 3)
+        self.__auto_swrval = QLabel('-.-')
+        self.__auto_swrval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        self.__autogrid.addWidget(self.__auto_swrval, 0, 3)
         
         self.__tune = QPushButton("Tune...")
         self.__tune.setStyleSheet(PBSTYLE)
@@ -367,7 +387,7 @@ class UI(QMainWindow):
         
         #----------------------------------
         # Target select
-        relaylabel = QLabel('Select TX/VNA')
+        relaylabel = QLabel('Target (TX/VNA)')
         relaylabel.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(relaylabel, 0, 0)
         self.__relay_sel = QComboBox()
@@ -376,6 +396,7 @@ class UI(QMainWindow):
         self.__relay_sel.addItem("TX")
         self.__relay_sel.addItem("VNA")
         self.__mangrid.addWidget(self.__relay_sel, 0, 2, 1, 1)
+        self.__relay_sel.currentIndexChanged.connect(self.__relay_change)
         
         #----------------------------------
         # Get current
@@ -494,6 +515,10 @@ class UI(QMainWindow):
         self.__api.abort_activity()
     
     def __do_cal(self):
+        self.__relay.vna()
+        self.__tg_ard.setText(VNA)
+        self.__relay_sel.setCurrentText(VNA)
+        self.__relay_state = VNA
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
         self.__current_activity = CALIBRATE
@@ -512,6 +537,10 @@ class UI(QMainWindow):
                 self.__loop_status[2] = True
         
     def __do_tune(self):
+        self.__relay.vna()
+        self.__tg_ard.setText(VNA)
+        self.__relay_sel.setCurrentText(VNA)
+        self.__relay_state = VNA
         loop = int(self.__loop_sel.currentText())
         freq = float(self.freqtxt.displayText())
         self.__st_act.setText(TUNE)
@@ -520,11 +549,32 @@ class UI(QMainWindow):
         self.__long_running = True
         self.__api.move_to_freq(loop, freq)
     
+    def __relay_change(self):
+        target = self.__relay_sel.currentText()
+        if target == TX:
+            self.__relay.tx()
+            self.__tg_ard.setText(TX)
+            self.__relay_sel.setCurrentText(TX)
+            self.__relay_state = TX
+        else:
+            self.__relay.vna()
+            self.__tg_ard.setText(VNA)
+            self.__relay_sel.setCurrentText(VNA)
+            self.__relay_state = VNA
+        
     def __do_res(self):
+        self.__relay.vna()
+        self.__tg_ard.setText(VNA)
+        self.__relay_sel.setCurrentText(VNA)
+        self.__relay_state = VNA
         self.__current_activity = RESONANCE
         self.__st_act.setText(RESONANCE)
         self.__activity_timer = RES_TIMEOUT
-        self.__api.get_current_res()
+        r, val = self.__api.get_current_res(self.__selected_loop)
+        if r:
+            self.__freqval.setText(str(round(val[0], 2)))
+            self.__swrres.setText(str(val[1]))
+        self.__current_activity = NONE
     
     def __do_pos(self):
         self.__current_activity = MOVETO
@@ -595,6 +645,14 @@ class UI(QMainWindow):
                 self.__central_widget.setEnabled(True)
                 self.__long_running = False
                 self.__abort.setStyleSheet(ABORTSTYLEOFF)
+                if self.__relay_state == TX:
+                    self.__relay.tx()
+                    self.__tg_ard.setText(TX)
+                    self.__relay_sel.setCurrentText(TX)
+                elif self.__relay_state == VNA:
+                    self.__relay.vna()
+                    self.__tg_ard.setText(VNA)
+                    self.__relay_sel.setCurrentText(VNA)
             self.__st_act.setText(self.__current_activity)
         else:
             # Not online so we can't do anything except exit
@@ -616,7 +674,7 @@ class UI(QMainWindow):
             self.__minvalue.setText(str(loop[1]))
             self.__maxvalue.setText(str(loop[0]))
         # Update SWR
-        self.__swrval.setText(str(self.__swr))
+        self.__auto_swrval.setText(str(self.__auto_swr))
             
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)

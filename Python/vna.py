@@ -24,6 +24,7 @@
 # Python imports
 import os, sys
 import subprocess
+import random
 
 # Application imports
 from defs import *
@@ -52,7 +53,7 @@ class VNA:
         
         # Create decoder
         self.__dec = decode.Decode()
-    
+        
     def fres(self, startFreq, stopFreq, hint = HOME):
         """
         Sweep between start and end frequencies.
@@ -70,6 +71,9 @@ class VNA:
             elif hint == MAX:
                 self.__current_step = 1
                 return True, self.__low_f
+            elif hint == RANDOM:
+                i = random.randint(1,STEPS)
+                return True, self.__high_f - (i * self.__inc_f)
             else:
                 if self.__current_step >= STEPS:
                     print ("Steps %d are running off end. Restarting at 1." % (self.__current_step))
@@ -87,7 +91,7 @@ class VNA:
             if self.__sweep(startFreq, stopFreq, steps):
                 return True, self.__dec.decode_fres()
             else:
-                return False, []
+                return False, None
     
     def fswr(self, freq):
         
