@@ -30,7 +30,7 @@ import random
 from defs import *
 import decode
 
-SIMULATE = True
+SIMULATE = False
 
 """
     Perform a sweep using the command line utility from vna/j.
@@ -47,7 +47,7 @@ class VNA:
             # These are just test values
             self.__low_f = 3.0          # Lowest frequency which is at max extension
             self.__high_f = 12.0        # Highest frequency which is at home position
-            self.__inc_f = (self.__high_f - self.__low_f)/STEPS # Freq increment on each step
+            self.__inc_f = (self.__high_f - self.__low_f)/ACT_STEPS # Freq increment on each step
             self.__current_step = 1
             self.__swr = 1.0            # Always return 1.0
         
@@ -65,17 +65,17 @@ class VNA:
             optional hint -- MIN, MAX, MID (used in simulation)
         """
         if SIMULATE:
-            if hint == HOME:
+            if hint == VNA_HOME:
                 self.__current_step = 1
                 return True, self.__high_f
-            elif hint == MAX:
+            elif hint == VNA_MAX:
                 self.__current_step = 1
                 return True, self.__low_f
-            elif hint == RANDOM:
-                i = random.randint(1,STEPS)
+            elif hint == VNA_RANDOM:
+                i = random.randint(1,ACT_STEPS)
                 return True, self.__high_f - (i * self.__inc_f)
             else:
-                if self.__current_step >= STEPS:
+                if self.__current_step >= ACT_STEPS:
                     print ("Steps %d are running off end. Restarting at 1." % (self.__current_step))
                     self.__current_step = 1
                 else:
@@ -94,7 +94,6 @@ class VNA:
                 return False, None
     
     def fswr(self, freq):
-        
         """
         Do spot frequency
         Target is to return SWR at the given frequency
@@ -144,6 +143,13 @@ class VNA:
         """
         
         try:
+            if sys.platform == 'win32':
+                exportPath = WIN_EXPORT_PATH
+            elif sys.platform == 'linux':
+                exportPath = LIN_EXPORT_PATH
+            else:
+                print('Unsupported platform %s' % (sys.platform))
+                return
             params = []
             params.append('java')
             params.append('-Dfstart=%s' % (startFreq))
@@ -154,11 +160,12 @@ class VNA:
             params.append('-Dcalfile=%s' % (CAL_FILE))
             params.append('-Dscanmode=%s' % (SCAN_MODE))
             params.append('-Dexports=%s' % (EXPORTS))
-            params.append('-DexportDirectory=%s' % (EXPORT_PATH))
+            params.append('-DexportDirectory=%s' % (exportPath))
             params.append('-DexportFilename=%s' % (EXPORT_FILENAME))
             params.append('-jar')
             params.append('%s' % (JAR))
             proc = subprocess.Popen(params)
+            print('Waiting for finish')
             proc.wait()
             print('Scan complete')
             return True

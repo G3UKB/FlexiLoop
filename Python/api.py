@@ -93,12 +93,12 @@ class API:
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, STEPS]))
+        self.__c_q.put(('calibrate', [loop, ACT_STEPS]))
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):
         print("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('re_calibrate_loop', [loop, STEPS]))
+        self.__c_q.put(('re_calibrate_loop', [loop, ACT_STEPS]))
         
     # Get position as a %age of full travel
     def get_pos(self):
@@ -110,11 +110,11 @@ class API:
         self.__tune.do_one_pass(loop, freq)
     
     def get_current_res(self, loop):
-        self.__relay.vna()
+        # Work out where we are and do a limited frequency scan to cut down the time lag.
         cal = model_for_loop(self.__model, loop)
         highf = cal[0]
         lowf = cal[1]
-        rf, f = self.__vna.fres(int(lowf*1000000), int(highf*1000000), RANDOM)
+        rf, f = self.__vna.fres(int(lowf*1000000), int(highf*1000000), VNA_RANDOM)
         rs, swr = self.__vna.fswr(f)
         if rf and rs:
             return True, (f, swr)

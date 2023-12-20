@@ -246,7 +246,7 @@ class Calibrate(threading.Thread):
             return False, None, None
         self.__event.clear()
         # Get res freq
-        r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = MAX)
+        r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = VNA_MAX)
         if not r:
             print("Failed to get max frequency!")
             return False, "Failed to get max frequency!", []
@@ -261,7 +261,7 @@ class Calibrate(threading.Thread):
             return False, None, None
         self.__event.clear()
         # get res freq
-        r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = HOME)
+        r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = VNA_HOME)
         if not r:
             print("Failed to get min frequency!")
             return False, "Failed to get min frequency!", []
@@ -295,7 +295,7 @@ class Calibrate(threading.Thread):
                 return False, None, None
             self.__event.clear()
         
-            r, f = self.__vna.fres(fhome, fmax, hint = MID)
+            r, f = self.__vna.fres(fhome, fmax, hint = VNA_MID)
             if not r:
                 print("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m

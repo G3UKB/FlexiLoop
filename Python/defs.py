@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 #
 # defs.py
+#
+# Definitions for Flexi-Loop application
 # 
 # Copyright (C) 2023 by G3UKB Bob Cowdery
 # This program is free software; you can redistribute it and/or modify
@@ -22,9 +24,17 @@
 #
 
 #=======================================================================
-# Model defs
+# Calibration
+#======================================
 MIN_FREQ = 1800000
 MAX_FREQ = 30000000
+
+#=======================================================================
+# Model
+#======================================
+# Configutation
+#
+# Main section headers
 CONFIG = 'CONFIG'
 STATE = 'STATE'
 # Serial section
@@ -33,30 +43,34 @@ PORT = 'PORT'
 # Calibration section
 CAL = 'CAL'
 HOME = 'HOME'
-MAX = 'MAX'
-MID = 'MID'
-RANDOM = 'RANDOM'
-LOOP_1 = 1
-LOOP_2 = 2
-LOOP_3 = 3
-STEPS = 10
 CAL_L1 = 'CAL_L1'
 CAL_L2 = 'CAL_L2'
 CAL_L3 = 'CAL_L3'
-# State section
+#======================================
+# State
+#
+# Windows section
 WINDOWS = 'WINDOWS'
 MAIN_WIN = 'MAIN_WIN'
 CONFIG_WIN = 'CONFIG_WIN'
 MEM_WIN = 'MEM_WIN'
+# Arduino section
 ARDUINO = 'ARDUINO'
 ONLINE = 'ONLINE'
 ACT_POS = 'ACT_POS'
 
 #=======================================================================
-# UI
+# User Interface, Calibrate and Tuning
+#
+# Path to configuration file
 CONFIG_PATH = '../config/auto_tuner.cfg'
+# Run idle processing every IDLE_TICKER ms
 IDLE_TICKER = 250
-HEARTBEAT_TIMER = 10 # 10 * IDLE_TICKER = 1s ; heartbeats should be every 0.5s
+
+# Loop selection
+LOOP_1 = 1
+LOOP_2 = 2
+LOOP_3 = 3
 
 # Current activities
 NONE = 'None'
@@ -72,22 +86,67 @@ MSREV = 'msRev'
 MOVETO = 'MoveTo'
 TUNE = 'Tune'
 RESONANCE = 'Resonance'
-
+# Pseudo activities
 STATUS = 'Status'
 ABORT = 'Abort'
 
+# Timeouts for the long running operations in seconds
+# Adjusted for the idle tick rate to number of idle passes
 CALIBRATE_TIMEOUT = 120 * (1000/250)
 TUNE_TIMEOUT = 120 * (1000/250)
 RES_TIMEOUT = 60 * (1000/250)
 MOVE_TIMEOUT = 30 * (1000/250)
 SHORT_TIMEOUT = 2 * (1000/250)
 
-#=======================================================================
-# General
-FWD = 'FWD'
-REV = 'REV'
-ANT_RLY = 'RELAY1'
+# Target selection dependent on relay on/off
 TX = 'TX'
 VNA = 'VNA'
+# Relay used on 4 relay board
+ANT_RLY = 'RELAY1'
+
+# Hints to vna.py for simulation mode
+VNA_HOME = 'HOME'
+VNA_MAX = 'MAX'
+VNA_MID = 'MID'
+VNA_RANDOM = 'RANDOM'
+
+# Number of steps for calibration
+# Resonant frequency and feedback value at each step forms part of calibration
+ACT_STEPS = 10
+
+# Direction of actuator motion
+FWD = 'FWD'
+REV = 'REV'
+
+#=======================================================================
+# VNA parameters
+#
+
+# Types
+RQST_FRES = 'fres'
+RQST_FSWR = 'fswr'
+RQST_SCAN = 'scan'
+
+# Driver
+DRIVER_ID = 20  # MiniVNA Tiny
+#DRIVER_PORT = 'ttyUSB0'
+DRIVER_PORT = 'COM4'
+
+# Scanner defs
+#CAL_FILE = '/home/looppi/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal'
+CAL_FILE = '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal'
+SCAN_MODE = 'REFL'
+EXPORTS = 'csv'
+EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}'
+#JAR = '/home/looppi/Projects/MiniVNA/VNAJ/vnaJ-hl.3.3.3.jar'
+JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar'
+
+# Decoder defs
+LIN_EXPORT_PATH = '/home/looppi/vnaJ.3.3/export'
+WIN_EXPORT_PATH = '../VNAJ/vnaJ.3.3/export'
+DEC_FREQ = 0
+DEC_SWR = 4
+
+
 
 
