@@ -80,6 +80,7 @@ class API:
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
+        self.__absolute_pos = 0
     
     # Termination
     def terminate(self):
@@ -111,11 +112,28 @@ class API:
     
     def get_current_res(self, loop):
         # Work out where we are and do a limited frequency scan to cut down the time lag.
+        pos = self.__absolute_pos
+        # Find the two calibration points this pos falls between
         cal = model_for_loop(self.__model, loop)
-        highf = cal[0]
-        lowf = cal[1]
+        index = 0
+        idx_low = 0
+        idx_high = 0
+        # The list is in high to low frequency order as home is fully retracted
+        for ft in cal[2]:
+            if ft[0] < pos:
+                # Lower than target
+                idx_high = index-1 
+                idx_low = index
+            else:
+                index += 1
+        # Get the corresponding frequencies
+        highf = cal[2][idx_high][1]
+        lowf = cal[1][idx_low][1]
+        # Get the resonant frequency between the given frequencies
         rf, f = self.__vna.fres(int(lowf*1000000), int(highf*1000000), VNA_RANDOM)
+        # and the SWR at that frequency
         rs, swr = self.__vna.fswr(f)
+        # Return result
         if rf and rs:
             return True, (f, swr)
         else:
@@ -162,6 +180,8 @@ class API:
                 if VERB: print("Failed to get position as limits are not set!")
                 self.__cb((name, (False, "Failed to get position as limits are not set!", [])))
             else:
+                # We need to save the absolute pos not the %age pos
+                self.__absolute_pos = args[0]
                 span = maximum - home
                 offset = args[0] - home
                 self.__cb((name, (True, "", [str(int((offset/span)*100))])))
