@@ -137,11 +137,11 @@ class API:
         highf = cal[2][idx_low][1]
         
         # Get the resonant frequency between the given frequencies
-        rf, f = self.__vna.fres(int(lowf*1000000), int(highf*1000000), VNA_RANDOM)
+        rf, [(f,swr)] = self.__vna.fres(int(lowf*1000000), int(highf*1000000), VNA_RANDOM)
         # and the SWR at that frequency
-        rs, swr = self.__vna.fswr(f)
+        #rs, swr = self.__vna.fswr(f)
         # Return result
-        if rf and rs:
+        if rf:
             return True, (f, swr)
         else:
             return False, ()

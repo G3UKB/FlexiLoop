@@ -570,10 +570,10 @@ class UI(QMainWindow):
         self.__current_activity = RESONANCE
         self.__st_act.setText(RESONANCE)
         self.__activity_timer = RES_TIMEOUT
-        r, val = self.__api.get_current_res(self.__selected_loop)
+        r, (f,swr) = self.__api.get_current_res(self.__selected_loop)
         if r:
-            self.__freqval.setText(str(round(val[0], 2)))
-            self.__swrres.setText(str(val[1]))
+            self.__freqval.setText(f)
+            self.__swrres.setText(swr)
         self.__current_activity = NONE
     
     def __do_pos(self):
