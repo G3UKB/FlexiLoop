@@ -64,6 +64,7 @@ class VNA:
             stopFreq    --  stop freq in Hz
             optional hint -- MIN, MAX, MID (used in simulation)
         """
+        
         if SIMULATE:
             if hint == VNA_HOME:
                 self.__current_step = 1
@@ -92,6 +93,8 @@ class VNA:
                 return True, self.__dec.decode_fres()
             else:
                 return False, None
+        else:
+            return False, None
     
     def fswr(self, freq):
         """

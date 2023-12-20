@@ -80,7 +80,7 @@ class API:
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
-        self.__absolute_pos = 0
+        self.__absolute_pos = -1
     
     # Termination
     def terminate(self):
@@ -112,23 +112,30 @@ class API:
     
     def get_current_res(self, loop):
         # Work out where we are and do a limited frequency scan to cut down the time lag.
+        if self.__absolute_pos == -1:
+            self.get_pos()
+            while self.__absolute_pos == -1:
+                sleep(0.1)
         pos = self.__absolute_pos
+
         # Find the two calibration points this pos falls between
         cal = model_for_loop(self.__model, loop)
         index = 0
         idx_low = 0
         idx_high = 0
         # The list is in high to low frequency order as home is fully retracted
-        for ft in cal[2]:
-            if ft[0] < pos:
+        while index < len(cal[2]):
+            if cal[2][index][0] < pos and cal[2][index+1][0] > pos:
                 # Lower than target
-                idx_high = index-1 
+                idx_high = index+1 
                 idx_low = index
+                break
             else:
                 index += 1
         # Get the corresponding frequencies
-        highf = cal[2][idx_high][1]
-        lowf = cal[1][idx_low][1]
+        lowf = cal[2][idx_high][1]
+        highf = cal[2][idx_low][1]
+        
         # Get the resonant frequency between the given frequencies
         rf, f = self.__vna.fres(int(lowf*1000000), int(highf*1000000), VNA_RANDOM)
         # and the SWR at that frequency
