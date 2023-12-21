@@ -128,7 +128,7 @@ class Tune(threading.Thread):
             self.__event.clear()
             
             # Stage 2 tweak SWR
-            r, swr = self.__vna.fswr(self.__freq)
+            r, [(f, swr)] = self.__vna.fswr(self.__freq)
             last_swr = swr
             try_for = 10
             dir = FWD

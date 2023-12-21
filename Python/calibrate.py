@@ -245,8 +245,8 @@ class Calibrate(threading.Thread):
             self.__event.clear()
             return False, None, None
         self.__event.clear()
-        # Get res freq
-        r, fmax = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = VNA_MAX)
+        # Get res freq approx as its a full sweep takes a while
+        r, [(fmax, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_MAX)
         if not r:
             print("Failed to get max frequency!")
             return False, "Failed to get max frequency!", []
@@ -261,7 +261,7 @@ class Calibrate(threading.Thread):
             return False, None, None
         self.__event.clear()
         # get res freq
-        r, fhome = self.__vna.fres(MIN_FREQ, MAX_FREQ, hint = VNA_HOME)
+        r, [(fhome, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_HOME)
         if not r:
             print("Failed to get min frequency!")
             return False, "Failed to get min frequency!", []
@@ -279,11 +279,17 @@ class Calibrate(threading.Thread):
         #maximum = 900
         span = maximum - home
         inc = span/steps
+        # Calc approx freq inc for each step
+        fspanhz = int((fhome-fmax) * 1000000)
+        fsteps = fspanhz/steps
+        nextf_approx = home
         
         # Add the home position
         m[2].append([int(home), fhome])
+        
         # Add intermediate positions
         next_inc = home + inc
+        counter = 0
         while next_inc < maximum:
             # Comment out if motor not running
             self.__comms_q.put(('move', [next_inc]))
@@ -295,12 +301,20 @@ class Calibrate(threading.Thread):
                 return False, None, None
             self.__event.clear()
         
-            r, f = self.__vna.fres(fhome, fmax, hint = VNA_MID)
+            # We don't want to do a full frequency scan for this loop on every point as it would take for ever.
+            # We need to split the scan into chunks
+            # The chunk should encompass each resonant frequency at the offset.
+            fhigh = fhome - (nextf_approx * counter) + 10000
+            flow = fhome - (nextf_approx * (counter+1)) - 10000
+            # Need a little more accuracy so every 1KHz should suffice
+            r, [(f, swr)] = self.__vna.fres(flow, fhigh, INC_1K, hint = VNA_MID)
             if not r:
                 print("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m
             m[2].append([int(next_inc), f])
             next_inc += inc
+            counter += 1
+            
         # Add the max position
         m[2].append([int(maximum), fmax])
         

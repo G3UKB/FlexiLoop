@@ -54,7 +54,7 @@ class VNA:
         # Create decoder
         self.__dec = decode.Decode()
         
-    def fres(self, startFreq, stopFreq, hint = HOME):
+    def fres(self, startFreq, stopFreq, incFreq, hint = HOME):
         """
         Sweep between start and end frequencies.
         Target is to determine resonant frequency.
@@ -62,19 +62,20 @@ class VNA:
         Arguments:
             startFreq   --  start freq in Hz
             stopFreq    --  stop freq in Hz
+            incFreq     --  take reading every incFreq in Hz 
             optional hint -- MIN, MAX, MID (used in simulation)
         """
         
         if SIMULATE:
             if hint == VNA_HOME:
                 self.__current_step = 1
-                return True, self.__high_f
+                return True, [(self.__high_f, self.__swr)]
             elif hint == VNA_MAX:
                 self.__current_step = 1
-                return True, self.__low_f
+                return True, [(self.__low_f, self.__swr)]
             elif hint == VNA_RANDOM:
                 i = random.randint(1,ACT_STEPS)
-                return True, self.__high_f - (i * self.__inc_f)
+                return True, [(self.__high_f - (i * self.__inc_f), self.__swr)]
             else:
                 if self.__current_step >= ACT_STEPS:
                     print ("Steps %d are running off end. Restarting at 1." % (self.__current_step))
@@ -83,18 +84,18 @@ class VNA:
                     # We step from high to low frequency
                     f_now = self.__high_f - (self.__current_step * self.__inc_f)
                     self.__current_step += 1
-                    return True, round(f_now, 2)
+                    return True, [(round(f_now, 2), self.__swr)]
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go
-            # Step every 250Hz
-            steps = int((stopFreq - startFreq)/250)
+            # Calc number of steps
+            steps = int((stopFreq - startFreq)/incFreq)
             if self.__sweep(startFreq, stopFreq, steps):
                 return True, self.__dec.decode_fres()
             else:
-                return False, None
+                return False, []
         else:
-            return False, None
+            return False, []
     
     def fswr(self, freq):
         """
@@ -105,7 +106,7 @@ class VNA:
             freq   --  freq in Hz
         """
         if SIMULATE:
-            return (freq, self.__swr)
+            return True, [(freq, self.__swr)]
         
         # Minimum separation is 1KHz and minimum steps is 2
         if self.__sweep(freq, freq + 1000, 2):
@@ -113,7 +114,7 @@ class VNA:
         else:
             return False, []
     
-    def scan(self, startFreq, stopFreq):
+    def scan(self, startFreq, stopFreq, incFreq):
         
         """
         Sweep between start and end frequencies.
@@ -122,12 +123,13 @@ class VNA:
         Arguments:
             startFreq   --  start freq in Hz
             stopFreq    --  stop freq in Hz
+            incFreq     --  take reading every incFreq in Hz 
         """
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go
             # Step every 10KHz
-            steps = int((stopFreq - startFreq)/10000)
+            steps = int((stopFreq - startFreq)/incFreq)
             if self.__sweep(startFreq, stopFreq, steps):
                 return True, self.__dec.decode_scan()
             else:
@@ -168,7 +170,6 @@ class VNA:
             params.append('-jar')
             params.append('%s' % (JAR))
             proc = subprocess.Popen(params)
-            print('Waiting for finish')
             proc.wait()
             print('Scan complete')
             return True
@@ -177,12 +178,13 @@ class VNA:
             print('Exception %s' % (str(e)))
             return False
 
+# =======================================================================
 # Testing     
 if __name__ == '__main__':
     vna = VNA()
     startf = int(sys.argv[1])
     stopf = int(sys.argv[2])
     f = int(sys.argv[3])
-    vna.fres(startf, stopf)
+    vna.fres(startf, stopf, 1000)
     vna.fswr(f)
     

@@ -127,6 +127,13 @@ RQST_FRES = 'fres'
 RQST_FSWR = 'fswr'
 RQST_SCAN = 'scan'
 
+# Freq inc between readings in Hz
+INC_10K = 10000
+INC_5K = 5000
+INC_1K = 1000
+INC_500 = 500
+INC_250 = 250
+
 # Driver
 DRIVER_ID = 20  # MiniVNA Tiny
 #DRIVER_PORT = 'ttyUSB0'
