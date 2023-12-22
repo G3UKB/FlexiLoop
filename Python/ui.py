@@ -609,9 +609,17 @@ class UI(QMainWindow):
         pass
     
     def __do_run_fwd(self):
+        self.__current_activity = RUNFWD
+        self.__st_act.setText(RUNFWD)
+        self.__activity_timer = MOVE_TIMEOUT
+        self.__long_running = True
         self.__api.free_fwd()
     
     def __do_stop_act(self):
+        self.__current_activity = RUNREV
+        self.__st_act.setText(RUNREV)
+        self.__activity_timer = MOVE_TIMEOUT
+        self.__long_running = True
         self.__api.free_rev()
     
     def __do_run_rev(self):

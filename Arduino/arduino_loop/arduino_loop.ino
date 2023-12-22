@@ -161,17 +161,17 @@ void process(String data) {
 
     case 'c':
       move_fwd();
-      Serial.print("Fwd;");
+      Serial.print("RunFwd;");
       break;
 
     case 'd':
       move_rev();
-      Serial.print("Rev;");
+      Serial.print("RunRev;");
       break;
 
     case 'e':
-    stop_move();
-    Serial.print("Stop;");
+      stop_move();
+      Serial.print("StopRun;");
       break;
 
     default:
@@ -326,6 +326,7 @@ int move_fwd() {
     Serial.print(get_feedback_value());
     Serial.print(";");
   }
+  return TRUE;
 }
 
 int move_rev() {
@@ -339,6 +340,7 @@ int move_rev() {
     Serial.print(get_feedback_value());
     Serial.print(";");
   }
+  return TRUE;
 }
 
 void stop_move() {
