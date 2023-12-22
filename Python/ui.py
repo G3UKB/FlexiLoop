@@ -39,7 +39,8 @@ import api
 import pirelay
 
 # Styles
-BOXSTYLE = "QGroupBox {color: rgb(65,62,56); font: 16px}"
+#BOXSTYLE = "QGroupBox {color: rgb(65,62,56);  border: 1px solid darkgrey; font: 16px}"
+#BOXSTYLE = "QGroupBox {color: rgb(65,62,56); font: 16px}"
 PBSTYLE = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
 DDSTYLE = "QComboBox {background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
 SBSTYLE = "QSpinBox {min-height: 20px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
@@ -56,7 +57,7 @@ class VLine(QFrame):
     def __init__(self):
         super(VLine, self).__init__()
         self.setFrameShape(self.VLine|self.Sunken)
-        self.setStyleSheet("background-color %s" % 'black')
+        self.setStyleSheet("background-color: rgb(97,97,97);")
         
 class UI(QMainWindow):
     
@@ -287,7 +288,7 @@ class UI(QMainWindow):
         # Loop area
         self.__loopgrid = QGridLayout()
         w1 = QGroupBox('Loop')
-        w1.setStyleSheet(BOXSTYLE)
+        #w1.setStyleSheet(BOXSTYLE)
         w1.setLayout(self.__loopgrid)
         self.__grid.addWidget(w1, 0,0,1,4)
         
@@ -299,7 +300,7 @@ class UI(QMainWindow):
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
-        self.__loop_sel.setMinimumHeight(30)
+        self.__loop_sel.setMinimumHeight(20)
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
@@ -348,7 +349,8 @@ class UI(QMainWindow):
         # Auto area
         self.__autogrid = QGridLayout()
         w2 = QGroupBox('Auto')
-        w2.setStyleSheet(BOXSTYLE)
+        #w2.setStyleSheet(BOXSTYLE)
+        #w2.setStyleSheet("QGroupBox::title {padding 0 3 px }")
         w2.setLayout(self.__autogrid)
         self.__grid.addWidget(w2, 1,0,1,4)
         self.__autogrid.setColumnMinimumWidth(5,300)
@@ -381,22 +383,63 @@ class UI(QMainWindow):
         # Manual area
         self.__mangrid = QGridLayout()
         w3 = QGroupBox('Manual')
-        w3.setStyleSheet(BOXSTYLE)
+        #w3.setStyleSheet(BOXSTYLE)
         w3.setLayout(self.__mangrid)
         self.__grid.addWidget(w3, 2,0,1,4)
+        
+        # Sub grid
+        self.__subgrid = QGridLayout()
+        w4 = QGroupBox()
+        #w4.setStyleSheet(BOXSTYLE)
+        w4.setLayout(self.__subgrid)
+        self.__mangrid.addWidget(w4, 0,0,1,6)
         
         #----------------------------------
         # Target select
         relaylabel = QLabel('Target (TX/VNA)')
         relaylabel.setStyleSheet(LBL1STYLE)
-        self.__mangrid.addWidget(relaylabel, 0, 0)
+        self.__subgrid.addWidget(relaylabel, 0, 0)
         self.__relay_sel = QComboBox()
         self.__relay_sel.setStyleSheet(DDSTYLE)
-        self.__relay_sel.setMinimumHeight(30)
+        self.__relay_sel.setMinimumHeight(20)
+        self.__relay_sel.setMaximumWidth(70)
+        self.__relay_sel.setMinimumWidth(70)
         self.__relay_sel.addItem("TX")
         self.__relay_sel.addItem("VNA")
-        self.__mangrid.addWidget(self.__relay_sel, 0, 2, 1, 1)
+        self.__subgrid.addWidget(self.__relay_sel, 0, 1)
         self.__relay_sel.currentIndexChanged.connect(self.__relay_change)
+        
+        speedlabel = QLabel('Speed')
+        speedlabel.setStyleSheet(LBL1STYLE)
+        self.__subgrid.addWidget(speedlabel, 0, 2)
+        self.__speed_sel = QComboBox()
+        self.__speed_sel.setStyleSheet(DDSTYLE)
+        self.__speed_sel.setMinimumHeight(20)
+        self.__speed_sel.setMaximumWidth(70)
+        self.__speed_sel.setMinimumWidth(70)
+        self.__speed_sel.addItem("Slow")
+        self.__speed_sel.addItem("Med")
+        self.__speed_sel.addItem("Fast")
+        self.__subgrid.addWidget(self.__speed_sel, 0, 3)
+        self.__speed_sel.currentIndexChanged.connect(self.__speed_change)
+        
+        self.__runfwd = QPushButton("Run Fwd")
+        self.__runfwd.setStyleSheet(PBSTYLE)
+        self.__runfwd.setToolTip('Run actuator forward...')
+        self.__subgrid.addWidget(self.__runfwd, 0,4)
+        self.__runfwd.clicked.connect(self.__do_run_fwd)
+        
+        self.__stopact = QPushButton("Stop")
+        self.__stopact.setStyleSheet(PBSTYLE)
+        self.__stopact.setToolTip('Stop actuator')
+        self.__subgrid.addWidget(self.__stopact, 0,5)
+        self.__stopact.clicked.connect(self.__do_stop_act)
+        
+        self.__runrev = QPushButton("Run Rev")
+        self.__runrev.setStyleSheet(PBSTYLE)
+        self.__runrev.setToolTip('Run actuator reverse...')
+        self.__subgrid.addWidget(self.__runrev, 0,6)
+        self.__runrev.clicked.connect(self.__do_run_rev)
         
         #----------------------------------
         # Get current
@@ -406,21 +449,21 @@ class UI(QMainWindow):
         self.__swrres = QLabel('-.-')
         self.__swrres.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__swrres.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__swrres, 1, 2)
+        self.__mangrid.addWidget(self.__swrres, 1, 1)
         
         res2label = QLabel('Freq')
         res2label.setStyleSheet(LBL1STYLE)
-        res2label.setAlignment(QtCore.Qt.AlignCenter)
-        self.__mangrid.addWidget(res2label, 1, 3)
+        #res2label.setAlignment(QtCore.Qt.AlignCenter)
+        self.__mangrid.addWidget(res2label, 1, 2)
         self.__freqval = QLabel('-.-')
         self.__freqval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__freqval.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__freqval, 1, 4)
+        self.__mangrid.addWidget(self.__freqval, 1, 3)
         
         self.__getres = QPushButton("Get Current")
         self.__getres.setStyleSheet(PBSTYLE)
         self.__getres.setToolTip('Get current SWR and Frequency...')
-        self.__mangrid.addWidget(self.__getres, 1,5)
+        self.__mangrid.addWidget(self.__getres, 1,4)
         self.__getres.clicked.connect(self.__do_res)
         
         #----------------------------------
@@ -434,25 +477,25 @@ class UI(QMainWindow):
         self.movetxt.setRange(0,100)
         self.movetxt.setValue(50)
         self.movetxt.setMaximumWidth(80)
-        self.__mangrid.addWidget(self.movetxt, 2, 2)
+        self.__mangrid.addWidget(self.movetxt, 2, 1)
         
         self.__movepos = QPushButton("Move")
         self.__movepos.setStyleSheet(PBSTYLE)
         self.__movepos.setToolTip('Move to given position 0-100%...')
-        self.__mangrid.addWidget(self.__movepos, 2,3)
+        self.__mangrid.addWidget(self.__movepos, 2,2)
         self.__movepos.clicked.connect(self.__do_pos)
         
         curr1label = QLabel('Current Pos')
         curr1label.setStyleSheet(LBL1STYLE)
-        self.__mangrid.addWidget(curr1label, 2, 4)
+        self.__mangrid.addWidget(curr1label, 2, 3)
         self.__currpos = QLabel('-')
         self.__currpos.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__currpos.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__currpos, 2, 5)
+        self.__mangrid.addWidget(self.__currpos, 2, 4)
         
         #----------------------------------
         # Increment
-        inclabel = QLabel('Increment (ms)')
+        inclabel = QLabel('Inc (ms)')
         inclabel.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(inclabel, 3, 0)
         self.inctxt = QSpinBox()
@@ -461,30 +504,30 @@ class UI(QMainWindow):
         self.inctxt.setRange(0,1000)
         self.inctxt.setValue(500)
         self.inctxt.setMaximumWidth(80)
-        self.__mangrid.addWidget(self.inctxt, 3, 2)
+        self.__mangrid.addWidget(self.inctxt, 3, 1)
         
         self.__runpos = QPushButton("Move Forward")
         self.__runpos.setStyleSheet(PBSTYLE)
         self.__runpos.setToolTip('Move forward for given ms...')
-        self.__mangrid.addWidget(self.__runpos, 3,3)
+        self.__mangrid.addWidget(self.__runpos, 3,2)
         self.__runpos.clicked.connect(self.__do_move_fwd)
         
         self.__runrev = QPushButton("Move Reverse")
         self.__runrev.setStyleSheet(PBSTYLE)
         self.__runrev.setToolTip('Move reverse for given ms...')
-        self.__mangrid.addWidget(self.__runrev, 3,4)
+        self.__mangrid.addWidget(self.__runrev, 3,3)
         self.__runrev.clicked.connect(self.__do_move_rev)
         
         self.__nudgefwd = QPushButton("Nudge Forward")
         self.__nudgefwd.setStyleSheet(PBSTYLE)
         self.__nudgefwd.setToolTip('Nudge forward...')
-        self.__mangrid.addWidget(self.__nudgefwd, 3,5)
+        self.__mangrid.addWidget(self.__nudgefwd, 3,4)
         self.__nudgefwd.clicked.connect(self.__do_nudge_fwd)
         
         self.__nudgerev = QPushButton("Nudge Reverse")
         self.__nudgerev.setStyleSheet(PBSTYLE)
         self.__nudgerev.setToolTip('Nudge reverse...')
-        self.__mangrid.addWidget(self.__nudgerev, 3,6)
+        self.__mangrid.addWidget(self.__nudgerev, 3,5)
         self.__nudgerev.clicked.connect(self.__do_nudge_rev)
         
     #=======================================================
@@ -561,7 +604,19 @@ class UI(QMainWindow):
             self.__tg_ard.setText(VNA)
             self.__relay_sel.setCurrentText(VNA)
             self.__relay_state = VNA
-        
+    
+    def __speed_change(self):
+        pass
+    
+    def __do_run_fwd(self):
+        pass
+    
+    def __do_stop_act(self):
+        pass
+    
+    def __do_run_rev(self):
+        pass
+    
     def __do_res(self):
         self.__relay.vna()
         self.__tg_ard.setText(VNA)

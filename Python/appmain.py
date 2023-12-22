@@ -25,6 +25,7 @@
 
 # Python imports
 import sys
+from pathlib import Path
 import traceback
 
 # Qt5 imports
@@ -61,6 +62,7 @@ class AppMain:
         
         # The one and only QApplication 
         self.__qt_app = QApplication(sys.argv)
+        self.__qt_app.setStyleSheet(Path('css/flexiloop.css').read_text())
         ui_inst = ui.UI(self.__model, self.__qt_app, port)
         ui_inst.run()
         # Return here when UI is closed
