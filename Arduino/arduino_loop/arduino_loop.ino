@@ -75,6 +75,9 @@ void process(String data) {
   *   o Nudge reverse : r;
   *   o Run forward for n ms : w,n[ms].;
   *   o Run reverse for n ms : v,n[ms].;
+  *   o Free run forward : c;
+  *   o Free run reverse : d;
+  *   o Stop free run : e;
   */
   char cmd = data[0];
   int ms;
@@ -154,6 +157,21 @@ void process(String data) {
       } else {
         Serial.print("Motor fault on move!;");
       }
+      break;
+
+    case 'c':
+      move_fwd();
+      Serial.print("Fwd;");
+      break;
+
+    case 'd':
+      move_rev();
+      Serial.print("Rev;");
+      break;
+
+    case 'e':
+    stop_move();
+    Serial.print("Stop;");
       break;
 
     default:
@@ -295,4 +313,34 @@ int move_ms(int ms, int pos) {
     Serial.print(";");
   }
   return TRUE;
+}
+
+int move_fwd() {
+  md.setM1Speed(current_speed);
+  if (md.getFault()) {
+    md.setM1Speed(0);
+    return FALSE;
+  } else {
+    delay (100);
+    Serial.print("Status: ");
+    Serial.print(get_feedback_value());
+    Serial.print(";");
+  }
+}
+
+int move_rev() {
+  md.setM1Speed(-current_speed);
+  if (md.getFault()) {
+    md.setM1Speed(0);
+    return FALSE;
+  } else {
+    delay (100);
+    Serial.print("Status: ");
+    Serial.print(get_feedback_value());
+    Serial.print(";");
+  }
+}
+
+void stop_move() {
+  md.setM1Speed(0);
 }

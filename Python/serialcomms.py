@@ -124,6 +124,9 @@ class SerialComms(threading.Thread):
             'nudge_rev': self.__nudge_rev,
             'run_fwd': self.__run_fwd,
             'run_rev': self.__run_rev,
+            'free_fwd': self.__free_fwd,
+            'free_rev': self.__free_rev,
+            'free_stop': self.__free_stop,
         }
         # Execute and return response
         self.__cb(disp_tab[name](args))
@@ -166,6 +169,15 @@ class SerialComms(threading.Thread):
         b += str(ms).encode('utf-8')
         b += b'.;'
         return self.send(b, 10)
+    
+    def __free_fwd(self, args):
+        return self.send(b"c;", 2)
+    
+    def __free_rev(self, args):
+        return self.send(b"d;", 2)
+    
+    def __free_stop(self, args):
+        return self.send(b"e;", 2)
     
     def __abort(self, args):
         return self.send(b"z;", 1)

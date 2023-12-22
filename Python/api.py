@@ -169,6 +169,15 @@ class API:
     
     def nudge_rev(self):
         self.__s_q.put(('nudge_rev', []))
+    
+    def free_fwd(self):
+        self.__s_q.put(('free_fwd', []))
+        
+    def free_rev(self):
+        self.__s_q.put(('free_rev', []))
+    
+    def free_stop(self):
+        self.__s_q.put(('free_stop', []))
         
     def abort_activity(self):
         self.__s_q.put(('abort', []))

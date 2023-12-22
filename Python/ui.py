@@ -49,7 +49,7 @@ LBL1STYLE = "QLabel {color: rgb(24,74,101); font: 14px}"
 LBLSTSTYLE = "QLabel {color: rgb(191,13,13); font: 14px}"
 LBLSTACSTYLE = "QLabel {color: rgb(33,82,3); font: 14px}"
 ABORTSTYLEON = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(191,13,13); color: rgb(0,0,0); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
-ABORTSTYLEOFF = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(180,180,180); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
+ABORTSTYLEOFF = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(97,97,97); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
 FRAMESTYLE = "QLabel {color: rgb(33,82,3)}"
 
 class VLine(QFrame):
@@ -609,13 +609,13 @@ class UI(QMainWindow):
         pass
     
     def __do_run_fwd(self):
-        pass
+        self.__api.free_fwd()
     
     def __do_stop_act(self):
-        pass
+        self.__api.free_rev()
     
     def __do_run_rev(self):
-        pass
+        self.__api.free_stop()
     
     def __do_res(self):
         self.__relay.vna()
