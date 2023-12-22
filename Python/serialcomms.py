@@ -171,10 +171,10 @@ class SerialComms(threading.Thread):
         return self.send(b, 10)
     
     def __free_fwd(self, args):
-        return self.send(b"c;", 2)
+        return self.send(b"c;", 30)
     
     def __free_rev(self, args):
-        return self.send(b"d;", 2)
+        return self.send(b"d;", 30)
     
     def __free_stop(self, args):
         return self.send(b"e;", 2)
