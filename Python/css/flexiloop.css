@@ -11,3 +11,85 @@ QGroupBox::title {
     left: 7px;
     padding: 0px 5px 0px 5px;
 }
+
+QPushButton {
+    min-height: 20px;
+    min-width: 100px;
+    background-color: rgb(131,124,114);
+    color: rgb(24,74,101);
+    border-style: outset;
+    border: 1px solid rgb(24,74,101);
+    border-radius: 5px;
+    font: 14px;
+}
+
+QPushButton::pressed {
+    background-color: rgb(97,97,97);
+}
+
+QPushButton#abton {
+    min-height: 20px;
+    min-width: 100px;
+    background-color: rgb(191,13,13);
+    color: rgb(0,0,0);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
+QPushButton#abtoff {
+    min-height: 20px;
+    min-width: 100px;
+    background-color: rgb(131,124,114);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
+QLabel {
+    color: rgb(24,74,101);
+    font: 14px;
+}
+
+QLabel#ston {
+    color: rgb(33,82,3);
+    font: 14px;
+}
+
+QLabel#stoff {
+    color: rgb(191,13,13);
+    font: 14px;
+}
+
+QComboBox {
+    background-color: rgb(131,124,114);
+    color: rgb(24,74,101);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
+QSpinBox {
+    min-height: 20px;
+    background-color: rgb(131,124,114);
+    color: rgb(24,74,101);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
+QLineEdit {
+    min-height: 25px;
+    background-color: rgb(131,124,114);
+    color: rgb(24,74,101);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 20px;
+
+}
