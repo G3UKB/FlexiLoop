@@ -14,6 +14,9 @@
 *   o Nudge reverse
 *   o Run forward for n ms
 *   o Run reverse for n ms
+*   o Free run forward
+*   o Free run reverse
+*   o Stop free run
 *
 */
 
@@ -98,7 +101,7 @@ void process(String data) {
     case 'x':
       if (!go_home_or_max(MAX)) {
         Serial.print("Motor fault;");
-      };
+      }
       Serial.print("Max;");
       break;
 
@@ -114,7 +117,7 @@ void process(String data) {
       } else {
         Serial.println("Motor fault on nudge!;");
       }
-    break;
+      break;
 
     case 'r':
       if (move_ms(100, REVERSE)) {
@@ -145,19 +148,6 @@ void process(String data) {
         Serial.print("Motor fault on reverse ms!;");
       }
       break;
-      
-    case 'm':
-      // Parse out the value to move to
-      int val = parse_int(data, 2);
-      
-      if (move_to_feedback_value(val)) {
-        Serial.print("MoveTo: ");
-        Serial.print(val);
-        Serial.print(';');
-      } else {
-        Serial.print("Motor fault on move!;");
-      }
-      break;
 
     case 'c':
       move_fwd();
@@ -172,6 +162,19 @@ void process(String data) {
     case 'e':
       stop_move();
       Serial.print("StopRun;");
+      break;
+
+    case 'm':
+      // Parse out the value to move to
+      int val = parse_int(data, 2);
+      
+      if (move_to_feedback_value(val)) {
+        Serial.print("MoveTo: ");
+        Serial.print(val);
+        Serial.print(';');
+      } else {
+        Serial.print("Motor fault on move!;");
+      }
       break;
 
     default:
@@ -359,6 +362,7 @@ int move_rev() {
   return TRUE;
 }
 
-void stop_move() {
+int stop_move() {
   md.setM1Speed(0);
+  return TRUE;
 }

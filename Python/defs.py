@@ -92,6 +92,8 @@ RESONANCE = 'Resonance'
 # Pseudo activities
 STATUS = 'Status'
 ABORT = 'Abort'
+STOP = 'Stop'
+NONE = 'None'
 
 # Timeouts for the long running operations in seconds
 # Adjusted for the idle tick rate to number of idle passes

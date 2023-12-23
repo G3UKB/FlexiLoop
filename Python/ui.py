@@ -423,11 +423,11 @@ class UI(QMainWindow):
         self.__subgrid.addWidget(self.__speed_sel, 0, 3)
         self.__speed_sel.currentIndexChanged.connect(self.__speed_change)
         
-        self.__runfwd = QPushButton("Run Fwd")
-        self.__runfwd.setStyleSheet(PBSTYLE)
-        self.__runfwd.setToolTip('Run actuator forward...')
-        self.__subgrid.addWidget(self.__runfwd, 0,4)
-        self.__runfwd.clicked.connect(self.__do_run_fwd)
+        self.__runrev = QPushButton("<< Run Rev")
+        self.__runrev.setStyleSheet(PBSTYLE)
+        self.__runrev.setToolTip('Run actuator reverse...')
+        self.__subgrid.addWidget(self.__runrev, 0,4)
+        self.__runrev.clicked.connect(self.__do_run_rev)
         
         self.__stopact = QPushButton("Stop")
         self.__stopact.setStyleSheet(PBSTYLE)
@@ -435,11 +435,13 @@ class UI(QMainWindow):
         self.__subgrid.addWidget(self.__stopact, 0,5)
         self.__stopact.clicked.connect(self.__do_stop_act)
         
-        self.__runrev = QPushButton("Run Rev")
-        self.__runrev.setStyleSheet(PBSTYLE)
-        self.__runrev.setToolTip('Run actuator reverse...')
-        self.__subgrid.addWidget(self.__runrev, 0,6)
-        self.__runrev.clicked.connect(self.__do_run_rev)
+        self.__runfwd = QPushButton("Run Fwd >>")
+        self.__runfwd.setStyleSheet(PBSTYLE)
+        self.__runfwd.setToolTip('Run actuator forward...')
+        self.__subgrid.addWidget(self.__runfwd, 0,6)
+        self.__runfwd.clicked.connect(self.__do_run_fwd)
+        
+        
         
         #----------------------------------
         # Get current
@@ -615,14 +617,14 @@ class UI(QMainWindow):
         self.__long_running = True
         self.__api.free_fwd()
     
-    def __do_stop_act(self):
+    def __do_run_rev(self):
         self.__current_activity = RUNREV
         self.__st_act.setText(RUNREV)
         self.__activity_timer = MOVE_TIMEOUT
         self.__long_running = True
         self.__api.free_rev()
     
-    def __do_run_rev(self):
+    def __do_stop_act(self):
         self.__api.free_stop()
     
     def __do_res(self):
@@ -701,7 +703,7 @@ class UI(QMainWindow):
             # Check activity state
             if self.__current_activity != NONE:
                 # Activity current
-                self.__central_widget.setEnabled(False)
+                #self.__central_widget.setEnabled(False)
                 if self.__long_running:
                     self.__abort.setStyleSheet(ABORTSTYLEON)
             else:

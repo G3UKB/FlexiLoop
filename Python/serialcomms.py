@@ -224,9 +224,12 @@ class SerialComms(threading.Thread):
         resp_timeout = timeout*2
         while(1):
             # Check abort
-            if self.__check_abort():
+            r = self.__check_stop_abort()
+            if r == ABORT:
                 # We return an abort instead of the given command
                 return (ABORT, (True, "User abort!", val))
+            elif r == STOP:
+                print("Stop actuator after forward or reverse command.")
             # Read a single character
             chr = self.__ser.read().decode('utf-8')
             if chr == '':
@@ -291,8 +294,7 @@ class SerialComms(threading.Thread):
             if param.isdigit():
                 val.append(int(param))
             else:
-                print("Invalid value for position (not int): ", p)
-                msg = "Invalid value for position (not int): %d" % param
+                print("Invalid value for position (not int): %d" % param)
                 success = False
         return (name, (success, msg, val))
 
@@ -300,17 +302,20 @@ class SerialComms(threading.Thread):
     # Abort?
     # This is a special command which has no response from the Arduino
     # It causes the current activity to abort i.e. actuator stops and the current command finishes
-    def __check_abort(self):
-        #print("Check abort")
+    def __check_stop_abort(self):
+        #print("Check abort or stop")
         if self.__q.qsize() > 0:
             name, args = self.__q.get()
             if name == 'abort':
                 self.__ser.write(b'z;')
                 self.__ser.flush()
-                return True
-        return False
-            
-                
+                return ABORT
+            elif name == 'free_stop':
+                self.__ser.write(b'e;')
+                self.__ser.flush()
+                return STOP 
+        return NONE
+    
 # ===============================================================
 # TESTING
 def callback(data):
