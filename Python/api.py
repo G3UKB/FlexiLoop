@@ -209,24 +209,4 @@ class API:
         # Just pass up to UI
         self.__cb(data)
     
-# ===============================================================
-# TESTING
-def api_callback(data):
-    print("API cb: ", data)
-    
-if __name__ == '__main__':
-    
-    model = persist.getSavedCfg('../config/flexi-loop.cfg')
-    if model == None:
-        print ('Configuration not found, using defaults')
-        model = model.flexi_loop_model
-            
-    api = API(model, 'COM5', api_callback)
-    api.calibrate(1)
-    sleep(15)
-    api.get_pos()
-    sleep(1)
-    api.terminate()
-    print("API test exit")
-        
         

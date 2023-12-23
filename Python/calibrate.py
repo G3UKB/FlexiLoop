@@ -356,30 +356,3 @@ class Calibrate(threading.Thread):
         else:
             if VERB: print ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
  
-# ===============================================================
-# TESTING
-def comms_callback(data):
-    print("Main comms cb: ", data)
-
-def cal_callback(data):
-    print("Main cal cb: ", data)
-    
-if __name__ == '__main__':
-    
-    s_q = queue.Queue(10)
-    comms = serialcomms.SerialComms(None, 'COM5', s_q, comms_callback)
-    comms.start()
-    # This just kicks the Arduino into life
-    s_q.put(('pos', []))
-    sleep(10)
-    
-    c_q = queue.Queue(10)
-    cal = Calibrate(comms, s_q, c_q, None, None, cal_callback)
-    cal.start()
-    c_q.put(('calibrate', [1, 10]))
-    
-    sleep(10)
-    comms.terminate()
-    comms.join()
-    cal.terminate()
-    cal.join()

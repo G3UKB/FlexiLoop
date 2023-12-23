@@ -178,13 +178,4 @@ class VNA:
             print('Exception %s' % (str(e)))
             return False
 
-# =======================================================================
-# Testing     
-if __name__ == '__main__':
-    vna = VNA()
-    startf = int(sys.argv[1])
-    stopf = int(sys.argv[2])
-    f = int(sys.argv[3])
-    vna.fres(startf, stopf, 1000)
-    vna.fswr(f)
     

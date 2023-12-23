@@ -35,6 +35,7 @@ from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGro
 
 # Application imports
 from defs import *
+from utils import *
 import api
 import pirelay
 
@@ -679,7 +680,7 @@ class UI(QMainWindow):
         # Index is zero based, loops are 1 based
         self.__selected_loop = index + 1
         # Set the min/max frequencies
-        loop = self.__model_for_loop(self.__selected_loop)
+        loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
             self.__minvalue.setText(str(loop[0]))
             self.__maxvalue.setText(str(loop[1]))
@@ -734,7 +735,7 @@ class UI(QMainWindow):
         if self.__loop_status[2]:
             self.__l3label.setStyleSheet(LBLSTACSTYLE)
         # Update min/max frequencies
-        loop = self.__model_for_loop(self.__selected_loop)
+        loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
             self.__minvalue.setText(str(loop[1]))
             self.__maxvalue.setText(str(loop[0]))
@@ -744,16 +745,4 @@ class UI(QMainWindow):
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
  
-    #=======================================================
-    # Utils
-    def __model_for_loop(self, loop):
-        
-        if loop == 1:
-            return self.__model[CONFIG][CAL][CAL_L1]
-        elif loop == 2:
-            return self.__model[CONFIG][CAL][CAL_L2]
-        elif loop == 3:
-            return self.__model[CONFIG][CAL][CAL_L3]
-        else:
-            return []
             

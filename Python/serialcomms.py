@@ -299,11 +299,11 @@ class SerialComms(threading.Thread):
         return (name, (success, msg, val))
 
     # ===============================================================
-    # Abort?
-    # This is a special command which has no response from the Arduino
-    # It causes the current activity to abort i.e. actuator stops and the current command finishes
+    # Abort is available for long running commands that maybe have multiple actions.
+    # Stop is used to stop the actuator when using manual free running fprward or reverse.
+    # An abort has no response but simply closes all current and pending activities.
+    # A stop will cause the forward or reverse commands to complete with their normal response.
     def __check_stop_abort(self):
-        #print("Check abort or stop")
         if self.__q.qsize() > 0:
             name, args = self.__q.get()
             if name == 'abort':
@@ -316,20 +316,5 @@ class SerialComms(threading.Thread):
                 return STOP 
         return NONE
     
-# ===============================================================
-# TESTING
-def callback(data):
-    print (data)
-
-if __name__ == '__main__':
-    
-    q = queue.Queue(10)
-    comms = SerialComms(None, 'COM5', q, callback)
-    comms.start()
-    q.put(('pos', []))
-    #print(q.qsize())
-    sleep(5)
-    comms.terminate()
-    comms.join()
     
         
