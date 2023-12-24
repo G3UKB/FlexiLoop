@@ -1,4 +1,12 @@
 
+QStatusBar::item {
+    border: none;
+}
+
+QFrame:maninner {
+    background-color: rgb(97,97,97);
+}
+
 QGroupBox {
     color: rgb(65,62,56);
     font: 16px;
@@ -27,7 +35,7 @@ QPushButton::pressed {
     background-color: rgb(97,97,97);
 }
 
-QPushButton#abton {
+QPushButton#abort {
     min-height: 20px;
     min-width: 100px;
     background-color: rgb(191,13,13);
@@ -38,7 +46,18 @@ QPushButton#abton {
     font: 14px;
 }
 
-QPushButton#abtoff {
+QPushButton::disabled#abort {
+    min-height: 20px;
+    min-width: 100px;
+    background-color: rgb(131,124,114);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
+QPushButton::disabled {
     min-height: 20px;
     min-width: 100px;
     background-color: rgb(131,124,114);
@@ -54,12 +73,12 @@ QLabel {
     font: 14px;
 }
 
-QLabel#ston {
+QLabel#stgreen {
     color: rgb(33,82,3);
     font: 14px;
 }
 
-QLabel#stoff {
+QLabel#stred {
     color: rgb(191,13,13);
     font: 14px;
 }

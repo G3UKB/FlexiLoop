@@ -39,6 +39,7 @@ from utils import *
 import api
 import pirelay
 
+#**stred and stgreen do not work as can't set to two object names**
 # Styles
 #BOXSTYLE = "QGroupBox {color: rgb(65,62,56);  border: 1px solid darkgrey; font: 16px}"
 #BOXSTYLE = "QGroupBox {color: rgb(65,62,56); font: 16px}"
@@ -47,17 +48,18 @@ import pirelay
 #SBSTYLE = "QSpinBox {min-height: 20px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
 #LESTYLE = "QLineEdit {min-height: 25px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 20px}"
 #LBL1STYLE = "QLabel {color: rgb(24,74,101); font: 14px}"
-LBLSTSTYLE = "QLabel {color: rgb(191,13,13); font: 14px}"
-LBLSTACSTYLE = "QLabel {color: rgb(33,82,3); font: 14px}"
-ABORTSTYLEON = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(191,13,13); color: rgb(0,0,0); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
-ABORTSTYLEOFF = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(97,97,97); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
+#LBLSTSTYLE = "QLabel {color: rgb(191,13,13); font: 14px}"
+#LBLSTACSTYLE = "QLabel {color: rgb(33,82,3); font: 14px}"
+#ABORTSTYLEON = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(191,13,13); color: rgb(0,0,0); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
+#ABORTSTYLEOFF = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(97,97,97); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
 
 class VLine(QFrame):
     # a simple VLine, like the one you get from designer
     def __init__(self):
         super(VLine, self).__init__()
         self.setFrameShape(self.VLine|self.Sunken)
-        self.setStyleSheet("background-color: rgb(97,97,97);")
+        #self.setStyleSheet("background-color: rgb(97,97,97);")
+        self.setObjectName("maninner")
         
 class UI(QMainWindow):
     
@@ -227,7 +229,9 @@ class UI(QMainWindow):
         self.statusBar.addPermanentWidget(self.st_lbl)
         self.__st_ard = QLabel()
         self.__st_ard.setText('off-line')
-        self.__st_ard.setStyleSheet(LBLSTSTYLE)
+        #self.__st_ard.setStyleSheet(LBLSTSTYLE)
+        self.__st_ard.setObjectName("stred")
+        self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
         self.statusBar.addPermanentWidget(self.__st_ard)
         
         self.statusBar.addPermanentWidget(VLine())
@@ -239,7 +243,9 @@ class UI(QMainWindow):
         self.statusBar.addPermanentWidget(self.tg_lbl)
         self.__tg_ard = QLabel()
         self.__tg_ard.setText('TX')
-        self.__tg_ard.setStyleSheet(LBLSTSTYLE)
+        #self.__tg_ard.setStyleSheet(LBLSTSTYLE)
+        self.__tg_ard.setObjectName("stred")
+        self.__tg_ard.setStyleSheet(self.__tg_ard.styleSheet())
         self.statusBar.addPermanentWidget(self.__tg_ard)
         
         self.statusBar.addPermanentWidget(VLine())
@@ -251,16 +257,21 @@ class UI(QMainWindow):
         self.statusBar.addPermanentWidget(self.st_lblact)
         self.__st_act = QLabel()
         self.__st_act.setText(NONE)
-        self.__st_act.setStyleSheet(LBLSTSTYLE)
+        #self.__st_act.setStyleSheet(LBLSTSTYLE)
+        self.__st_act.setObjectName("stred")
+        self.__st_act.setStyleSheet(self.__st_act.styleSheet())
         self.statusBar.addPermanentWidget(self.__st_act)
         
         self.statusBar.addPermanentWidget(VLine())
         
         # Buttons
         self.__abort = QPushButton("Abort!")
-        self.__abort.setStyleSheet(ABORTSTYLEOFF)
+        #self.__abort.setStyleSheet(ABORTSTYLEOFF)
+        self.__abort.setEnabled(False)
+        self.__abort.setObjectName("abort")
         self.__abort.setToolTip('Abort the current operation!')
         self.__abort.clicked.connect(self.__do_abort)
+        self.__abort.setMinimumHeight(20)
         self.statusBar.addPermanentWidget(self.__abort)
         
         self.statusBar.addPermanentWidget(VLine())
@@ -269,9 +280,10 @@ class UI(QMainWindow):
         #self.__exit.setStyleSheet(PBSTYLE)
         self.__exit.setToolTip('Close the application')
         self.__exit.clicked.connect(self.__do_close)
+        self.__exit.setMinimumHeight(20)
         self.statusBar.addPermanentWidget(self.__exit)
         
-        self.statusBar.setStyleSheet("QStatusBar::item{border: none;}")       
+        #self.statusBar.setStyleSheet("QStatusBar::item{border: none;}")       
         
     #=======================================================
     # Create all widgets
@@ -331,15 +343,21 @@ class UI(QMainWindow):
         hbox = QHBoxLayout()
         self.__l1label = QLabel('Loop-1')
         hbox.addWidget(self.__l1label)
-        self.__l1label.setStyleSheet(LBLSTSTYLE)
+        #self.__l1label.setStyleSheet(LBLSTSTYLE)
+        self.__l1label.setObjectName("stred")
+        self.__l1label.setStyleSheet(self.__l1label.styleSheet())
         self.__l1label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l2label = QLabel('Loop-2')
         hbox.addWidget(self.__l2label)
-        self.__l2label.setStyleSheet(LBLSTSTYLE)
+        #self.__l2label.setStyleSheet(LBLSTSTYLE)
+        self.__l2label.setObjectName("stred")
+        self.__l2label.setStyleSheet(self.__l2label.styleSheet())
         self.__l2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l3label = QLabel('Loop-3')
         hbox.addWidget(self.__l3label)
-        self.__l3label.setStyleSheet(LBLSTSTYLE)
+        #self.__l3label.setStyleSheet(LBLSTSTYLE)
+        self.__l3label.setObjectName("stred")
+        self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
         self.__loopgrid.addWidget(s, 1, 1, 1, 3)
@@ -693,7 +711,10 @@ class UI(QMainWindow):
         if self.__model[STATE][ARDUINO][ONLINE]:
             # on-line indicator
             self.__st_ard.setText('on-line')
-            self.__st_ard.setStyleSheet(LBLSTACSTYLE)
+            #self.__st_ard.setStyleSheet(LBLSTACSTYLE)
+            self.__st_ard.setObjectName("stgreen")
+            self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
+            
             self.__central_widget.setEnabled(True)
             
             # Update current position
@@ -704,11 +725,13 @@ class UI(QMainWindow):
                 # Activity current
                 self.__central_widget.setEnabled(False)
                 if self.__long_running:
-                    self.__abort.setStyleSheet(ABORTSTYLEON)
+                    self.__abort.setEnabled(True)
+                    #self.__abort.setStyleSheet(ABORTSTYLEON)
             else:
                 self.__central_widget.setEnabled(True)
                 self.__long_running = False
-                self.__abort.setStyleSheet(ABORTSTYLEOFF)
+                #self.__abort.setStyleSheet(ABORTSTYLEOFF)
+                self.__abort.setEnabled(False)
                 if self.__relay_state == TX:
                     self.__relay.tx()
                     self.__tg_ard.setText(TX)
@@ -723,15 +746,23 @@ class UI(QMainWindow):
             self.__central_widget.setEnabled(False)
             # off-line indicator
             self.__st_ard.setText('off-line')
-            self.__st_ard.setStyleSheet(LBLSTSTYLE)
+            #self.__st_ard.setStyleSheet(LBLSTSTYLE)
+            self.__st_ard.setObjectName("stred")
+            self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
         
         # Update loop status for configured loops
         if self.__loop_status[0]:
-            self.__l1label.setStyleSheet(LBLSTACSTYLE)
+            #self.__l1label.setStyleSheet(LBLSTACSTYLE)
+            self.__l1label.setObjectName("stgreen")
+            self.__l1label.setStyleSheet(self.__l1label.styleSheet())
         if self.__loop_status[1]:
-            self.__l2label.setStyleSheet(LBLSTACSTYLE)
+            #self.__l2label.setStyleSheet(LBLSTACSTYLE)
+            self.__l2label.setObjectName("stgreen")
+            self.__l2label.setStyleSheet(self.__l2label.styleSheet())
         if self.__loop_status[2]:
-            self.__l3label.setStyleSheet(LBLSTACSTYLE)
+            #self.__l3label.setStyleSheet(LBLSTACSTYLE)
+            self.__l3label.setObjectName("stgreen")
+            self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         # Update min/max frequencies
         loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
