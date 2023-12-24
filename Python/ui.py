@@ -321,7 +321,8 @@ class UI(QMainWindow):
         minlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue = QLabel('0.0')
         self.__minvalue.setAlignment(QtCore.Qt.AlignCenter)
-        self.__minvalue.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        #self.__minvalue.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        self.__minvalue.setObjectName("minmax")
         self.__loopgrid.addWidget(self.__minvalue, 0, 3)
         maxlabel = QLabel('Max freq')
         #maxlabel.setStyleSheet(LBL1STYLE)
@@ -329,7 +330,8 @@ class UI(QMainWindow):
         maxlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__maxvalue = QLabel('0.0')
         self.__maxvalue.setAlignment(QtCore.Qt.AlignCenter)
-        self.__maxvalue.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        #self.__maxvalue.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        self.__maxvalue.setObjectName("minmax")
         self.__loopgrid.addWidget(self.__maxvalue, 0, 5)
         
         self.__cal = QPushButton("(Re)Calibrate...")
@@ -339,7 +341,7 @@ class UI(QMainWindow):
         self.__cal.clicked.connect(self.__do_cal)
         
         s = QGroupBox('Status')
-        s.setStyleSheet("QGroupBox {color: rgb(65,62,56); font: 14px}")
+        #s.setStyleSheet("QGroupBox {color: rgb(65,62,56); font: 14px}")
         hbox = QHBoxLayout()
         self.__l1label = QLabel('Loop-1')
         hbox.addWidget(self.__l1label)
@@ -387,7 +389,8 @@ class UI(QMainWindow):
         self.__autogrid.addWidget(swrlabel, 0, 2)
         swrlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__auto_swrval = QLabel('-.-')
-        self.__auto_swrval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        #self.__auto_swrval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        self.__auto_swrval.setObjectName("minmax")
         self.__autogrid.addWidget(self.__auto_swrval, 0, 3)
         
         self.__tune = QPushButton("Tune...")
@@ -466,7 +469,8 @@ class UI(QMainWindow):
         #res1label.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(res1label, 1, 0)
         self.__swrres = QLabel('-.-')
-        self.__swrres.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        #self.__swrres.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        self.__swrres.setObjectName("minmax")
         self.__swrres.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__swrres, 1, 1)
         
@@ -475,7 +479,8 @@ class UI(QMainWindow):
         #res2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__mangrid.addWidget(res2label, 1, 2)
         self.__freqval = QLabel('-.-')
-        self.__freqval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        #self.__freqval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        self.__freqval.setObjectName("minmax")
         self.__freqval.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__freqval, 1, 3)
         
@@ -589,13 +594,19 @@ class UI(QMainWindow):
         self.__long_running = True
         if self.__api.calibrate(loop):
             if loop == 1:
-                self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                #self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                self.__l1label.setObjectName("stgreen")
+                self.__l1label.setStyleSheet(self.__l1label.styleSheet())
                 self.__loop_status[0] = True
             elif loop == 2:
-                self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                #self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                self.__l2label.setObjectName("stgreen")
+                self.__l2label.setStyleSheet(self.__l2label.styleSheet())
                 self.__loop_status[1] = True
             elif loop == 3:
-                self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                #self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
+                self.__l3label.setObjectName("stgreen")
+                self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
         
     def __do_tune(self):
