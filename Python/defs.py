@@ -123,6 +123,12 @@ ACT_STEPS = 10
 FWD = 'FWD'
 REV = 'REV'
 
+# Widget enable/disable states
+W_DISABLE_ALL = 'WDisableAll'
+W_LONG_RUNNING = 'WLongRunning'
+W_FREE_RUNNING = 'WFreeRunning'
+W_NORMAL = 'WNormal'
+            
 #=======================================================================
 # VNA parameters
 #

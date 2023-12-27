@@ -99,6 +99,7 @@ class UI(QMainWindow):
         # Current (long running) activity
         self.__current_activity = NONE
         self.__long_running = False
+        self.__free_running = False
         self.__activity_timer = SHORT_TIMEOUT
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -377,12 +378,12 @@ class UI(QMainWindow):
         freqlabel = QLabel('Freq')
         #freqlabel.setStyleSheet(LBL1STYLE)
         self.__autogrid.addWidget(freqlabel, 0, 0)
-        self.freqtxt = QLineEdit()
+        self.__freqtxt = QLineEdit()
         #self.freqtxt.setStyleSheet(LESTYLE)
-        self.freqtxt.setToolTip('Set tune frequency')
-        self.freqtxt.setInputMask('000.000;0')
-        self.freqtxt.setMaximumWidth(80)
-        self.__autogrid.addWidget(self.freqtxt, 0, 1)
+        self.__freqtxt.setToolTip('Set tune frequency')
+        self.__freqtxt.setInputMask('000.000;0')
+        self.__freqtxt.setMaximumWidth(80)
+        self.__autogrid.addWidget(self.__freqtxt, 0, 1)
         
         swrlabel = QLabel('SWR')
         #swrlabel.setStyleSheet(LBL1STYLE)
@@ -495,13 +496,13 @@ class UI(QMainWindow):
         movelabel = QLabel('Move to (%)')
         #movelabel.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(movelabel, 2, 0)
-        self.movetxt = QSpinBox()
+        self.__movetxt = QSpinBox()
         #self.movetxt.setStyleSheet(SBSTYLE)
-        self.movetxt.setToolTip('Move position 0-100%')
-        self.movetxt.setRange(0,100)
-        self.movetxt.setValue(50)
-        self.movetxt.setMaximumWidth(80)
-        self.__mangrid.addWidget(self.movetxt, 2, 1)
+        self.__movetxt.setToolTip('Move position 0-100%')
+        self.__movetxt.setRange(0,100)
+        self.__movetxt.setValue(50)
+        self.__movetxt.setMaximumWidth(80)
+        self.__mangrid.addWidget(self.__movetxt, 2, 1)
         
         self.__movepos = QPushButton("Move")
         #self.__movepos.setStyleSheet(PBSTYLE)
@@ -522,13 +523,13 @@ class UI(QMainWindow):
         inclabel = QLabel('Inc (ms)')
         #inclabel.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(inclabel, 3, 0)
-        self.inctxt = QSpinBox()
+        self.__inctxt = QSpinBox()
         #self.inctxt.setStyleSheet(SBSTYLE)
-        self.inctxt.setToolTip('Increment time in ms')
-        self.inctxt.setRange(0,1000)
-        self.inctxt.setValue(500)
-        self.inctxt.setMaximumWidth(80)
-        self.__mangrid.addWidget(self.inctxt, 3, 1)
+        self.__inctxt.setToolTip('Increment time in ms')
+        self.__inctxt.setRange(0,1000)
+        self.__inctxt.setValue(500)
+        self.__inctxt.setMaximumWidth(80)
+        self.__mangrid.addWidget(self.__inctxt, 3, 1)
         
         self.__runpos = QPushButton("Move Forward")
         #self.__runpos.setStyleSheet(PBSTYLE)
@@ -642,14 +643,14 @@ class UI(QMainWindow):
         self.__current_activity = RUNFWD
         self.__st_act.setText(RUNFWD)
         self.__activity_timer = MOVE_TIMEOUT
-        self.__long_running = True
+        self.__free_running = True
         self.__api.free_fwd()
     
     def __do_run_rev(self):
         self.__current_activity = RUNREV
         self.__st_act.setText(RUNREV)
         self.__activity_timer = MOVE_TIMEOUT
-        self.__long_running = True
+        self.__free_running = True
         self.__api.free_rev()
     
     def __do_stop_act(self):
@@ -674,19 +675,19 @@ class UI(QMainWindow):
         self.__st_act.setText(MOVETO)
         self.__activity_timer = MOVE_TIMEOUT
         self.__long_running = True
-        self.__api.move_to_position(self.movetxt.value())
+        self.__api.move_to_position(self.__movetxt.value())
     
     def __do_move_fwd(self):
         self.__current_activity = MSFWD
         self.__st_act.setText(MSFWD)
         self.__activity_timer = SHORT_TIMEOUT
-        self.__api.move_fwd_for_ms(self.inctxt.value())
+        self.__api.move_fwd_for_ms(self.__inctxt.value())
     
     def __do_move_rev(self):
         self.__current_activity = MSREV
         self.__st_act.setText(MSREV)
         self.__activity_timer = SHORT_TIMEOUT
-        self.__api.move_rev_for_ms(self.inctxt.value())
+        self.__api.move_rev_for_ms(self.__inctxt.value())
     
     def __do_nudge_fwd(self):
         self.__current_activity = NUDGEFWD
@@ -726,7 +727,7 @@ class UI(QMainWindow):
             self.__st_ard.setObjectName("stgreen")
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
             
-            self.__central_widget.setEnabled(True)
+            #self.__central_widget.setEnabled(True)
             
             # Update current position
             self.__currpos.setText(str(self.__current_pos) + '%')
@@ -734,15 +735,22 @@ class UI(QMainWindow):
             # Check activity state
             if self.__current_activity != NONE:
                 # Activity current
-                self.__central_widget.setEnabled(False)
+                #self.__central_widget.setEnabled(False)
                 if self.__long_running:
-                    self.__abort.setEnabled(True)
+                    self.__set_widget_state(W_LONG_RUNNING)
+                    #self.__abort.setEnabled(True)
                     #self.__abort.setStyleSheet(ABORTSTYLEON)
+                elif self.__free_running:
+                    self.__set_widget_state(W_FREE_RUNNING)
+                else:
+                    self.__set_widget_state(W_DISABLE_ALL)
             else:
-                self.__central_widget.setEnabled(True)
+                #self.__central_widget.setEnabled(True)
+                self.__set_widget_state(W_NORMAL)
                 self.__long_running = False
+                self.__free_running = False
                 #self.__abort.setStyleSheet(ABORTSTYLEOFF)
-                self.__abort.setEnabled(False)
+                #self.__abort.setEnabled(False)
                 if self.__relay_state == TX:
                     self.__relay.tx()
                     self.__tg_ard.setText(TX)
@@ -754,7 +762,8 @@ class UI(QMainWindow):
             self.__st_act.setText(self.__current_activity)
         else:
             # Not online so we can't do anything except exit
-            self.__central_widget.setEnabled(False)
+            #self.__central_widget.setEnabled(False)
+            self.__set_widget_state(W_DISABLE_ALL)
             # off-line indicator
             self.__st_ard.setText('off-line')
             #self.__st_ard.setStyleSheet(LBLSTSTYLE)
@@ -785,4 +794,48 @@ class UI(QMainWindow):
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
  
+    # Enable/disable according to state
+    def __set_widget_state(self, state):
+        
+        if state == W_DISABLE_ALL:
+            # All disable except the close
+            self.__w_enable_disable(False)
+            self.__abort.setEnabled(False)
             
+        elif state == W_LONG_RUNNING:
+            # All disable except close and abort
+            self.__w_enable_disable(False)
+            self.__abort.setEnabled(True)
+            
+        elif state == W_FREE_RUNNING:
+            # All disable except close and stop
+            self.__w_enable_disable(False)
+            self.__abort.setEnabled(False)
+            self.__stopact.setEnabled(True)
+            
+        elif state == W_NORMAL:
+            # All enable except abort
+            self.__w_enable_disable(True)
+            self.__abort.setEnabled(False)
+        else:
+            # All disable except the close
+            self.__w_enable_disable(False)
+            self.__abort.setEnabled(False)
+    
+    def __w_enable_disable(self, state):
+        self.__loop_sel.setEnabled(state)
+        self.__cal.setEnabled(state)
+        self.__freqtxt.setEnabled(state)
+        self.__tune.setEnabled(state)
+        self.__relay_sel.setEnabled(state)
+        self.__speed_sel.setEnabled(state)
+        self.__runrev.setEnabled(state)
+        self.__runfwd.setEnabled(state)
+        self.__getres.setEnabled(state)
+        self.__movetxt.setEnabled(state)
+        self.__movepos.setEnabled(state)
+        self.__inctxt.setEnabled(state)
+        self.__runpos.setEnabled(state)
+        self.__nudgefwd.setEnabled(state)
+        self.__nudgerev.setEnabled(state)
+        
