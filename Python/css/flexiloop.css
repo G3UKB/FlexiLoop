@@ -1,12 +1,40 @@
+/*
+#
+# flexiloop.css
+#
+# All UI styles for Flexi Loop application
+# 
+# Copyright (C) 2023 by G3UKB Bob Cowdery
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#    
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#    
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#    
+#  The author can be reached by email at:   
+#     bob@bobcowdery.plus.com
+#
+*/
 
+/* Status Bar */
 QStatusBar::item {
     border: none;
 }
 
+/* Frame */
 QFrame:maninner {
     background-color: rgb(97,97,97);
 }
 
+/* Group Box */
 QGroupBox {
     color: rgb(65,62,56);
     font: 16px;
@@ -20,6 +48,7 @@ QGroupBox::title {
     padding: 0px 5px 0px 5px;
 }
 
+/* Buttons, including names styles */
 QPushButton {
     min-height: 20px;
     min-width: 100px;
@@ -68,6 +97,7 @@ QPushButton::disabled {
     font: 14px;
 }
 
+/* labels, including named labels */
 QLabel {
     color: rgb(24,74,101);
     font: 14px;
@@ -88,6 +118,7 @@ QLabel#minmax {
     font: 20px;
 }
 
+/* ComboBox */
 QComboBox {
     background-color: rgb(131,124,114);
     color: rgb(24,74,101);
@@ -97,6 +128,7 @@ QComboBox {
     font: 14px;
 }
 
+/* SpinBox */
 QSpinBox {
     min-height: 20px;
     background-color: rgb(131,124,114);
@@ -107,6 +139,7 @@ QSpinBox {
     font: 14px;
 }
 
+/* LineEdit */
 QLineEdit {
     min-height: 25px;
     background-color: rgb(131,124,114);

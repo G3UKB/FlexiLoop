@@ -39,28 +39,15 @@ from utils import *
 import api
 import pirelay
 
-#**stred and stgreen do not work as can't set to two object names**
-# Styles
-#BOXSTYLE = "QGroupBox {color: rgb(65,62,56);  border: 1px solid darkgrey; font: 16px}"
-#BOXSTYLE = "QGroupBox {color: rgb(65,62,56); font: 16px}"
-#PBSTYLE = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
-#DDSTYLE = "QComboBox {background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
-#SBSTYLE = "QSpinBox {min-height: 20px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
-#LESTYLE = "QLineEdit {min-height: 25px; background-color: rgb(131,124,114); color: rgb(24,74,101); border-style: outset; border-width: 1px; border-radius: 5px; font: 20px}"
-#LBL1STYLE = "QLabel {color: rgb(24,74,101); font: 14px}"
-#LBLSTSTYLE = "QLabel {color: rgb(191,13,13); font: 14px}"
-#LBLSTACSTYLE = "QLabel {color: rgb(33,82,3); font: 14px}"
-#ABORTSTYLEON = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(191,13,13); color: rgb(0,0,0); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
-#ABORTSTYLEOFF = "QPushButton {min-height: 20px; min-width: 100px; background-color: rgb(131,124,114); color: rgb(97,97,97); border-style: outset; border-width: 1px; border-radius: 5px; font: 14px}"
-
+# Vertical line
 class VLine(QFrame):
     # a simple VLine, like the one you get from designer
     def __init__(self):
         super(VLine, self).__init__()
         self.setFrameShape(self.VLine|self.Sunken)
-        #self.setStyleSheet("background-color: rgb(97,97,97);")
         self.setObjectName("maninner")
-        
+
+# Main window        
 class UI(QMainWindow):
     
     def __init__(self, model, qt_app, port):
@@ -226,11 +213,9 @@ class UI(QMainWindow):
         # Arduino status
         self.st_lbl = QLabel()
         self.st_lbl.setText('Arduino: ')
-        #self.st_lbl.setStyleSheet(LBL1STYLE)
         self.statusBar.addPermanentWidget(self.st_lbl)
         self.__st_ard = QLabel()
         self.__st_ard.setText('off-line')
-        #self.__st_ard.setStyleSheet(LBLSTSTYLE)
         self.__st_ard.setObjectName("stred")
         self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
         self.statusBar.addPermanentWidget(self.__st_ard)
@@ -240,11 +225,9 @@ class UI(QMainWindow):
         # Target status
         self.tg_lbl = QLabel()
         self.tg_lbl.setText('Target: ')
-        #self.tg_lbl.setStyleSheet(LBL1STYLE)
         self.statusBar.addPermanentWidget(self.tg_lbl)
         self.__tg_ard = QLabel()
         self.__tg_ard.setText('TX')
-        #self.__tg_ard.setStyleSheet(LBLSTSTYLE)
         self.__tg_ard.setObjectName("stred")
         self.__tg_ard.setStyleSheet(self.__tg_ard.styleSheet())
         self.statusBar.addPermanentWidget(self.__tg_ard)
@@ -254,11 +237,9 @@ class UI(QMainWindow):
         # Activity Status
         self.st_lblact= QLabel()
         self.st_lblact.setText('Activity: ')
-        #self.st_lblact.setStyleSheet(LBL1STYLE)
         self.statusBar.addPermanentWidget(self.st_lblact)
         self.__st_act = QLabel()
         self.__st_act.setText(NONE)
-        #self.__st_act.setStyleSheet(LBLSTSTYLE)
         self.__st_act.setObjectName("stred")
         self.__st_act.setStyleSheet(self.__st_act.styleSheet())
         self.statusBar.addPermanentWidget(self.__st_act)
@@ -267,7 +248,6 @@ class UI(QMainWindow):
         
         # Buttons
         self.__abort = QPushButton("Abort!")
-        #self.__abort.setStyleSheet(ABORTSTYLEOFF)
         self.__abort.setEnabled(False)
         self.__abort.setObjectName("abort")
         self.__abort.setToolTip('Abort the current operation!')
@@ -278,13 +258,10 @@ class UI(QMainWindow):
         self.statusBar.addPermanentWidget(VLine())
         
         self.__exit = QPushButton("Close")
-        #self.__exit.setStyleSheet(PBSTYLE)
         self.__exit.setToolTip('Close the application')
         self.__exit.clicked.connect(self.__do_close)
         self.__exit.setMinimumHeight(20)
-        self.statusBar.addPermanentWidget(self.__exit)
-        
-        #self.statusBar.setStyleSheet("QStatusBar::item{border: none;}")       
+        self.statusBar.addPermanentWidget(self.__exit)       
         
     #=======================================================
     # Create all widgets
@@ -300,15 +277,12 @@ class UI(QMainWindow):
         # Loop area
         self.__loopgrid = QGridLayout()
         w1 = QGroupBox('Loop')
-        #w1.setStyleSheet(BOXSTYLE)
         w1.setLayout(self.__loopgrid)
         self.__grid.addWidget(w1, 0,0,1,4)
         
         looplabel = QLabel('Select Loop')
-        #looplabel.setStyleSheet(LBL1STYLE)
         self.__loopgrid.addWidget(looplabel, 0, 0)
         self.__loop_sel = QComboBox()
-        #self.__loop_sel.setStyleSheet(DDSTYLE)
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
@@ -317,48 +291,39 @@ class UI(QMainWindow):
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
         minlabel = QLabel('Min freq')
-        #minlabel.setStyleSheet(LBL1STYLE)
         self.__loopgrid.addWidget(minlabel, 0, 2)
         minlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue = QLabel('0.0')
         self.__minvalue.setAlignment(QtCore.Qt.AlignCenter)
-        #self.__minvalue.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__minvalue.setObjectName("minmax")
         self.__loopgrid.addWidget(self.__minvalue, 0, 3)
         maxlabel = QLabel('Max freq')
-        #maxlabel.setStyleSheet(LBL1STYLE)
         self.__loopgrid.addWidget(maxlabel, 0, 4)
         maxlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__maxvalue = QLabel('0.0')
         self.__maxvalue.setAlignment(QtCore.Qt.AlignCenter)
-        #self.__maxvalue.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__maxvalue.setObjectName("minmax")
         self.__loopgrid.addWidget(self.__maxvalue, 0, 5)
         
         self.__cal = QPushButton("(Re)Calibrate...")
-        #self.__cal.setStyleSheet(PBSTYLE)
         self.__cal.setToolTip('Calibrate for loop...')
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
         s = QGroupBox('Status')
-        #s.setStyleSheet("QGroupBox {color: rgb(65,62,56); font: 14px}")
         hbox = QHBoxLayout()
         self.__l1label = QLabel('Loop-1')
         hbox.addWidget(self.__l1label)
-        #self.__l1label.setStyleSheet(LBLSTSTYLE)
         self.__l1label.setObjectName("stred")
         self.__l1label.setStyleSheet(self.__l1label.styleSheet())
         self.__l1label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l2label = QLabel('Loop-2')
         hbox.addWidget(self.__l2label)
-        #self.__l2label.setStyleSheet(LBLSTSTYLE)
         self.__l2label.setObjectName("stred")
         self.__l2label.setStyleSheet(self.__l2label.styleSheet())
         self.__l2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__l3label = QLabel('Loop-3')
         hbox.addWidget(self.__l3label)
-        #self.__l3label.setStyleSheet(LBLSTSTYLE)
         self.__l3label.setObjectName("stred")
         self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
@@ -369,33 +334,26 @@ class UI(QMainWindow):
         # Auto area
         self.__autogrid = QGridLayout()
         w2 = QGroupBox('Auto')
-        #w2.setStyleSheet(BOXSTYLE)
-        #w2.setStyleSheet("QGroupBox::title {padding 0 3 px }")
         w2.setLayout(self.__autogrid)
         self.__grid.addWidget(w2, 1,0,1,4)
         self.__autogrid.setColumnMinimumWidth(5,300)
         
         freqlabel = QLabel('Freq')
-        #freqlabel.setStyleSheet(LBL1STYLE)
         self.__autogrid.addWidget(freqlabel, 0, 0)
         self.__freqtxt = QLineEdit()
-        #self.freqtxt.setStyleSheet(LESTYLE)
         self.__freqtxt.setToolTip('Set tune frequency')
         self.__freqtxt.setInputMask('000.000;0')
         self.__freqtxt.setMaximumWidth(80)
         self.__autogrid.addWidget(self.__freqtxt, 0, 1)
         
         swrlabel = QLabel('SWR')
-        #swrlabel.setStyleSheet(LBL1STYLE)
         self.__autogrid.addWidget(swrlabel, 0, 2)
         swrlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__auto_swrval = QLabel('-.-')
-        #self.__auto_swrval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__auto_swrval.setObjectName("minmax")
         self.__autogrid.addWidget(self.__auto_swrval, 0, 3)
         
         self.__tune = QPushButton("Tune...")
-        #self.__tune.setStyleSheet(PBSTYLE)
         self.__tune.setToolTip('Tune to freq...')
         self.__autogrid.addWidget(self.__tune, 0,4)
         self.__tune.clicked.connect(self.__do_tune)
@@ -404,24 +362,20 @@ class UI(QMainWindow):
         # Manual area
         self.__mangrid = QGridLayout()
         w3 = QGroupBox('Manual')
-        #w3.setStyleSheet(BOXSTYLE)
         w3.setLayout(self.__mangrid)
         self.__grid.addWidget(w3, 2,0,1,4)
         
         # Sub grid
         self.__subgrid = QGridLayout()
         w4 = QGroupBox()
-        #w4.setStyleSheet(BOXSTYLE)
         w4.setLayout(self.__subgrid)
         self.__mangrid.addWidget(w4, 0,0,1,6)
         
         #----------------------------------
         # Target select
         relaylabel = QLabel('Target (TX/VNA)')
-        #relaylabel.setStyleSheet(LBL1STYLE)
         self.__subgrid.addWidget(relaylabel, 0, 0)
         self.__relay_sel = QComboBox()
-        #self.__relay_sel.setStyleSheet(DDSTYLE)
         self.__relay_sel.setMinimumHeight(20)
         self.__relay_sel.setMaximumWidth(70)
         self.__relay_sel.setMinimumWidth(70)
@@ -431,10 +385,8 @@ class UI(QMainWindow):
         self.__relay_sel.currentIndexChanged.connect(self.__relay_change)
         
         speedlabel = QLabel('Speed')
-        #speedlabel.setStyleSheet(LBL1STYLE)
         self.__subgrid.addWidget(speedlabel, 0, 2)
         self.__speed_sel = QComboBox()
-        #self.__speed_sel.setStyleSheet(DDSTYLE)
         self.__speed_sel.setMinimumHeight(20)
         self.__speed_sel.setMaximumWidth(70)
         self.__speed_sel.setMinimumWidth(70)
@@ -445,19 +397,16 @@ class UI(QMainWindow):
         self.__speed_sel.currentIndexChanged.connect(self.__speed_change)
         
         self.__runrev = QPushButton("<< Run Rev")
-        #self.__runrev.setStyleSheet(PBSTYLE)
         self.__runrev.setToolTip('Run actuator reverse...')
         self.__subgrid.addWidget(self.__runrev, 0,4)
         self.__runrev.clicked.connect(self.__do_run_rev)
         
         self.__stopact = QPushButton("Stop")
-        #self.__stopact.setStyleSheet(PBSTYLE)
         self.__stopact.setToolTip('Stop actuator')
         self.__subgrid.addWidget(self.__stopact, 0,5)
         self.__stopact.clicked.connect(self.__do_stop_act)
         
         self.__runfwd = QPushButton("Run Fwd >>")
-        #self.__runfwd.setStyleSheet(PBSTYLE)
         self.__runfwd.setToolTip('Run actuator forward...')
         self.__subgrid.addWidget(self.__runfwd, 0,6)
         self.__runfwd.clicked.connect(self.__do_run_fwd)
@@ -467,26 +416,20 @@ class UI(QMainWindow):
         #----------------------------------
         # Get current
         res1label = QLabel('SWR')
-        #res1label.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(res1label, 1, 0)
         self.__swrres = QLabel('-.-')
-        #self.__swrres.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__swrres.setObjectName("minmax")
         self.__swrres.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__swrres, 1, 1)
         
         res2label = QLabel('Freq')
-        #res2label.setStyleSheet(LBL1STYLE)
-        #res2label.setAlignment(QtCore.Qt.AlignCenter)
         self.__mangrid.addWidget(res2label, 1, 2)
         self.__freqval = QLabel('-.-')
-        #self.__freqval.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__freqval.setObjectName("minmax")
         self.__freqval.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__freqval, 1, 3)
         
         self.__getres = QPushButton("Get Current")
-        #self.__getres.setStyleSheet(PBSTYLE)
         self.__getres.setToolTip('Get current SWR and Frequency...')
         self.__mangrid.addWidget(self.__getres, 1,4)
         self.__getres.clicked.connect(self.__do_res)
@@ -494,10 +437,8 @@ class UI(QMainWindow):
         #----------------------------------
         # Move position
         movelabel = QLabel('Move to (%)')
-        #movelabel.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(movelabel, 2, 0)
         self.__movetxt = QSpinBox()
-        #self.movetxt.setStyleSheet(SBSTYLE)
         self.__movetxt.setToolTip('Move position 0-100%')
         self.__movetxt.setRange(0,100)
         self.__movetxt.setValue(50)
@@ -505,13 +446,11 @@ class UI(QMainWindow):
         self.__mangrid.addWidget(self.__movetxt, 2, 1)
         
         self.__movepos = QPushButton("Move")
-        #self.__movepos.setStyleSheet(PBSTYLE)
         self.__movepos.setToolTip('Move to given position 0-100%...')
         self.__mangrid.addWidget(self.__movepos, 2,2)
         self.__movepos.clicked.connect(self.__do_pos)
         
         curr1label = QLabel('Current Pos')
-        #curr1label.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(curr1label, 2, 3)
         self.__currpos = QLabel('-')
         self.__currpos.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
@@ -521,36 +460,30 @@ class UI(QMainWindow):
         #----------------------------------
         # Increment
         inclabel = QLabel('Inc (ms)')
-        #inclabel.setStyleSheet(LBL1STYLE)
         self.__mangrid.addWidget(inclabel, 3, 0)
         self.__inctxt = QSpinBox()
-        #self.inctxt.setStyleSheet(SBSTYLE)
         self.__inctxt.setToolTip('Increment time in ms')
         self.__inctxt.setRange(0,1000)
         self.__inctxt.setValue(500)
         self.__inctxt.setMaximumWidth(80)
         self.__mangrid.addWidget(self.__inctxt, 3, 1)
         
-        self.__runpos = QPushButton("Move Forward")
-        #self.__runpos.setStyleSheet(PBSTYLE)
-        self.__runpos.setToolTip('Move forward for given ms...')
-        self.__mangrid.addWidget(self.__runpos, 3,2)
-        self.__runpos.clicked.connect(self.__do_move_fwd)
+        self.__mvfwd = QPushButton("Move Forward")
+        self.__mvfwd.setToolTip('Move forward for given ms...')
+        self.__mangrid.addWidget(self.__mvfwd, 3,2)
+        self.__mvfwd.clicked.connect(self.__do_move_fwd)
         
-        self.__runrev = QPushButton("Move Reverse")
-        #self.__runrev.setStyleSheet(PBSTYLE)
-        self.__runrev.setToolTip('Move reverse for given ms...')
-        self.__mangrid.addWidget(self.__runrev, 3,3)
-        self.__runrev.clicked.connect(self.__do_move_rev)
+        self.__mvrev = QPushButton("Move Reverse")
+        self.__mvrev.setToolTip('Move reverse for given ms...')
+        self.__mangrid.addWidget(self.__mvrev, 3,3)
+        self.__mvrev.clicked.connect(self.__do_move_rev)
         
         self.__nudgefwd = QPushButton("Nudge Forward")
-        #self.__nudgefwd.setStyleSheet(PBSTYLE)
         self.__nudgefwd.setToolTip('Nudge forward...')
         self.__mangrid.addWidget(self.__nudgefwd, 3,4)
         self.__nudgefwd.clicked.connect(self.__do_nudge_fwd)
         
         self.__nudgerev = QPushButton("Nudge Reverse")
-        #self.__nudgerev.setStyleSheet(PBSTYLE)
         self.__nudgerev.setToolTip('Nudge reverse...')
         self.__mangrid.addWidget(self.__nudgerev, 3,5)
         self.__nudgerev.clicked.connect(self.__do_nudge_rev)
@@ -595,17 +528,14 @@ class UI(QMainWindow):
         self.__long_running = True
         if self.__api.calibrate(loop):
             if loop == 1:
-                #self.__l1label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
                 self.__l1label.setObjectName("stgreen")
                 self.__l1label.setStyleSheet(self.__l1label.styleSheet())
                 self.__loop_status[0] = True
             elif loop == 2:
-                #self.__l2label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
                 self.__l2label.setObjectName("stgreen")
                 self.__l2label.setStyleSheet(self.__l2label.styleSheet())
                 self.__loop_status[1] = True
             elif loop == 3:
-                #self.__l3label.setStyleSheet("QLabel {color: rgb(0,255,0); font: 12px}")
                 self.__l3label.setObjectName("stgreen")
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
@@ -723,11 +653,8 @@ class UI(QMainWindow):
         if self.__model[STATE][ARDUINO][ONLINE]:
             # on-line indicator
             self.__st_ard.setText('on-line')
-            #self.__st_ard.setStyleSheet(LBLSTACSTYLE)
             self.__st_ard.setObjectName("stgreen")
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
-            
-            #self.__central_widget.setEnabled(True)
             
             # Update current position
             self.__currpos.setText(str(self.__current_pos) + '%')
@@ -735,22 +662,16 @@ class UI(QMainWindow):
             # Check activity state
             if self.__current_activity != NONE:
                 # Activity current
-                #self.__central_widget.setEnabled(False)
                 if self.__long_running:
                     self.__set_widget_state(W_LONG_RUNNING)
-                    #self.__abort.setEnabled(True)
-                    #self.__abort.setStyleSheet(ABORTSTYLEON)
                 elif self.__free_running:
                     self.__set_widget_state(W_FREE_RUNNING)
                 else:
                     self.__set_widget_state(W_DISABLE_ALL)
             else:
-                #self.__central_widget.setEnabled(True)
                 self.__set_widget_state(W_NORMAL)
                 self.__long_running = False
                 self.__free_running = False
-                #self.__abort.setStyleSheet(ABORTSTYLEOFF)
-                #self.__abort.setEnabled(False)
                 if self.__relay_state == TX:
                     self.__relay.tx()
                     self.__tg_ard.setText(TX)
@@ -762,25 +683,20 @@ class UI(QMainWindow):
             self.__st_act.setText(self.__current_activity)
         else:
             # Not online so we can't do anything except exit
-            #self.__central_widget.setEnabled(False)
             self.__set_widget_state(W_DISABLE_ALL)
             # off-line indicator
             self.__st_ard.setText('off-line')
-            #self.__st_ard.setStyleSheet(LBLSTSTYLE)
             self.__st_ard.setObjectName("stred")
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
         
         # Update loop status for configured loops
         if self.__loop_status[0]:
-            #self.__l1label.setStyleSheet(LBLSTACSTYLE)
             self.__l1label.setObjectName("stgreen")
             self.__l1label.setStyleSheet(self.__l1label.styleSheet())
         if self.__loop_status[1]:
-            #self.__l2label.setStyleSheet(LBLSTACSTYLE)
             self.__l2label.setObjectName("stgreen")
             self.__l2label.setStyleSheet(self.__l2label.styleSheet())
         if self.__loop_status[2]:
-            #self.__l3label.setStyleSheet(LBLSTACSTYLE)
             self.__l3label.setObjectName("stgreen")
             self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         # Update min/max frequencies
@@ -798,30 +714,35 @@ class UI(QMainWindow):
     def __set_widget_state(self, state):
         
         if state == W_DISABLE_ALL:
-            # All disable except the close
+            # All disable except close
             self.__w_enable_disable(False)
+            self.__stopact.setEnabled(False)
             self.__abort.setEnabled(False)
             
         elif state == W_LONG_RUNNING:
             # All disable except close and abort
             self.__w_enable_disable(False)
+            self.__stopact.setEnabled(False)
             self.__abort.setEnabled(True)
             
         elif state == W_FREE_RUNNING:
             # All disable except close and stop
             self.__w_enable_disable(False)
-            self.__abort.setEnabled(False)
             self.__stopact.setEnabled(True)
+            self.__abort.setEnabled(False)
             
         elif state == W_NORMAL:
-            # All enable except abort
+            # All enable except abort and stop
             self.__w_enable_disable(True)
+            self.__stopact.setEnabled(False)
             self.__abort.setEnabled(False)
         else:
-            # All disable except the close
+            # All disable except close
             self.__w_enable_disable(False)
+            self.__stopact.setEnabled(False)
             self.__abort.setEnabled(False)
     
+    # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
         self.__loop_sel.setEnabled(state)
         self.__cal.setEnabled(state)
@@ -829,13 +750,14 @@ class UI(QMainWindow):
         self.__tune.setEnabled(state)
         self.__relay_sel.setEnabled(state)
         self.__speed_sel.setEnabled(state)
-        self.__runrev.setEnabled(state)
-        self.__runfwd.setEnabled(state)
+        self.__mvrev.setEnabled(state)
+        self.__mvfwd.setEnabled(state)
         self.__getres.setEnabled(state)
         self.__movetxt.setEnabled(state)
-        self.__movepos.setEnabled(state)
+        self.__runfwd.setEnabled(state)
+        self.__runrev.setEnabled(state)
         self.__inctxt.setEnabled(state)
-        self.__runpos.setEnabled(state)
+        self.__movepos.setEnabled(state)
         self.__nudgefwd.setEnabled(state)
         self.__nudgerev.setEnabled(state)
         
