@@ -29,6 +29,7 @@ from time import sleep
 import queue
 import threading
 import traceback
+import logging
 
 # Application imports
 from defs import *
@@ -63,6 +64,8 @@ class Calibrate(threading.Thread):
     def __init__(self, comms, comms_q, cal_q, vna, model, callback):
         super(Calibrate, self).__init__()
         
+        self.logger = logging.getLogger(__name__)
+        
         self.__comms = comms
         self.__comms_q = comms_q
         self.__cal_q = cal_q
@@ -85,6 +88,7 @@ class Calibrate(threading.Thread):
 
     # Thread entry point
     def run(self):
+        self.logger.info("Running...")
         while not self.term:
             try:
                 if self.__cal_q.qsize() > 0:
