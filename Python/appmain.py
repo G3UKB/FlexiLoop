@@ -27,6 +27,7 @@
 import sys
 from pathlib import Path
 import traceback
+import logging
 
 # Qt5 imports
 from PyQt5.QtWidgets import QApplication
@@ -38,9 +39,6 @@ import persist
 import api
 import ui
 
-# We expect to find the config file here otherwise it will be created.
-CONFIG_PATH = '../config/flexi-loop.cfg'
-
 #=====================================================
 # The main application class
 #===================================================== 
@@ -48,6 +46,12 @@ class AppMain:
     
     def run(self):
         print("Flexi-Loop Controller running...")
+        
+        # Set up simple file logging
+        logging.basicConfig(filename='log/flexi-loop.log', encoding='utf-8', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG, datefmt='%d/%m/%Y %I:%M:%S %p')
+        logger = logging.getLogger(__name__)
+        logger.info("Flexi-Loop Controller running...")
+        
         # Manage configuration
         self.__configured = True
         self.__model = persist.getSavedCfg(CONFIG_PATH)

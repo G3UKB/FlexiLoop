@@ -5,3 +5,4 @@ config/flexi_loop.cfg
 VNAJ/vnaJ.3.3/export/VNA_231220_171905.csv
 *.csv
 *.csv
+Python/log/flexi-loop.log

@@ -63,7 +63,7 @@ ACT_POS = 'ACT_POS'
 # User Interface, Calibrate and Tuning
 #
 # Path to configuration file
-CONFIG_PATH = '../config/auto_tuner.cfg'
+CONFIG_PATH = '../config/flexi_loop.cfg'
 # Run idle processing every IDLE_TICKER ms
 IDLE_TICKER = 250
 
@@ -97,11 +97,11 @@ NONE = 'None'
 
 # Timeouts for the long running operations in seconds
 # Adjusted for the idle tick rate to number of idle passes
-CALIBRATE_TIMEOUT = 120 * (1000/250)
-TUNE_TIMEOUT = 120 * (1000/250)
-RES_TIMEOUT = 60 * (1000/250)
-MOVE_TIMEOUT = 30 * (1000/250)
-SHORT_TIMEOUT = 2 * (1000/250)
+CALIBRATE_TIMEOUT = 120 * (1000/250) #P
+TUNE_TIMEOUT = 120 * (1000/250) #P
+RES_TIMEOUT = 60 * (1000/250) #P
+MOVE_TIMEOUT = 30 * (1000/250) #P
+SHORT_TIMEOUT = 2 * (1000/250) #P
 
 # Target selection dependent on relay on/off
 TX = 'TX'
@@ -117,7 +117,7 @@ VNA_RANDOM = 'RANDOM'
 
 # Number of steps for calibration
 # Resonant frequency and feedback value at each step forms part of calibration
-ACT_STEPS = 10
+ACT_STEPS = 10 #P
 
 # Direction of actuator motion
 FWD = 'FWD'
@@ -147,21 +147,21 @@ INC_250 = 250
 
 # Driver
 DRIVER_ID = 20  # MiniVNA Tiny
-#DRIVER_PORT = 'ttyUSB0'
-DRIVER_PORT = 'COM4'
+#DRIVER_PORT = 'ttyUSB0' #P
+DRIVER_PORT = 'COM4' #P
 
 # Scanner defs
-#CAL_FILE = '/home/looppi/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal'
-CAL_FILE = '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal'
+#CAL_FILE = '/home/looppi/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal' #P
+CAL_FILE = '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal' #P
 SCAN_MODE = 'REFL'
 EXPORTS = 'csv'
-EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}'
-#JAR = '/home/looppi/Projects/MiniVNA/VNAJ/vnaJ-hl.3.3.3.jar'
-JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar'
+EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}' #P
+#JAR = '/home/looppi/Projects/MiniVNA/VNAJ/vnaJ-hl.3.3.3.jar' #P
+JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar' #P
 
 # Decoder defs
-LIN_EXPORT_PATH = '/home/looppi/vnaJ.3.3/export'
-WIN_EXPORT_PATH = '../VNAJ/vnaJ.3.3/export'
+LIN_EXPORT_PATH = '/home/looppi/vnaJ.3.3/export' #P
+WIN_EXPORT_PATH = '../VNAJ/vnaJ.3.3/export' #P
 DEC_FREQ = 0
 DEC_SWR = 4
 
