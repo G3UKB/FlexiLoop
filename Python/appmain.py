@@ -29,6 +29,7 @@ from pathlib import Path
 import traceback
 import logging
 from logging import handlers
+import argparse
 
 # Qt5 imports
 from PyQt5.QtWidgets import QApplication
@@ -44,6 +45,9 @@ import ui
 # The main application class
 #===================================================== 
 class AppMain:
+    def __init__(self, path, log ):
+        self.path = path
+        self.log = log
     
     def run(self):
         print("Flexi-Loop Controller running...")
@@ -55,12 +59,12 @@ class AppMain:
         formatter = logging.Formatter('%(asctime)s - %(module)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
-        
+        # and a console handler
         stdout_handler = logging.StreamHandler(sys.stdout)
         stdout_handler.setFormatter(formatter)
-        # Must be done by configuration or command line
-        logger.addHandler(stdout_handler)
-        logger.removeHandler(stdout_handler)
+        # Does user wany console logging?
+        if self.log == 'Yes':
+            logger.addHandler(stdout_handler)
         
         # Announce ourselves
         logger.info("***************** Start of Day *****************")
@@ -68,7 +72,7 @@ class AppMain:
         
         # Manage configuration
         self.__configured = True
-        self.__model = persist.getSavedCfg(CONFIG_PATH)
+        self.__model = persist.getSavedCfg(self.path)
         if self.__model == None:
             logger.info ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
@@ -85,17 +89,27 @@ class AppMain:
         # Return here when UI is closed
         
         # Save model
-        persist.saveCfg(CONFIG_PATH, self.__model)
+        persist.saveCfg(self.path, self.__model)
         
 #======================================================================================================================
 # Main code
 def main():
     
-        try:
-            app = AppMain()
-            sys.exit(app.run()) 
-        except Exception as e:
-            print ('Exception [%s][%s]' % (str(e), traceback.format_exc()))
+    # Manage command line arguments
+    parser = argparse.ArgumentParser(
+        prog='Flexi-Loop Controller',
+        description='Controller for the Flexi-Loop mag loop project',
+        epilog='Bob - G3UKB')
+    parser.add_argument('-p', '--config-path', dest='path', default=CONFIG_PATH, help='Path to config file, default is %s' % CONFIG_PATH)
+    parser.add_argument('-c', '--console-log', dest='log', choices=['Yes', 'No'], help='Yes = log to console as well as file, default is file only')
+    args = parser.parse_args()
+    
+    # Start application
+    try:
+        app = AppMain(args.path, args.log)
+        sys.exit(app.run()) 
+    except Exception as e:
+        print ('Exception [%s][%s]' % (str(e), traceback.format_exc()))
  
 # Entry point       
 if __name__ == '__main__':
