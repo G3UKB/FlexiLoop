@@ -28,6 +28,7 @@ import sys
 from pathlib import Path
 import traceback
 import logging
+from logging import handlers
 
 # Qt5 imports
 from PyQt5.QtWidgets import QApplication
@@ -47,9 +48,16 @@ class AppMain:
     def run(self):
         print("Flexi-Loop Controller running...")
         
-        # Set up simple file logging
-        logging.basicConfig(filename='log/flexi-loop.log', encoding='utf-8', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG, datefmt='%d/%m/%Y %I:%M:%S %p')
-        logger = logging.getLogger(__name__)
+        # Set up basic rotating file logging
+        logger = logging.getLogger('root')
+        logger.setLevel(logging.INFO)
+        handler = logging.handlers.RotatingFileHandler(filename='log/flexi-loop.log', maxBytes=10000, backupCount = 3, encoding='utf-8')
+        formatter = logging.Formatter('%(asctime)s - %(module)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        
+        # Announce ourselves
+        logger.info("***************** Start of Day *****************")
         logger.info("Flexi-Loop Controller running...")
         
         # Manage configuration
@@ -59,7 +67,6 @@ class AppMain:
             print ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
             self.__configured = False
-        # print(self.__model)
         
         # Extract required fields
         port = self.__model[CONFIG][SERIAL][PORT]

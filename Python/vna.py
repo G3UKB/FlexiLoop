@@ -25,6 +25,7 @@
 import os, sys
 import subprocess
 import random
+import logging
 
 # Application imports
 from defs import *
@@ -42,6 +43,10 @@ SIMULATE = False
 class VNA:
     
     def __init__(self):
+        
+        # Get root logger
+        self.logger = logging.getLogger('root')
+
         # Simulation setup
         if SIMULATE:
             # These are just test values

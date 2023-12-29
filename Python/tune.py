@@ -29,6 +29,7 @@ from time import sleep
 import queue
 import threading
 import traceback
+import logging
 
 # Application imports
 from defs import *
@@ -44,6 +45,9 @@ class Tune(threading.Thread):
     
     def __init__(self, model, serial, vna, s_q, cb):
         super(Tune, self).__init__()
+        
+        # Get root logger
+        self.logger = logging.getLogger('root')
         
         self.__model = model
         self.__serial_comms = serial

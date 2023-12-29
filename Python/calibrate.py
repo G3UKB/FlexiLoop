@@ -64,7 +64,8 @@ class Calibrate(threading.Thread):
     def __init__(self, comms, comms_q, cal_q, vna, model, callback):
         super(Calibrate, self).__init__()
         
-        self.logger = logging.getLogger(__name__)
+        # Get root logger
+        self.logger = logging.getLogger('root')
         
         self.__comms = comms
         self.__comms_q = comms_q

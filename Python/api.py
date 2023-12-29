@@ -29,6 +29,7 @@ from time import sleep
 import queue
 import threading
 import traceback
+import logging
 
 # Application imports
 from defs import *
@@ -51,6 +52,9 @@ class API:
     
     # Initialisation
     def __init__(self, model, port, callback):
+        
+        # Get root logger
+        self.logger = logging.getLogger('root')
         
         # Params
         self.__model = model

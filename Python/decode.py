@@ -23,9 +23,12 @@
 #     bob@bobcowdery.plus.com
 #
 
+# Python imports
 import os, sys
 import glob
+import logging
 
+# Application imports
 from defs import *
 
 """
@@ -36,7 +39,9 @@ Decode data set written to the output file by the vna/j command line program.
 class Decode:
     
     def __init__(self):
-        pass
+        
+        # Get root logger
+        self.logger = logging.getLogger('root')
     
     def decode_fres(self):
         """ Find the resonant frequency in the result set """

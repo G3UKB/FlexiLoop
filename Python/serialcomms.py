@@ -30,6 +30,7 @@ from time import sleep
 import queue
 import threading
 import traceback
+import logging
 
 # Application imports
 from defs import *
@@ -58,6 +59,9 @@ class SerialComms(threading.Thread):
         
         super(SerialComms, self).__init__()
         
+        # Get root logger
+        self.logger = logging.getLogger('root')
+
         self.__model = model
         self.__q = q
         self.__cb = main_callback

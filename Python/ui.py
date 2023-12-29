@@ -26,6 +26,7 @@
 # Python imports
 import sys
 import traceback
+import logging
 
 # PyQt5 imports
 from PyQt5.QtWidgets import QMainWindow, QApplication, QToolTip
@@ -53,6 +54,9 @@ class UI(QMainWindow):
     def __init__(self, model, qt_app, port):
         super(UI, self).__init__()
 
+        # Get root logger
+        self.logger = logging.getLogger('root')
+        
         self.__model = model
         self.__qt_app = qt_app
         
