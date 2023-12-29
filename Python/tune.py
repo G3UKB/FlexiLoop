@@ -81,7 +81,7 @@ class Tune(threading.Thread):
                 if self.term: return
             self.one_pass = False
             
-            print("Tuning -- this may take a while...")
+            self.logger.info("Tuning -- this may take a while...")
             # Need to steal the serial comms callback
             self.__serial_comms.steal_callback(self.t_tune_cb)
             
@@ -89,7 +89,7 @@ class Tune(threading.Thread):
             cal = model_for_loop(self.__model, self.__loop)
             if self.__freq < cal[1] or self.__freq > cal[0]:
                 # Not covered by this loop
-                print ("Requested freq {} is outside limits for this loop [{},{}]".format(self.__freq, cal[1], cal[0]))
+                self.logger.warning ("Requested freq {} is outside limits for this loop [{},{}]".format(self.__freq, cal[1], cal[0]))
                 self.__cb(('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(self.__freq, cal[1], cal[0]), [])))
                 self.__serial_comms.restore_callback()
                 return
@@ -140,7 +140,7 @@ class Tune(threading.Thread):
                 # Tweek if necessary
                 while swr > 1.5:
                     if try_for <= 0:
-                        print("Unable to reduce SWR to less than 1.5 {}".format(swr))
+                        self.logger.info("Unable to reduce SWR to less than 1.5 {}".format(swr))
                         self.__cb(("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
                         break
                     if dir == FWD:
@@ -163,7 +163,7 @@ class Tune(threading.Thread):
                         continue
                 self.__cb((TUNE, (True, "", [swr])))
             else:
-                print("Failed to obtain a SWR reading for freq {}".format(self.__freq))
+                self.logger.inwarningfo("Failed to obtain a SWR reading for freq {}".format(self.__freq))
                 self.__cb((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
             self.__serial_comms.restore_callback()
         print("Tune thread  exiting...")

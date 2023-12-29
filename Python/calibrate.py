@@ -106,7 +106,7 @@ class Calibrate(threading.Thread):
                 print(str(e))
                 #self.__cb('fatal: {0}'.format(e))
                 break
-        print("Calibrate thread exiting...")
+        self.logger.info("Calibrate thread exiting...")
     
     # ===============================================================
     # PRIVATE
@@ -160,7 +160,7 @@ class Calibrate(threading.Thread):
                         # We have a problem
                         return ('Calibrate', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
-            print ("Error in calibration map: " % msg)
+            self.logger.warning ("Error in calibration map: " % msg)
             return ('Calibrate', (False, msg, cal_map))
         
         return ('Calibrate', (True, "", cal_map))
@@ -237,7 +237,7 @@ class Calibrate(threading.Thread):
         # Get map for model
         r, m = self.retrieve_map(loop)
         if not r:
-            print("Invalid loop id: %d" % loop)
+            self.logger.warning("Invalid loop id: %d" % loop)
             return False, "Invalid loop id: %d" % loop, []
         m.clear()
         
@@ -253,7 +253,7 @@ class Calibrate(threading.Thread):
         # Get res freq approx as its a full sweep takes a while
         r, [(fmax, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_MAX)
         if not r:
-            print("Failed to get max frequency!")
+            self.logger.warning("Failed to get max frequency!")
             return False, "Failed to get max frequency!", []
         
         # Move home and take a reading
@@ -268,7 +268,7 @@ class Calibrate(threading.Thread):
         # get res freq
         r, [(fhome, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_HOME)
         if not r:
-            print("Failed to get min frequency!")
+            self.logger.warning("Failed to get min frequency!")
             return False, "Failed to get min frequency!", []
         
         # Save limits for this loop
@@ -314,7 +314,7 @@ class Calibrate(threading.Thread):
             # Need a little more accuracy so every 1KHz should suffice
             r, [(f, swr)] = self.__vna.fres(flow, fhigh, INC_1K, hint = VNA_MID)
             if not r:
-                print("Failed to get resonant frequency!")
+                self.logger.inwarningfo("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m
             m[2].append([int(next_inc), f])
             next_inc += inc
@@ -339,7 +339,7 @@ class Calibrate(threading.Thread):
     # Note this is called on the comms thread and stolen from api.py
     def callback(self, data):
         
-        if VERB: print("Calibrate: got event: ", data)
+        if VERB: self.logger.info("Calibrate: got event: ", data)
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
@@ -359,5 +359,5 @@ class Calibrate(threading.Thread):
             self.__abort = True
             self.__event.set() 
         else:
-            if VERB: print ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
+            if VERB: self.logger.info ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
  

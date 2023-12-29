@@ -71,7 +71,7 @@ class SerialComms(threading.Thread):
         try:
             self.__ser = serial.Serial(port, 9600, timeout=1)
         except:
-            print("Failed to initialise Arduino port. Is the Arduino connected?")
+            self.logger.info("Failed to initialise Arduino port. Is the Arduino connected?")
             if MODEL: self.__model[STATE][ARDUINO][ONLINE] = False
             return
         
@@ -93,9 +93,9 @@ class SerialComms(threading.Thread):
     
     # Thread entry point
     def run(self):
+        self.logger.info("Running...")
         while not self.term:
             try:
-                #print(self.__q.qsize())
                 if self.__q.qsize() > 0:
                     while self.__q.qsize() > 0:
                         name, args = self.__q.get()
@@ -108,10 +108,10 @@ class SerialComms(threading.Thread):
                     sleep(0.02)
             except Exception as e:
                 # Something went wrong
-                print(str(e))
+                self.logger.info(str(e))
                 #self.__cb('fatal: {0}'.format(e))
                 break
-        print("Comms thread exiting...")
+        self.logger.info("Comms thread exiting...")
     
     # ===============================================================
     # PRIVATE
@@ -200,7 +200,7 @@ class SerialComms(threading.Thread):
             resp = self.read_resp(timeout)
             if resp[1][0] == False:
                 sleep(0.2)
-                if VERB: print("Command failed, retrying...")
+                if VERB: self.logger.info("Command failed, retrying...")
                 if retries <= 0:
                     msg = "Command failed after %d retries" % retries
                     return (resp[0], (False, msg, []))
@@ -233,7 +233,7 @@ class SerialComms(threading.Thread):
                 # We return an abort instead of the given command
                 return (ABORT, (True, "User abort!", val))
             elif r == STOP:
-                print("Stop actuator after forward or reverse command.")
+                self.logger.info("Stop actuator after forward or reverse command.")
             # Read a single character
             chr = self.__ser.read().decode('utf-8')
             if chr == '':
@@ -241,7 +241,7 @@ class SerialComms(threading.Thread):
                 #if VERB: print("Waiting response...")
                 if resp_timeout <= 0:
                     # Timeout on waiting for a response
-                    if VERB: print("Response timeout!")
+                    if VERB: self.logger.info("Response timeout!")
                     msg = "Response timeout!"
                     break
                 else:
@@ -254,16 +254,16 @@ class SerialComms(threading.Thread):
                 # Found terminator character
                 if "Status" in acc:
                     # Its a status message so return this directly
-                    if VERB: print("Status: ", acc)
+                    if VERB: self.logger.info("Status: ", acc)
                     self.__cb(self.__encode(acc))
                     acc = ""
                     continue
                 # Otherwise its a response to the command
-                if VERB: print("Response: ", acc)
+                if VERB: self.logger.info("Response: ", acc)
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
-                    if VERB: print("More data available - collecting... ", ser.in_waiting)
+                    if VERB: self.logger.info("More data available - collecting... ", ser.in_waiting)
                     acc = ""
                     continue
                 success = True
@@ -298,7 +298,7 @@ class SerialComms(threading.Thread):
             if param.isdigit():
                 val.append(int(param))
             else:
-                print("Invalid value for position (not int): %d" % param)
+                self.logger.warning("Invalid value for position (not int): %d" % param)
                 success = False
         return (name, (success, msg, val))
 

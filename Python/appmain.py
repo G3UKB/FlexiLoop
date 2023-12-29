@@ -91,6 +91,8 @@ class AppMain:
         # Save model
         persist.saveCfg(self.path, self.__model)
         
+        print("Flexi-Loop Controller exiting...")
+        
 #======================================================================================================================
 # Main code
 def main():
