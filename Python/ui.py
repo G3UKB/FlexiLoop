@@ -161,7 +161,7 @@ class UI(QMainWindow):
             # Activity in progress
             self.__activity_timer -= 1
             if self.__activity_timer <= 0:
-                print ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!' % (self.__current_activity))
+                logger.info ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!' % (self.__current_activity))
                 self.__current_activity == NONE
                 self.__activity_timer = SHORT_TIMEOUT
                 return
@@ -180,11 +180,11 @@ class UI(QMainWindow):
                             self.__loop_status[self.__selected_loop-1] = True
                     elif name == TUNE:
                         self.__swr = args[0]
-                    print ('Activity %s completed successfully' % (self.__current_activity))
+                    logger.info ('Activity %s completed successfully' % (self.__current_activity))
                     self.__current_activity = NONE
                     self.__activity_timer = SHORT_TIMEOUT
                 else:
-                    print ('Activity %s completed but failed!' % (self.__current_activity))
+                    logger.info ('Activity %s completed but failed!' % (self.__current_activity))
             elif name == STATUS:
                 # We expect status at any time
                 self.__current_pos = args[0]
@@ -193,9 +193,9 @@ class UI(QMainWindow):
                 # User hit the abort button
                 self.__current_activity = NONE
                 self.__activity_timer = SHORT_TIMEOUT
-                print("Activity aborted by user!")
+                logger.info("Activity aborted by user!")
             else:
-                print ('Waiting for activity %s to completed but got activity %s! Contibuing to wait' % (self.__current_activity, name))
+                logger.info ('Waiting for activity %s to completed but got activity %s! Continuing to wait' % (self.__current_activity, name))
                 
     #=======================================================
     # PRIVATE

@@ -97,12 +97,12 @@ class API:
     
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
-        print("Calibrating loop: {}. This may take a while...".format(loop))
+        logger.info("Calibrating loop: {}. This may take a while...".format(loop))
         self.__c_q.put(('calibrate', [loop, ACT_STEPS]))
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):
-        print("Calibrating loop: {}. This may take a while...".format(loop))
+        logger.info("Calibrating loop: {}. This may take a while...".format(loop))
         self.__c_q.put(('re_calibrate_loop', [loop, ACT_STEPS]))
         
     # Get position as a %age of full travel
@@ -156,7 +156,7 @@ class API:
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
         if home == -1 or max == -1:
-            print("Failed to move as limits are not set!")
+            logger.warning("Failed to move as limits are not set!")
             return
         span = maximum - home
         frac = (int(pos)/100)*span
@@ -195,9 +195,8 @@ class API:
             # Calculate and return position
             home = self.__model[CONFIG][CAL][HOME]
             maximum = self.__model[CONFIG][CAL][MAX]
-            #print('get_pos: ', home, maximum)
             if home == -1 or maximum == -1:
-                if VERB: print("Failed to get position as limits are not set!")
+                if VERB: logger.warning("Failed to get position as limits are not set!")
                 self.__cb((name, (False, "Failed to get position as limits are not set!", [])))
             else:
                 # We need to save the absolute pos not the %age pos

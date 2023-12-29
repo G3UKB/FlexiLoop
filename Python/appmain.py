@@ -51,10 +51,16 @@ class AppMain:
         # Set up basic rotating file logging
         logger = logging.getLogger('root')
         logger.setLevel(logging.INFO)
-        handler = logging.handlers.RotatingFileHandler(filename='log/flexi-loop.log', maxBytes=10000, backupCount = 3, encoding='utf-8')
+        file_handler = logging.handlers.RotatingFileHandler(filename='log/flexi-loop.log', maxBytes=10000, backupCount = 3, encoding='utf-8')
         formatter = logging.Formatter('%(asctime)s - %(module)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+        
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setFormatter(formatter)
+        # Must be done by configuration or command line
+        logger.addHandler(stdout_handler)
+        logger.removeHandler(stdout_handler)
         
         # Announce ourselves
         logger.info("***************** Start of Day *****************")
@@ -64,7 +70,7 @@ class AppMain:
         self.__configured = True
         self.__model = persist.getSavedCfg(CONFIG_PATH)
         if self.__model == None:
-            print ('Configuration not found, using defaults')
+            logger.info ('Configuration not found, using defaults')
             self.__model = model.flexi_loop_model
             self.__configured = False
         
