@@ -65,6 +65,7 @@ class UI(QMainWindow):
         #Loop status
         self.__selected_loop = 1
         self.__loop_status = [False, False, False]
+        self.__last_widget_status = W_DISABLE_ALL
     
         # Set the back colour
         palette = QtGui.QPalette()
@@ -113,7 +114,7 @@ class UI(QMainWindow):
         self.__man_swr = '_._'
         
         # Default to TX side
-        self.__api.tx_mode()
+        #self.__api.tx_mode()
         self.__relay_state = TX
         
     #=======================================================
@@ -659,32 +660,32 @@ class UI(QMainWindow):
             
             # Update current position
             self.__currpos.setText(str(self.__current_pos) + '%')
-              
+            widget_state = None  
             # Check activity state
             if self.__current_activity != NONE:
                 # Activity current
                 if self.__long_running:
-                    self.__set_widget_state(W_LONG_RUNNING)
+                    widget_state = W_LONG_RUNNING
                 elif self.__free_running:
-                    self.__set_widget_state(W_FREE_RUNNING)
+                    widget_state = W_FREE_RUNNING
                 else:
-                    self.__set_widget_state(W_DISABLE_ALL)
+                    widget_state = W_DISABLE_ALL
             else:
-                self.__set_widget_state(W_NORMAL)
+                widget_state = W_NORMAL
                 self.__long_running = False
                 self.__free_running = False
                 if self.__relay_state == TX:
-                    self.__api.tx_mode()
+                    #self.__api.tx_mode()
                     self.__tg_ard.setText(TX)
                     self.__relay_sel.setCurrentText(TX)
                 elif self.__relay_state == VNA:
-                    self.__api.vna_mode()
+                    #self.__api.vna_mode()
                     self.__tg_ard.setText(VNA)
                     self.__relay_sel.setCurrentText(VNA)
             self.__st_act.setText(self.__current_activity)
         else:
             # Not online so we can't do anything except exit
-            self.__set_widget_state(W_DISABLE_ALL)
+            widget_state = W_DISABLE_ALL
             # off-line indicator
             self.__st_ard.setText('off-line')
             self.__st_ard.setObjectName("stred")
@@ -700,6 +701,12 @@ class UI(QMainWindow):
         if self.__loop_status[2]:
             self.__l3label.setObjectName("stgreen")
             self.__l3label.setStyleSheet(self.__l3label.styleSheet())
+        
+        # Adjust buttons for loop status
+        if not self.__loop_status[self.__selected_loop-1] and self.__model[STATE][ARDUINO][ONLINE]:
+            # Current loop is not configured
+            widget_state = W_NO_CONFIG
+        
         # Update min/max frequencies
         loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
@@ -707,41 +714,55 @@ class UI(QMainWindow):
             self.__maxvalue.setText(str(loop[0]))
         # Update SWR
         self.__auto_swrval.setText(str(self.__auto_swr))
-            
+        
+        # Set widgets
+        self.__set_widget_state(widget_state)
+        
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
  
     # Enable/disable according to state
     def __set_widget_state(self, state):
         
-        if state == W_DISABLE_ALL:
-            # All disable except close
-            self.__w_enable_disable(False)
-            self.__stopact.setEnabled(False)
-            self.__abort.setEnabled(False)
+        if not self.__last_widget_status == state:
+            print("Doing ", self.__last_widget_status, state)
+            self.__last_widget_status = state
+            if state == W_DISABLE_ALL:
+                # All disable except close
+                self.__w_enable_disable(False)
+                self.__stopact.setEnabled(False)
+                self.__abort.setEnabled(False)
             
-        elif state == W_LONG_RUNNING:
-            # All disable except close and abort
-            self.__w_enable_disable(False)
-            self.__stopact.setEnabled(False)
-            self.__abort.setEnabled(True)
-            
-        elif state == W_FREE_RUNNING:
-            # All disable except close and stop
-            self.__w_enable_disable(False)
-            self.__stopact.setEnabled(True)
-            self.__abort.setEnabled(False)
-            
-        elif state == W_NORMAL:
-            # All enable except abort and stop
-            self.__w_enable_disable(True)
-            self.__stopact.setEnabled(False)
-            self.__abort.setEnabled(False)
-        else:
-            # All disable except close
-            self.__w_enable_disable(False)
-            self.__stopact.setEnabled(False)
-            self.__abort.setEnabled(False)
+            elif state == W_NO_CONFIG:
+                # All disable except close and config
+                self.__w_enable_disable(False)
+                self.__stopact.setEnabled(False)
+                self.__abort.setEnabled(False)
+                self.__loop_sel.setEnabled(True)
+                self.__cal.setEnabled(True)
+                
+            elif state == W_LONG_RUNNING:
+                # All disable except close and abort
+                self.__w_enable_disable(False)
+                self.__stopact.setEnabled(False)
+                self.__abort.setEnabled(True)
+                
+            elif state == W_FREE_RUNNING:
+                # All disable except close and stop
+                self.__w_enable_disable(False)
+                self.__stopact.setEnabled(True)
+                self.__abort.setEnabled(False)
+                
+            elif state == W_NORMAL:
+                # All enable except abort and stop
+                self.__w_enable_disable(True)
+                self.__stopact.setEnabled(False)
+                self.__abort.setEnabled(False)
+            else:
+                # All disable except close
+                self.__w_enable_disable(False)
+                self.__stopact.setEnabled(False)
+                self.__abort.setEnabled(False)
     
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):

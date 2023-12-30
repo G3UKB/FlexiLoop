@@ -124,6 +124,7 @@ REV = 'REV'
 
 # Widget enable/disable states
 W_DISABLE_ALL = 'WDisableAll'
+W_NO_CONFIG = 'WNoConfig'
 W_LONG_RUNNING = 'WLongRunning'
 W_FREE_RUNNING = 'WFreeRunning'
 W_NORMAL = 'WNormal'
