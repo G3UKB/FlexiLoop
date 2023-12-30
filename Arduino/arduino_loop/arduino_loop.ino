@@ -17,6 +17,8 @@
 *   o Free run forward
 *   o Free run reverse
 *   o Stop free run
+*   o Relay energise
+*   o Relay de-energise
 *
 */
 
@@ -31,6 +33,7 @@
 #define FALSE 0
 #define HOME 0
 #define MAX 1
+#define RLY_PIN 22
 
 // Instance of motor driver
 DualMC33926MotorShield md;
@@ -43,6 +46,8 @@ void setup() {
   // Initialise motor driver
   md.init();
   pinMode(POTENTIOMETER_PIN, INPUT);
+  pinMode(RLY_PIN, OUTPUT);
+  digitalWrite(RLY_PIN, LOW);
 }
 
 // Execution loop runs continuously
@@ -81,12 +86,25 @@ void process(String data) {
   *   o Free run forward : c;
   *   o Free run reverse : d;
   *   o Stop free run : e;
+  *   o Relay energise : a;
+  *   o Relay de-energise : b;
   */
   char cmd = data[0];
   int ms;
-
+  
   // Switch on command type
   switch (cmd) {
+    
+    case 'a':
+      digitalWrite(RLY_PIN, HIGH);
+      Serial.print("RlyOn;");
+      break;
+
+    case 'b':
+      digitalWrite(RLY_PIN, LOW);
+      Serial.print("RlyOff;");
+      break;
+
     case 's':
       Serial.print("Speed;");
       break;

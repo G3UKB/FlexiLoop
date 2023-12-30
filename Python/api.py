@@ -185,6 +185,12 @@ class API:
         
     def abort_activity(self):
         self.__s_q.put(('abort', []))
+        
+    def tx_mode(self):
+        self.__s_q.put(('relay_on', []))
+        
+    def vna_mode(self):
+        self.__s_q.put(('relay_off', []))
     
     # =========================================================================    
     # Callback

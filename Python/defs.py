@@ -93,6 +93,7 @@ RESONANCE = 'Resonance'
 STATUS = 'Status'
 ABORT = 'Abort'
 STOP = 'Stop'
+
 NONE = 'None'
 
 # Timeouts for the long running operations in seconds
@@ -106,8 +107,6 @@ SHORT_TIMEOUT = 2 * (1000/250) #P
 # Target selection dependent on relay on/off
 TX = 'TX'
 VNA = 'VNA'
-# Relay used on 4 relay board
-ANT_RLY = 'RELAY1'
 
 # Hints to vna.py for simulation mode
 VNA_HOME = 'HOME'

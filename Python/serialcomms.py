@@ -36,7 +36,7 @@ import logging
 from defs import *
 
 # Verbose flag
-VERB = False
+VERB = True
 # Set False when testing
 MODEL = True
 
@@ -99,7 +99,6 @@ class SerialComms(threading.Thread):
                 if self.__q.qsize() > 0:
                     while self.__q.qsize() > 0:
                         name, args = self.__q.get()
-                        #print(name, args)
                         # By default this is synchronous so will wait for the response
                         # Response goes to main code callback, we don't care here
                         self.__dispatch(name, args)
@@ -131,6 +130,9 @@ class SerialComms(threading.Thread):
             'free_fwd': self.__free_fwd,
             'free_rev': self.__free_rev,
             'free_stop': self.__free_stop,
+            'relay_on' : self.__relay_on,
+            'relay_off' : self.__relay_off,
+            
         }
         # Execute and return response
         self.__cb(disp_tab[name](args))
@@ -182,6 +184,12 @@ class SerialComms(threading.Thread):
     
     def __free_stop(self, args):
         return self.send(b"e;", 2)
+    
+    def __relay_on(self, args):
+        return self.send(b"a;", 2)
+    
+    def __relay_off(self, args):
+        return self.send(b"b;", 2)
     
     def __abort(self, args):
         return self.send(b"z;", 1)
@@ -254,16 +262,16 @@ class SerialComms(threading.Thread):
                 # Found terminator character
                 if "Status" in acc:
                     # Its a status message so return this directly
-                    if VERB: self.logger.info("Status: ", acc)
+                    if VERB: self.logger.info("Status: %s" % acc)
                     self.__cb(self.__encode(acc))
                     acc = ""
                     continue
                 # Otherwise its a response to the command
-                if VERB: self.logger.info("Response: ", acc)
+                if VERB: self.logger.info("Response: %s" % acc)
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
-                    if VERB: self.logger.info("More data available - collecting... ", ser.in_waiting)
+                    if VERB: self.logger.info("More data available %d - collecting... " % ser.in_waiting)
                     acc = ""
                     continue
                 success = True

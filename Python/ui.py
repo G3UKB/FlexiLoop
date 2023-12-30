@@ -38,11 +38,10 @@ from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGro
 from defs import *
 from utils import *
 import api
-import pirelay
 
 # Vertical line
 class VLine(QFrame):
-    # a simple VLine, like the one you get from designer
+    # A simple VLine, like the one you get from designer
     def __init__(self):
         super(VLine, self).__init__()
         self.setFrameShape(self.VLine|self.Sunken)
@@ -113,10 +112,8 @@ class UI(QMainWindow):
         self.__auto_swr = '_._'
         self.__man_swr = '_._'
         
-        # Create a relay instance
-        self.__relay = pirelay.Relay(ANT_RLY)
         # Default to TX side
-        self.__relay.tx()
+        self.__api.tx_mode()
         self.__relay_state = TX
         
     #=======================================================
@@ -520,7 +517,7 @@ class UI(QMainWindow):
         self.__api.abort_activity()
     
     def __do_cal(self):
-        self.__relay.vna()
+        self.__api.vna_mode()
         self.__tg_ard.setText(VNA)
         self.__relay_sel.setCurrentText(VNA)
         self.__relay_state = VNA
@@ -545,7 +542,7 @@ class UI(QMainWindow):
                 self.__loop_status[2] = True
         
     def __do_tune(self):
-        self.__relay.vna()
+        self.__api.vna_mode()
         self.__tg_ard.setText(VNA)
         self.__relay_sel.setCurrentText(VNA)
         self.__relay_state = VNA
@@ -560,12 +557,12 @@ class UI(QMainWindow):
     def __relay_change(self):
         target = self.__relay_sel.currentText()
         if target == TX:
-            self.__relay.tx()
+            self.__api.tx_mode()
             self.__tg_ard.setText(TX)
             self.__relay_sel.setCurrentText(TX)
             self.__relay_state = TX
         else:
-            self.__relay.vna()
+            self.__api.vna_mode()
             self.__tg_ard.setText(VNA)
             self.__relay_sel.setCurrentText(VNA)
             self.__relay_state = VNA
@@ -591,7 +588,7 @@ class UI(QMainWindow):
         self.__api.free_stop()
     
     def __do_res(self):
-        self.__relay.vna()
+        self.__api.vna_mode()
         self.__tg_ard.setText(VNA)
         self.__relay_sel.setCurrentText(VNA)
         self.__relay_state = VNA
@@ -677,11 +674,11 @@ class UI(QMainWindow):
                 self.__long_running = False
                 self.__free_running = False
                 if self.__relay_state == TX:
-                    self.__relay.tx()
+                    self.__api.tx_mode()
                     self.__tg_ard.setText(TX)
                     self.__relay_sel.setCurrentText(TX)
                 elif self.__relay_state == VNA:
-                    self.__relay.vna()
+                    self.__api.vna_mode()
                     self.__tg_ard.setText(VNA)
                     self.__relay_sel.setCurrentText(VNA)
             self.__st_act.setText(self.__current_activity)
