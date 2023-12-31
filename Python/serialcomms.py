@@ -36,7 +36,7 @@ import logging
 from defs import *
 
 # Verbose flag
-VERB = True
+VERB = False
 # Set False when testing
 MODEL = True
 

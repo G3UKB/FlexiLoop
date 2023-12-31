@@ -114,7 +114,6 @@ class UI(QMainWindow):
         self.__man_swr = '_._'
         
         # Default to TX side
-        #self.__api.tx_mode()
         self.__relay_state = TX
         
     #=======================================================
@@ -159,7 +158,7 @@ class UI(QMainWindow):
             # Activity in progress
             self.__activity_timer -= 1
             if self.__activity_timer <= 0:
-                logger.info ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!' % (self.__current_activity))
+                self.logger.info ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!' % (self.__current_activity))
                 self.__current_activity == NONE
                 self.__activity_timer = SHORT_TIMEOUT
                 return
@@ -178,11 +177,11 @@ class UI(QMainWindow):
                             self.__loop_status[self.__selected_loop-1] = True
                     elif name == TUNE:
                         self.__swr = args[0]
-                    logger.info ('Activity %s completed successfully' % (self.__current_activity))
+                    self.logger.info ('Activity %s completed successfully' % (self.__current_activity))
                     self.__current_activity = NONE
                     self.__activity_timer = SHORT_TIMEOUT
                 else:
-                    logger.info ('Activity %s completed but failed!' % (self.__current_activity))
+                    self.logger.info ('Activity %s completed but failed!' % (self.__current_activity))
             elif name == STATUS:
                 # We expect status at any time
                 self.__current_pos = args[0]
@@ -191,9 +190,9 @@ class UI(QMainWindow):
                 # User hit the abort button
                 self.__current_activity = NONE
                 self.__activity_timer = SHORT_TIMEOUT
-                logger.info("Activity aborted by user!")
+                self.logger.info("Activity aborted by user!")
             else:
-                logger.info ('Waiting for activity %s to completed but got activity %s! Continuing to wait' % (self.__current_activity, name))
+                self.logger.info ('Waiting for activity %s to completed but got activity %s! Continuing to wait' % (self.__current_activity, name))
                 
     #=======================================================
     # PRIVATE
@@ -675,11 +674,9 @@ class UI(QMainWindow):
                 self.__long_running = False
                 self.__free_running = False
                 if self.__relay_state == TX:
-                    #self.__api.tx_mode()
                     self.__tg_ard.setText(TX)
                     self.__relay_sel.setCurrentText(TX)
                 elif self.__relay_state == VNA:
-                    #self.__api.vna_mode()
                     self.__tg_ard.setText(VNA)
                     self.__relay_sel.setCurrentText(VNA)
             self.__st_act.setText(self.__current_activity)
@@ -725,7 +722,6 @@ class UI(QMainWindow):
     def __set_widget_state(self, state):
         
         if not self.__last_widget_status == state:
-            print("Doing ", self.__last_widget_status, state)
             self.__last_widget_status = state
             if state == W_DISABLE_ALL:
                 # All disable except close
