@@ -38,6 +38,7 @@ from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGro
 from defs import *
 from utils import *
 import api
+import config
 
 # Vertical line
 class VLine(QFrame):
@@ -61,6 +62,9 @@ class UI(QMainWindow):
         
         # Create the API instance
         self.__api = api.API(model, port, self.callback)
+        
+        # Create the config dialog
+        self.__config_dialog = config.Config(self.__model)
         
         #Loop status
         self.__selected_loop = 1
@@ -275,11 +279,25 @@ class UI(QMainWindow):
         self.__central_widget.setLayout(self.__grid)
         
         # -------------------------------------------
+        # Menu type area
+        self.__menugrid = QGridLayout()
+        wmen = QGroupBox('')
+        wmen.setLayout(self.__menugrid)
+        self.__grid.addWidget(wmen, 0,0,1,4)
+        
+        self.__config = QPushButton("Config")
+        self.__config.setEnabled(True)
+        self.__config.setToolTip('Manage configuration...')
+        self.__config.clicked.connect(self.__do_config)
+        self.__config.setMinimumHeight(20)
+        self.__menugrid.addWidget(self.__config, 0,0)
+        
+        # -------------------------------------------
         # Loop area
         self.__loopgrid = QGridLayout()
         w1 = QGroupBox('Loop')
         w1.setLayout(self.__loopgrid)
-        self.__grid.addWidget(w1, 0,0,1,4)
+        self.__grid.addWidget(w1, 1,0,1,4)
         
         looplabel = QLabel('Select Loop')
         self.__loopgrid.addWidget(looplabel, 0, 0)
@@ -336,7 +354,7 @@ class UI(QMainWindow):
         self.__autogrid = QGridLayout()
         w2 = QGroupBox('Auto')
         w2.setLayout(self.__autogrid)
-        self.__grid.addWidget(w2, 1,0,1,4)
+        self.__grid.addWidget(w2, 2,0,1,4)
         self.__autogrid.setColumnMinimumWidth(5,300)
         
         freqlabel = QLabel('Freq')
@@ -364,7 +382,7 @@ class UI(QMainWindow):
         self.__mangrid = QGridLayout()
         w3 = QGroupBox('Manual')
         w3.setLayout(self.__mangrid)
-        self.__grid.addWidget(w3, 2,0,1,4)
+        self.__grid.addWidget(w3, 3,0,1,4)
         
         # Sub grid
         self.__subgrid = QGridLayout()
@@ -506,7 +524,12 @@ class UI(QMainWindow):
         # Update config
         x,y,w,h = self.__model[STATE][WINDOWS][MAIN_WIN]
         self.__model[STATE][WINDOWS][MAIN_WIN] = [event.pos().x(),event.pos().y(),w,h]
-     
+    
+    #=======================================================
+    # Configuration
+    def __do_config(self):
+        self.__config_dialog.show()
+    
     #=======================================================
     # Button events
     def __do_close(self):
@@ -517,10 +540,7 @@ class UI(QMainWindow):
         self.__api.abort_activity()
     
     def __do_cal(self):
-        self.__api.vna_mode()
-        self.__tg_ard.setText(VNA)
-        self.__relay_sel.setCurrentText(VNA)
-        self.__relay_state = VNA
+        self.__set_vna_mode()
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
         self.__current_activity = CALIBRATE
@@ -540,12 +560,10 @@ class UI(QMainWindow):
                 self.__l3label.setObjectName("stgreen")
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
+        self.__set_tx_mode()
         
     def __do_tune(self):
-        self.__api.vna_mode()
-        self.__tg_ard.setText(VNA)
-        self.__relay_sel.setCurrentText(VNA)
-        self.__relay_state = VNA
+        self.__set_vna_mode()
         loop = int(self.__loop_sel.currentText())
         freq = float(self.freqtxt.displayText())
         self.__st_act.setText(TUNE)
@@ -553,19 +571,14 @@ class UI(QMainWindow):
         self.__activity_timer = TUNE_TIMEOUT
         self.__long_running = True
         self.__api.move_to_freq(loop, freq)
-    
+        self.__set_tx_mode()
+        
     def __relay_change(self):
         target = self.__relay_sel.currentText()
         if target == TX:
-            self.__api.tx_mode()
-            self.__tg_ard.setText(TX)
-            self.__relay_sel.setCurrentText(TX)
-            self.__relay_state = TX
+            self.__set_tx_mode()
         else:
-            self.__api.vna_mode()
-            self.__tg_ard.setText(VNA)
-            self.__relay_sel.setCurrentText(VNA)
-            self.__relay_state = VNA
+            self.__set_vna_mode()
     
     def __speed_change(self):
         pass
@@ -646,6 +659,20 @@ class UI(QMainWindow):
         else:
             self.__minvalue.setText('0.0')
             self.__maxvalue.setText('0.0')
+    
+    #=======================================================
+    # Helpers
+    def __set_tx_mode(self):
+        self.__api.tx_mode()
+        self.__tg_ard.setText(TX)
+        self.__relay_sel.setCurrentText(TX)
+        self.__relay_state = TX
+            
+    def __set_vna_mode(self):
+        self.__api.vna_mode()
+        self.__tg_ard.setText(VNA)
+        self.__relay_sel.setCurrentText(VNA)
+        self.__relay_state = VNA
         
     #=======================================================
     # Background activities
