@@ -48,7 +48,16 @@ flexi_loop_model = {
         SERIAL: {
             PORT: 'COM5',
         },
+        TIMEOUTS: {
+            CALIBRATE_TIMEOUT: 120,
+            TUNE_TIMEOUT: 120,
+            RES_TIMEOUT: 60,
+            MOVE_TIMEOUT: 30,
+            SHORT_TIMEOUT: 2,
+        },
         CAL: {
+            # Number of steps for set points
+            ACTUATOR_STEPS: 10,
             # Feedback values for min and max
             HOME: -1,
             MAX: -1,
@@ -56,6 +65,15 @@ flexi_loop_model = {
             CAL_L1: [],
             CAL_L2: [],
             CAL_L3: [],
+        },
+        VNA_CONF: {
+            VNA_PRESENT: VNA_YES,
+            CAL_FILE: '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal',
+            SCAN_MODE: 'REFL',
+            EXPORTS: 'csv',
+            EXPORT_FILENAME: 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}',
+            VNA_JAR: '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar',
+            EXPORT_PATH: '../VNAJ/vnaJ.3.3/export',
         },
     },
     STATE: {

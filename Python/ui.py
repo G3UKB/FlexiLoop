@@ -95,7 +95,7 @@ class UI(QMainWindow):
         self.__current_activity = NONE
         self.__long_running = False
         self.__free_running = False
-        self.__activity_timer = SHORT_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
@@ -157,14 +157,14 @@ class UI(QMainWindow):
         
         # Are we waiting for an activity to complete
         if self.__current_activity == NONE:
-            self.__activity_timer = SHORT_TIMEOUT
+            self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         else:
             # Activity in progress
             self.__activity_timer -= 1
             if self.__activity_timer <= 0:
                 self.logger.info ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!' % (self.__current_activity))
                 self.__current_activity == NONE
-                self.__activity_timer = SHORT_TIMEOUT
+                self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
                 return
             
             # Get current event data
@@ -183,7 +183,7 @@ class UI(QMainWindow):
                         self.__swr = args[0]
                     self.logger.info ('Activity %s completed successfully' % (self.__current_activity))
                     self.__current_activity = NONE
-                    self.__activity_timer = SHORT_TIMEOUT
+                    self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
                 else:
                     self.logger.info ('Activity %s completed but failed!' % (self.__current_activity))
             elif name == STATUS:
@@ -193,7 +193,7 @@ class UI(QMainWindow):
             elif name == ABORT:
                 # User hit the abort button
                 self.__current_activity = NONE
-                self.__activity_timer = SHORT_TIMEOUT
+                self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
                 self.logger.info("Activity aborted by user!")
             else:
                 self.logger.info ('Waiting for activity %s to completed but got activity %s! Continuing to wait' % (self.__current_activity, name))
@@ -544,7 +544,7 @@ class UI(QMainWindow):
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
         self.__current_activity = CALIBRATE
-        self.__activity_timer = CALIBRATE_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__st_act.setText(CALIBRATE)
         self.__long_running = True
         if self.__api.calibrate(loop):
@@ -568,7 +568,7 @@ class UI(QMainWindow):
         freq = float(self.freqtxt.displayText())
         self.__st_act.setText(TUNE)
         self.__current_activity = TUNE
-        self.__activity_timer = TUNE_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_freq(loop, freq)
         self.__set_tx_mode()
@@ -586,14 +586,14 @@ class UI(QMainWindow):
     def __do_run_fwd(self):
         self.__current_activity = RUNFWD
         self.__st_act.setText(RUNFWD)
-        self.__activity_timer = MOVE_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__free_running = True
         self.__api.free_fwd()
     
     def __do_run_rev(self):
         self.__current_activity = RUNREV
         self.__st_act.setText(RUNREV)
-        self.__activity_timer = MOVE_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__free_running = True
         self.__api.free_rev()
     
@@ -607,7 +607,7 @@ class UI(QMainWindow):
         self.__relay_state = VNA
         self.__current_activity = RESONANCE
         self.__st_act.setText(RESONANCE)
-        self.__activity_timer = RES_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT]*(1000/IDLE_TICKER)
         r, (f,swr) = self.__api.get_current_res(self.__selected_loop)
         if r:
             self.__freqval.setText(f)
@@ -617,32 +617,32 @@ class UI(QMainWindow):
     def __do_pos(self):
         self.__current_activity = MOVETO
         self.__st_act.setText(MOVETO)
-        self.__activity_timer = MOVE_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_position(self.__movetxt.value())
     
     def __do_move_fwd(self):
         self.__current_activity = MSFWD
         self.__st_act.setText(MSFWD)
-        self.__activity_timer = SHORT_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.move_fwd_for_ms(self.__inctxt.value())
     
     def __do_move_rev(self):
         self.__current_activity = MSREV
         self.__st_act.setText(MSREV)
-        self.__activity_timer = SHORT_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.move_rev_for_ms(self.__inctxt.value())
     
     def __do_nudge_fwd(self):
         self.__current_activity = NUDGEFWD
         self.__st_act.setText(NUDGEFWD)
-        self.__activity_timer = SHORT_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.nudge_fwd()
     
     def __do_nudge_rev(self):
         self.__current_activity = NUDGEREV
         self.__st_act.setText(NUDGEREV)
-        self.__activity_timer = SHORT_TIMEOUT
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.nudge_rev()
 
     #=======================================================

@@ -67,7 +67,7 @@ class API:
         self.__serial_comms.start()
         
         # Create a VNA instance
-        self.__vna = vna.VNA()
+        self.__vna = vna.VNA(model)
         
         # Create a Calibration instance
         self.__c_q = queue.Queue(10)
@@ -98,12 +98,12 @@ class API:
     # Perform a calibration for the given loop    
     def calibrate(self, loop):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, ACT_STEPS]))
+        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS]]))
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('re_calibrate_loop', [loop, ACT_STEPS]))
+        self.__c_q.put(('re_calibrate_loop', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS]]))
         
     # Get position as a %age of full travel
     def get_pos(self):

@@ -42,17 +42,19 @@ SIMULATE = True
 
 class VNA:
     
-    def __init__(self):
+    def __init__(self, model):
         
         # Get root logger
         self.logger = logging.getLogger('root')
 
+        self.__model = model
+        
         # Simulation setup
         if SIMULATE:
             # These are just test values
             self.__low_f = 3.0          # Lowest frequency which is at max extension
             self.__high_f = 12.0        # Highest frequency which is at home position
-            self.__inc_f = (self.__high_f - self.__low_f)/ACT_STEPS # Freq increment on each step
+            self.__inc_f = (self.__high_f - self.__low_f)/self.__model[CONFIG][CAL][ACTUATOR_STEPS] # Freq increment on each step
             self.__current_step = 1
             self.__swr = 1.0            # Always return 1.0
         
@@ -79,10 +81,10 @@ class VNA:
                 self.__current_step = 1
                 return True, [(self.__low_f, self.__swr)]
             elif hint == VNA_RANDOM:
-                i = random.randint(1,ACT_STEPS)
+                i = random.randint(1,self.__model[CONFIG][CAL][ACTUATOR_STEPS])
                 return True, [(self.__high_f - (i * self.__inc_f), self.__swr)]
             else:
-                if self.__current_step >= ACT_STEPS:
+                if self.__current_step >= self.__model[CONFIG][CAL][ACTUATOR_STEPS]:
                     print ("Steps %d are running off end. Restarting at 1." % (self.__current_step))
                     self.__current_step = 1
                 else:
@@ -151,29 +153,21 @@ class VNA:
                 steps       --  steps between start and stop (minimum 2 gives one reading at each freq)
                 
         """
-        
         try:
-            if sys.platform == 'win32':
-                exportPath = WIN_EXPORT_PATH
-            elif sys.platform == 'linux':
-                exportPath = LIN_EXPORT_PATH
-            else:
-                print('Unsupported platform %s' % (sys.platform))
-                return
             params = []
             params.append('java')
             params.append('-Dfstart=%s' % (startFreq))
             params.append('-Dfstop=%s' % (stopFreq))
             params.append('-Dfsteps=%s' % (steps))
-            params.append('-DdriverId=%d' % (DRIVER_ID))
-            params.append('-DdriverPort=%s' % (DRIVER_PORT))
-            params.append('-Dcalfile=%s' % (CAL_FILE))
-            params.append('-Dscanmode=%s' % (SCAN_MODE))
-            params.append('-Dexports=%s' % (EXPORTS))
-            params.append('-DexportDirectory=%s' % (exportPath))
-            params.append('-DexportFilename=%s' % (EXPORT_FILENAME))
+            params.append('-DdriverId=%d' % (self.__model[CONFIG][VNA_CONF][DRIVER_ID]))
+            params.append('-DdriverPort=%s' % (self.__model[CONFIG][VNA_CONF][DRIVER_PORT]))
+            params.append('-Dcalfile=%s' % (self.__model[CONFIG][VNA_CONF][CAL_FILE]))
+            params.append('-Dscanmode=%s' % (self.__model[CONFIG][VNA_CONF][SCAN_MODE]))
+            params.append('-Dexports=%s' % (self.__model[CONFIG][VNA_CONF][EXPORTS]))
+            params.append('-DexportDirectory=%s' % (self.__model[CONFIG][VNA_CONF][EXPORT_PATH]))
+            params.append('-DexportFilename=%s' % (self.__model[CONFIG][VNA_CONF][EXPORT_FILENAME]))
             params.append('-jar')
-            params.append('%s' % (JAR))
+            params.append('%s' % (self.__model[CONFIG][VNA_CONF][VNA_JAR]))
             proc = subprocess.Popen(params)
             proc.wait()
             print('Scan complete')

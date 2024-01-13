@@ -88,14 +88,76 @@ class Config(QDialog):
         
         # Set up the tabs
         self.top_tab_widget = QTabWidget()
-        gentab = QWidget()
-        self.top_tab_widget.addTab(gentab, "General")
-        
+           
         # Set main layout
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.addWidget(self.top_tab_widget)
+        
+        # Arduino tab
+        arduinotab = QWidget()
+        self.top_tab_widget.addTab(arduinotab, "Arduino")
+        arduinogrid = QGridLayout()
+        arduinotab.setLayout(arduinogrid)
+        self.__populate_arduino(arduinogrid)
+        
+        # Caibration tab
+        calibrationab = QWidget()
+        self.top_tab_widget.addTab(calibrationab, "Calibration")
+        calobrationgrid = QGridLayout()
+        calibrationab.setLayout(calobrationgrid)
+        self.__populate_calibration(calobrationgrid)
+
+        # Timeouts tab
+        timeouttab = QWidget()
+        self.top_tab_widget.addTab(timeouttab, "Timeouts")
+        timeoutgrid = QGridLayout()
+        timeouttab.setLayout(timeoutgrid)
+        self.__populate_timeouts(timeoutgrid)
     
+        # VNA tab
+        vnatab = QWidget()
+        self.top_tab_widget.addTab(vnatab, "VNA")
+        vnagrid = QGridLayout()
+        vnatab.setLayout(vnagrid)
+        self.__populate_vna(vnagrid)
+        
+    #=======================================================
+    # Populate dialog
+    def __populate_arduino(self, grid):
+        # Serial port
+        pass
+
+    def __populate_calibration(self, grid):
+        # Default number of set points
+        # ACTUATOR_STEPS = 10
+        pass
+    
+    def __populate_timeouts(self, grid):
+        # Defaults for timeouts
+        # Note values are configured in seconds
+        # Working values depend on idle tick time
+        # CALIBRATE_TIMEOUT = 120 * (1000/IDLE_TICKER)
+        # TUNE_TIMEOUT = 120 * (1000/IDLE_TICKER)
+        # RES_TIMEOUT = 60 * (1000/IDLE_TICKER)
+        # MOVE_TIMEOUT = 30 * (1000/IDLE_TICKER)
+        # SHORT_TIMEOUT = 2 * (1000/IDLE_TICKER)
+        pass
+    
+    def __populate_vna(self, grid):
+        # VNA present?
+        # Defaults
+        # DRIVER_ID = 20  # MiniVNA Tiny
+        # DRIVER_PORT = 'COM4'
+        # CAL_FILE = '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal'
+        # SCAN_MODE = 'REFL'
+        # EXPORTS = 'csv'
+        # EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}'
+        # JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar' #P
+        # Decoder defs
+        # EXPORT_PATH = '../VNAJ/vnaJ.3.3/export'
+        pass
+        
     #=======================================================
     # Window events
     def closeEvent(self, event):

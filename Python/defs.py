@@ -40,12 +40,17 @@ STATE = 'STATE'
 # Serial section
 SERIAL = 'SERIAL'
 PORT = 'PORT'
+# Timeout section
+TIMEOUTS = 'TIMEOUTS'
 # Calibration section
 CAL = 'CAL'
 HOME = 'HOME'
 CAL_L1 = 'CAL_L1'
 CAL_L2 = 'CAL_L2'
 CAL_L3 = 'CAL_L3'
+# VNA section
+VNA_CONF = 'VNA_CONF'
+
 #======================================
 # State
 #
@@ -93,16 +98,15 @@ RESONANCE = 'Resonance'
 STATUS = 'Status'
 ABORT = 'Abort'
 STOP = 'Stop'
-
 NONE = 'None'
 
 # Timeouts for the long running operations in seconds
 # Adjusted for the idle tick rate to number of idle passes
-CALIBRATE_TIMEOUT = 120 * (1000/250) #P
-TUNE_TIMEOUT = 120 * (1000/250) #P
-RES_TIMEOUT = 60 * (1000/250) #P
-MOVE_TIMEOUT = 30 * (1000/250) #P
-SHORT_TIMEOUT = 2 * (1000/250) #P
+CALIBRATE_TIMEOUT = 'CALIBRATE_TIMEOUT'
+TUNE_TIMEOUT = 'TUNE_TIMEOUT'
+RES_TIMEOUT = 'RES_TIMEOUT'
+MOVE_TIMEOUT = 'MOVE_TIMEOUT'
+SHORT_TIMEOUT = 'SHORT_TIMEOUT'
 
 # Target selection dependent on relay on/off
 TX = 'TX'
@@ -116,7 +120,7 @@ VNA_RANDOM = 'RANDOM'
 
 # Number of steps for calibration
 # Resonant frequency and feedback value at each step forms part of calibration
-ACT_STEPS = 10 #P
+ACTUATOR_STEPS = 'ACTUATOR_STEPS'
 
 # Direction of actuator motion
 FWD = 'FWD'
@@ -133,6 +137,10 @@ W_NORMAL = 'WNormal'
 # VNA parameters
 #
 
+VNA_PRESENT = 'VNA_PRESENT'
+VNA_YES = 'VNA_YES'
+VNA_NO = 'VNA_NO'
+
 # Types
 RQST_FRES = 'fres'
 RQST_FSWR = 'fswr'
@@ -146,22 +154,18 @@ INC_500 = 500
 INC_250 = 250
 
 # Driver
-DRIVER_ID = 20  # MiniVNA Tiny
-#DRIVER_PORT = 'ttyUSB0' #P
-DRIVER_PORT = 'COM4' #P
+DRIVER_ID = 'DRIVER_ID'
+DRIVER_PORT = 'DRIVER_PORT'
 
 # Scanner defs
-#CAL_FILE = '/home/looppi/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal' #P
-CAL_FILE = '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal' #P
-SCAN_MODE = 'REFL'
-EXPORTS = 'csv'
-EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}' #P
-#JAR = '/home/looppi/Projects/MiniVNA/VNAJ/vnaJ-hl.3.3.3.jar' #P
-JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar' #P
+CAL_FILE = 'CAL_FILE'
+SCAN_MODE = 'SCAN_MODE'
+EXPORTS = 'EXPORTS'
+EXPORT_FILENAME = 'EXPORT_FILENAME'
+VNA_JAR = 'VNA_JAR'
 
 # Decoder defs
-LIN_EXPORT_PATH = '/home/looppi/vnaJ.3.3/export' #P
-WIN_EXPORT_PATH = '../VNAJ/vnaJ.3.3/export' #P
+EXPORT_PATH = 'EXPORT_PATH'
 DEC_FREQ = 0
 DEC_SWR = 4
 
