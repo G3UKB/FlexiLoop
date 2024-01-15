@@ -79,7 +79,7 @@ class AppMain:
             self.__configured = False
         
         # Extract required fields
-        port = self.__model[CONFIG][SERIAL][PORT]
+        port = self.__model[CONFIG][ARDUINO][PORT]
         
         # The one and only QApplication 
         self.__qt_app = QApplication(sys.argv)

@@ -32,7 +32,7 @@ import logging
 from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QStatusBar, QTabWidget, QTableWidget, QInputDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QStatusBar, QTabWidget, QTableWidget, QInputDialog, QFileDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QTableWidgetItem
 
 # Application imports
 from defs import *
@@ -129,6 +129,7 @@ class Config(QDialog):
         portlabel = QLabel('Arduino Port')
         grid.addWidget(portlabel, 0, 0)
         self.__serialporttxt = QLineEdit()
+        self.__serialporttxt.setText(self.__model[CONFIG][ARDUINO][PORT])
         self.__serialporttxt.setToolTip('Set Arduino Port')
         self.__serialporttxt.setMaximumWidth(80)
         grid.addWidget(self.__serialporttxt, 0, 1)
@@ -209,10 +210,102 @@ class Config(QDialog):
         # SCAN_MODE = 'REFL'
         # EXPORTS = 'csv'
         # EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}'
-        # JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar' #P
+        # VNA_JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar'
         # Decoder defs
         # EXPORT_PATH = '../VNAJ/vnaJ.3.3/export'
-        pass
+        
+        vnaavaillabel = QLabel('VNA Present?')
+        grid.addWidget(vnaavaillabel, 0, 0)
+        self.__vnaavailtog = QCheckBox('')
+        self.__vnaavailtog.setToolTip('Set number of seconds to wait for short running actions')
+        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
+            self.__vnaavailtog.setChecked(True)
+        else:
+            self.__vnaavailtog.setChecked(False)
+        grid.addWidget(self.__vnaavailtog, 0, 1)
+        
+        vnadriverlabel = QLabel('VNA Driver')
+        grid.addWidget(vnadriverlabel, 1, 0)    
+        self.__vnadrivertxt = QSpinBox()
+        self.__vnadrivertxt.setToolTip('Driver ID, default mini-VNA Tiny = 20')
+        self.__vnadrivertxt.setRange(0,100)
+        self.__vnadrivertxt.setValue(self.__model[CONFIG][VNA_CONF][DRIVER_ID])
+        self.__vnadrivertxt.setMaximumWidth(80)
+        grid.addWidget(self.__vnadrivertxt, 1, 1)
+        
+        vnaportlabel = QLabel('VNA Port')
+        grid.addWidget(vnaportlabel, 2, 0)
+        self.__vnaporttxt = QLineEdit()
+        self.__vnaporttxt.setText(self.__model[CONFIG][VNA_CONF][DRIVER_PORT])
+        self.__vnaporttxt.setToolTip('Set VNA Port')
+        self.__vnaporttxt.setMaximumWidth(80)
+        grid.addWidget(self.__vnaporttxt, 2, 1)
+        
+        vnamodelabel = QLabel('Scan Mode')
+        grid.addWidget(vnamodelabel, 4, 0)
+        self.__vnamodetxt = QLineEdit()
+        self.__vnamodetxt.setText(self.__model[CONFIG][VNA_CONF][SCAN_MODE])
+        self.__vnamodetxt.setToolTip('Set Scan Mode')
+        self.__vnamodetxt.setMaximumWidth(80)
+        grid.addWidget(self.__vnamodetxt, 4, 1)
+        
+        vnatypelabel = QLabel('Export File Type')
+        grid.addWidget(vnatypelabel, 5, 0)
+        self.__vnatypetxt = QLineEdit()
+        self.__vnatypetxt.setText(self.__model[CONFIG][VNA_CONF][EXPORTS])
+        self.__vnatypetxt.setToolTip('Set export type')
+        self.__vnatypetxt.setMaximumWidth(80)
+        grid.addWidget(self.__vnatypetxt, 5, 1)
+        
+        vnanamelabel = QLabel('Export Filename')
+        grid.addWidget(vnanamelabel, 6, 0)
+        self.__vnanametxt = QLineEdit()
+        self.__vnanametxt.setText(self.__model[CONFIG][VNA_CONF][EXPORT_FILENAME])
+        self.__vnanametxt.setToolTip('Set export type')
+        self.__vnanametxt.setMaximumWidth(200)
+        grid.addWidget(self.__vnanametxt, 6, 1)
+        
+        vnacalpathlabel = QLabel('Calibration File Path')
+        grid.addWidget(vnacalpathlabel, 7, 0)
+        self.__vnacalpathtxt = QLineEdit()
+        self.__vnacalpathtxt.setText(self.__model[CONFIG][VNA_CONF][CAL_FILE])
+        self.__vnacalpathtxt.setToolTip('Set calibration file path')
+        self.__vnacalpathtxt.setMinimumWidth(200)
+        grid.addWidget(self.__vnacalpathtxt, 7, 1)
+        # Now we need a way to select a file
+        self.__caldialog = QPushButton("...")
+        self.__caldialog.setMaximumWidth(30)
+        self.__caldialog.setToolTip('Choose file...')
+        grid.addWidget(self.__caldialog, 7, 2)
+        self.__caldialog.clicked.connect(self.__do_cal_path)
+        
+        vnajarlabel = QLabel('VNA Jar Path')
+        grid.addWidget(vnajarlabel, 8, 0)
+        self.__vnajarpathtxt = QLineEdit()
+        self.__vnajarpathtxt.setText(self.__model[CONFIG][VNA_CONF][VNA_JAR])
+        self.__vnajarpathtxt.setToolTip('Set JAR path')
+        self.__vnajarpathtxt.setMinimumWidth(200)
+        grid.addWidget(self.__vnajarpathtxt, 8, 1)
+        # Now we need a way to select a file
+        self.__jardialog = QPushButton("...")
+        self.__jardialog.setMaximumWidth(30)
+        self.__jardialog.setToolTip('Choose file...')
+        grid.addWidget(self.__jardialog, 8, 2)
+        self.__jardialog.clicked.connect(self.__do_jar_path)
+        
+        vnaexportlabel = QLabel('Export Path')
+        grid.addWidget(vnaexportlabel, 9, 0)
+        self.__vnaexportpathtxt = QLineEdit()
+        self.__vnaexportpathtxt.setText(self.__model[CONFIG][VNA_CONF][EXPORT_PATH])
+        self.__vnaexportpathtxt.setToolTip('Set export file path')
+        self.__vnaexportpathtxt.setMinimumWidth(200)
+        grid.addWidget(self.__vnaexportpathtxt, 9, 1)
+        # Now we need a way to select a file
+        self.__exportdialog = QPushButton("...")
+        self.__exportdialog.setMaximumWidth(30)
+        self.__exportdialog.setToolTip('Choose file...')
+        grid.addWidget(self.__exportdialog, 9, 2)
+        self.__exportdialog.clicked.connect(self.__do_export_path)
         
     #=======================================================
     # Window events
@@ -230,4 +323,16 @@ class Config(QDialog):
     def moveEvent(self, event):
         # Update config
         x,y,w,h = self.__model[STATE][WINDOWS][CONFIG_WIN]
-        self.__model[STATE][WINDOWS][CONFIG_WIN] = [event.pos().x(),event.pos().y(),w,h]   
+        self.__model[STATE][WINDOWS][CONFIG_WIN] = [event.pos().x(),event.pos().y(),w,h]
+        
+    #=======================================================
+    # User events
+    def __do_cal_path(self):
+        self.__vnacalpathtxt.setText(QFileDialog.getOpenFileName(self, 'Open file')[0])
+        
+    def __do_jar_path(self):
+        self.__vnajarpathtxt.setText(QFileDialog.getOpenFileName(self, 'Open file')[0])
+        
+    def __do_export_path(self):
+        self.__vnaexportpathtxt.setText(QFileDialog.getOpenFileName(self, 'Open file')[0])
+    

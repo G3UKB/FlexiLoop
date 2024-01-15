@@ -45,7 +45,7 @@ def get_ip():
 
 flexi_loop_model = {
     CONFIG: {
-        SERIAL: {
+        ARDUINO: {
             PORT: 'COM5',
         },
         TIMEOUTS: {
@@ -68,6 +68,8 @@ flexi_loop_model = {
         },
         VNA_CONF: {
             VNA_PRESENT: VNA_YES,
+            DRIVER_ID: 20,
+            DRIVER_PORT: 'COM4',
             CAL_FILE: '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal',
             SCAN_MODE: 'REFL',
             EXPORTS: 'csv',
