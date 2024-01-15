@@ -126,12 +126,24 @@ class Config(QDialog):
     # Populate dialog
     def __populate_arduino(self, grid):
         # Serial port
-        pass
+        portlabel = QLabel('Arduino Port')
+        grid.addWidget(portlabel, 0, 0)
+        self.__serialporttxt = QLineEdit()
+        self.__serialporttxt.setToolTip('Set Arduino Port')
+        self.__serialporttxt.setMaximumWidth(80)
+        grid.addWidget(self.__serialporttxt, 0, 1)
 
     def __populate_calibration(self, grid):
         # Default number of set points
         # ACTUATOR_STEPS = 10
-        pass
+        steplabel = QLabel('Calibration Steps')
+        grid.addWidget(steplabel, 0, 0)
+        self.__steptxt = QSpinBox()
+        self.__steptxt.setToolTip('Set number of calibration steps')
+        self.__steptxt.setRange(0,50)
+        self.__steptxt.setValue(10)
+        self.__steptxt.setMaximumWidth(80)
+        grid.addWidget(self.__steptxt, 0, 1)
     
     def __populate_timeouts(self, grid):
         # Defaults for timeouts
@@ -142,8 +154,52 @@ class Config(QDialog):
         # RES_TIMEOUT = 60 * (1000/IDLE_TICKER)
         # MOVE_TIMEOUT = 30 * (1000/IDLE_TICKER)
         # SHORT_TIMEOUT = 2 * (1000/IDLE_TICKER)
-        pass
+        
+        caltolabel = QLabel('Calibration Timeout')
+        grid.addWidget(caltolabel, 0, 0)
+        self.__caltotxt = QSpinBox()
+        self.__caltotxt.setToolTip('Set number of seconds to wait for calibration to finish')
+        self.__caltotxt.setRange(0,200)
+        self.__caltotxt.setValue(self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT])
+        self.__caltotxt.setMaximumWidth(80)
+        grid.addWidget(self.__caltotxt, 0, 1)
     
+        tunetolabel = QLabel('Tune Timeout')
+        grid.addWidget(tunetolabel, 1, 0)
+        self.__tunetotxt = QSpinBox()
+        self.__tunetotxt.setToolTip('Set number of seconds to wait for tuning to finish')
+        self.__tunetotxt.setRange(0,200)
+        self.__tunetotxt.setValue(self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT])
+        self.__tunetotxt.setMaximumWidth(80)
+        grid.addWidget(self.__tunetotxt, 1, 1)
+        
+        restolabel = QLabel('Resonance Timeout')
+        grid.addWidget(restolabel, 2, 0)
+        self.__restotxt = QSpinBox()
+        self.__restotxt.setToolTip('Set number of seconds to wait for finding current resonance frequency')
+        self.__restotxt.setRange(0,100)
+        self.__restotxt.setValue(self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT])
+        self.__restotxt.setMaximumWidth(80)
+        grid.addWidget(self.__restotxt, 2, 1)
+        
+        movetolabel = QLabel('Move Timeout')
+        grid.addWidget(movetolabel, 3, 0)
+        self.__movetotxt = QSpinBox()
+        self.__movetotxt.setToolTip('Set number of seconds to wait to move to extension %age')
+        self.__movetotxt.setRange(0,60)
+        self.__movetotxt.setValue(self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT])
+        self.__movetotxt.setMaximumWidth(80)
+        grid.addWidget(self.__movetotxt, 3, 1)
+        
+        shorttolabel = QLabel('Short Timeout')
+        grid.addWidget(shorttolabel, 4, 0)
+        self.__shorttotxt = QSpinBox()
+        self.__shorttotxt.setToolTip('Set number of seconds to wait for short running actions')
+        self.__shorttotxt.setRange(0,10)
+        self.__shorttotxt.setValue(self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT])
+        self.__shorttotxt.setMaximumWidth(80)
+        grid.addWidget(self.__shorttotxt, 4, 1)
+        
     def __populate_vna(self, grid):
         # VNA present?
         # Defaults
