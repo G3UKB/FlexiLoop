@@ -128,19 +128,19 @@ class Config(QDialog):
         
         # Action buttons
         self.__save = QPushButton("Save")
-        self.__save.setObjectName("dialog")
+        #self.__save.setObjectName("dialog")
         self.__save.setMaximumWidth(30)
         self.__save.setToolTip('Save changes ...')
         common.addWidget(self.__save, 0, 0)
         self.__save.clicked.connect(self.__do_save)
         self.__cancel = QPushButton("Cancel")
-        self.__cancel.setObjectName("dialog")
+        #self.__cancel.setObjectName("dialog")
         self.__cancel.setMaximumWidth(30)
         self.__cancel.setToolTip('Cancel changes ...')
         common.addWidget(self.__cancel, 0, 1)
         self.__cancel.clicked.connect(self.__do_cancel)
         self.__close = QPushButton("Close")
-        self.__close.setObjectName("dialog")
+        #self.__close.setObjectName("dialog")
         self.__close.setMaximumWidth(30)
         self.__close.setToolTip('Close configuration')
         common.addWidget(self.__close, 0, 2)
@@ -158,6 +158,9 @@ class Config(QDialog):
         self.__serialporttxt.setToolTip('Set Arduino Port')
         self.__serialporttxt.setMaximumWidth(80)
         grid.addWidget(self.__serialporttxt, 0, 1)
+        grid.setAlignment(QtCore.Qt.AlignLeft)
+        grid.setRowStretch(1, 1)
+        grid.setColumnStretch(2, 1)
 
     def __populate_calibration(self, grid):
         # Default number of set points
@@ -169,8 +172,10 @@ class Config(QDialog):
         self.__steptxt.setToolTip('Set number of calibration steps')
         self.__steptxt.setRange(0,50)
         self.__steptxt.setValue(self.__model[CONFIG][CAL][ACTUATOR_STEPS])
-        self.__steptxt.setMaximumWidth(80)
+        self.__steptxt.setMinimumWidth(80)
         grid.addWidget(self.__steptxt, 0, 1)
+        grid.setRowStretch(1, 1)
+        grid.setColumnStretch(2, 1)
     
     def __populate_timeouts(self, grid):
         # Defaults for timeouts
@@ -189,7 +194,7 @@ class Config(QDialog):
         self.__caltotxt.setToolTip('Set number of seconds to wait for calibration to finish')
         self.__caltotxt.setRange(0,200)
         self.__caltotxt.setValue(self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT])
-        self.__caltotxt.setMaximumWidth(80)
+        self.__caltotxt.setMinimumWidth(80)
         grid.addWidget(self.__caltotxt, 0, 1)
     
         tunetolabel = QLabel('Tune Timeout')
@@ -199,7 +204,7 @@ class Config(QDialog):
         self.__tunetotxt.setToolTip('Set number of seconds to wait for tuning to finish')
         self.__tunetotxt.setRange(0,200)
         self.__tunetotxt.setValue(self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT])
-        self.__tunetotxt.setMaximumWidth(80)
+        self.__tunetotxt.setMinimumWidth(80)
         grid.addWidget(self.__tunetotxt, 1, 1)
         
         restolabel = QLabel('Resonance Timeout')
@@ -209,7 +214,7 @@ class Config(QDialog):
         self.__restotxt.setToolTip('Set number of seconds to wait for finding current resonance frequency')
         self.__restotxt.setRange(0,100)
         self.__restotxt.setValue(self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT])
-        self.__restotxt.setMaximumWidth(80)
+        self.__restotxt.setMinimumWidth(80)
         grid.addWidget(self.__restotxt, 2, 1)
         
         movetolabel = QLabel('Move Timeout')
@@ -219,7 +224,7 @@ class Config(QDialog):
         self.__movetotxt.setToolTip('Set number of seconds to wait to move to extension %age')
         self.__movetotxt.setRange(0,60)
         self.__movetotxt.setValue(self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT])
-        self.__movetotxt.setMaximumWidth(80)
+        self.__movetotxt.setMinimumWidth(80)
         grid.addWidget(self.__movetotxt, 3, 1)
         
         shorttolabel = QLabel('Short Timeout')
@@ -229,8 +234,11 @@ class Config(QDialog):
         self.__shorttotxt.setToolTip('Set number of seconds to wait for short running actions')
         self.__shorttotxt.setRange(0,10)
         self.__shorttotxt.setValue(self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT])
-        self.__shorttotxt.setMaximumWidth(80)
+        self.__shorttotxt.setMinimumWidth(80)
         grid.addWidget(self.__shorttotxt, 4, 1)
+        
+        grid.setRowStretch(5, 1)
+        grid.setColumnStretch(2, 1)
         
     def __populate_vna(self, grid):
         # VNA present?
@@ -298,7 +306,7 @@ class Config(QDialog):
         self.__vnanametxt.setObjectName("dialog")
         self.__vnanametxt.setText(self.__model[CONFIG][VNA_CONF][EXPORT_FILENAME])
         self.__vnanametxt.setToolTip('Set export type')
-        self.__vnanametxt.setMaximumWidth(200)
+        self.__vnanametxt.setMinimumWidth(300)
         grid.addWidget(self.__vnanametxt, 6, 1)
         
         vnacalpathlabel = QLabel('Calibration File Path')
@@ -307,12 +315,12 @@ class Config(QDialog):
         self.__vnacalpathtxt.setObjectName("dialog")
         self.__vnacalpathtxt.setText(self.__model[CONFIG][VNA_CONF][CAL_FILE])
         self.__vnacalpathtxt.setToolTip('Set calibration file path')
-        self.__vnacalpathtxt.setMinimumWidth(200)
+        self.__vnacalpathtxt.setMinimumWidth(300)
         grid.addWidget(self.__vnacalpathtxt, 7, 1)
         # Now we need a way to select a file
         self.__caldialog = QPushButton("...")
         self.__caldialog.setObjectName("dialog")
-        self.__caldialog.setMaximumWidth(30)
+        #self.__caldialog.setMaximumWidth(10)
         self.__caldialog.setToolTip('Choose file...')
         grid.addWidget(self.__caldialog, 7, 2)
         self.__caldialog.clicked.connect(self.__do_cal_path)
@@ -323,12 +331,12 @@ class Config(QDialog):
         self.__vnajarpathtxt.setObjectName("dialog")
         self.__vnajarpathtxt.setText(self.__model[CONFIG][VNA_CONF][VNA_JAR])
         self.__vnajarpathtxt.setToolTip('Set JAR path')
-        self.__vnajarpathtxt.setMinimumWidth(200)
+        self.__vnajarpathtxt.setMinimumWidth(300)
         grid.addWidget(self.__vnajarpathtxt, 8, 1)
         # Now we need a way to select a file
         self.__jardialog = QPushButton("...")
         self.__jardialog.setObjectName("dialog")
-        self.__jardialog.setMaximumWidth(30)
+        #self.__jardialog.setMaximumWidth(10)
         self.__jardialog.setToolTip('Choose file...')
         grid.addWidget(self.__jardialog, 8, 2)
         self.__jardialog.clicked.connect(self.__do_jar_path)
@@ -339,15 +347,18 @@ class Config(QDialog):
         self.__vnaexportpathtxt.setObjectName("dialog")
         self.__vnaexportpathtxt.setText(self.__model[CONFIG][VNA_CONF][EXPORT_PATH])
         self.__vnaexportpathtxt.setToolTip('Set export file path')
-        self.__vnaexportpathtxt.setMinimumWidth(200)
+        self.__vnaexportpathtxt.setMinimumWidth(300)
         grid.addWidget(self.__vnaexportpathtxt, 9, 1)
         # Now we need a way to select a file
         self.__exportdialog = QPushButton("...")
         self.__exportdialog.setObjectName("dialog")
-        self.__exportdialog.setMaximumWidth(30)
+        #self.__exportdialog.setMaximumWidth(10)
         self.__exportdialog.setToolTip('Choose file...')
         grid.addWidget(self.__exportdialog, 9, 2)
         self.__exportdialog.clicked.connect(self.__do_export_path)
+        
+        grid.setRowStretch(10, 1)
+        grid.setColumnStretch(3, 1)
         
     #=======================================================
     # Window events
@@ -378,9 +389,9 @@ class Config(QDialog):
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
         if self.__vnaavailtog.isChecked():
-            self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES
+            self.__model[CONFIG][VNA_CONF][VNA_PRESENT] = VNA_YES
         else:
-            self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO
+            self.__model[CONFIG][VNA_CONF][VNA_PRESENT] = VNA_NO
         self.__model[CONFIG][VNA_CONF][DRIVER_ID] = self.__vnadrivertxt.value()
         self.__model[CONFIG][VNA_CONF][DRIVER_PORT] = self.__vnaporttxt.text()
         self.__model[CONFIG][VNA_CONF][SCAN_MODE] = self.__vnamodetxt.text()

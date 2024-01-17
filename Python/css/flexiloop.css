@@ -62,7 +62,7 @@ QPushButton {
 
 QPushButton#dialog {
     min-height: 20px;
-    min-width: 100px;
+    min-width: 30px;
     background-color: rgb(200,197,191);
     color: rgb(24,74,101);
     border-style: outset;
