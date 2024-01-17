@@ -69,7 +69,7 @@ class UI(QMainWindow):
         #Loop status
         self.__selected_loop = 1
         self.__loop_status = [False, False, False]
-        self.__last_widget_status = W_DISABLE_ALL
+        self.__last_widget_status = None
     
         # Set the back colour
         palette = QtGui.QPalette()
@@ -340,12 +340,13 @@ class UI(QMainWindow):
         self.__maxvalue.setObjectName("minmax")
         self.__loopgrid.addWidget(self.__maxvalue, 0, 5)
         
+        # Calibration
         self.__cal = QPushButton("(Re)Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
-        s = QGroupBox('Status')
+        s = QGroupBox('Calibrate Status')
         hbox = QHBoxLayout()
         self.__l1label = QLabel('Loop-1')
         hbox.addWidget(self.__l1label)
@@ -364,6 +365,32 @@ class UI(QMainWindow):
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
         self.__loopgrid.addWidget(s, 1, 1, 1, 3)
+        
+        # Set points
+        self.__sp = QPushButton("Setpoints...")
+        self.__sp.setToolTip('Manage setpoints for loop...')
+        self.__loopgrid.addWidget(self.__sp, 1, 4)
+        self.__sp.clicked.connect(self.__do_sp)
+        
+        sps = QGroupBox('Setpoint Status')
+        hbox1 = QHBoxLayout()
+        self.__l4label = QLabel('Loop-1')
+        hbox1.addWidget(self.__l4label)
+        self.__l4label.setObjectName("stred")
+        self.__l4label.setStyleSheet(self.__l4label.styleSheet())
+        self.__l4label.setAlignment(QtCore.Qt.AlignCenter)
+        self.__l5label = QLabel('Loop-2')
+        hbox1.addWidget(self.__l5label)
+        self.__l5label.setObjectName("stred")
+        self.__l5label.setStyleSheet(self.__l5label.styleSheet())
+        self.__l5label.setAlignment(QtCore.Qt.AlignCenter)
+        self.__l6label = QLabel('Loop-3')
+        hbox1.addWidget(self.__l6label)
+        self.__l6label.setObjectName("stred")
+        self.__l6label.setStyleSheet(self.__l6label.styleSheet())
+        self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
+        sps.setLayout(hbox1)
+        self.__loopgrid.addWidget(sps, 1, 5, 1, 3)
         
         # -------------------------------------------
         # Auto area
@@ -577,7 +604,12 @@ class UI(QMainWindow):
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
         self.__set_tx_mode()
-        
+    
+    def __do_sp(self):
+        # Invoke the setpoint dialog
+        # This allows setting and navigating setpoints.
+        pass
+    
     def __do_tune(self):
         self.__set_vna_mode()
         loop = int(self.__loop_sel.currentText())
@@ -743,9 +775,10 @@ class UI(QMainWindow):
             self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         
         # Adjust buttons for loop status
-        if not self.__loop_status[self.__selected_loop-1] and self.__model[STATE][ARDUINO][ONLINE]:
-            # Current loop is not configured
-            widget_state = W_NO_CONFIG
+        if self.__model[STATE][ARDUINO][ONLINE]:
+            if not self.__loop_status[self.__selected_loop-1]:
+                # Current loop is not configured
+                widget_state = W_NO_CONFIG
         
         # Update min/max frequencies
         loop = model_for_loop(self.__model, self.__selected_loop)
@@ -756,13 +789,14 @@ class UI(QMainWindow):
         self.__auto_swrval.setText(str(self.__auto_swr))
         
         # Update VNA status
-        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
-            self.__st_vna.setText('present')
-            self.__st_vna.setObjectName("stgreen")
-        else:
-            self.__st_vna.setText('absent')
-            self.__st_vna.setObjectName("stred")
-        self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
+        if self.__model[STATE][ARDUINO][ONLINE]:
+            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
+                self.__st_vna.setText('present')
+                self.__st_vna.setObjectName("stgreen")
+            else:
+                self.__st_vna.setText('absent')
+                self.__st_vna.setObjectName("stred")
+            self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
         
         # Set widgets
         self.__set_widget_state(widget_state)
@@ -772,7 +806,6 @@ class UI(QMainWindow):
  
     # Enable/disable according to state
     def __set_widget_state(self, state):
-        
         if not self.__last_widget_status == state:
             self.__last_widget_status = state
             if state == W_DISABLE_ALL:
@@ -812,10 +845,18 @@ class UI(QMainWindow):
                 self.__stopact.setEnabled(False)
                 self.__abort.setEnabled(False)
     
+        # Do additive states
+        if self.__model[STATE][ARDUINO][ONLINE]:
+            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
+                self.__w_vna_enable_disable(True)
+            else:
+                self.__w_vna_enable_disable(False)
+        
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
         self.__loop_sel.setEnabled(state)
         self.__cal.setEnabled(state)
+        self.__sp.setEnabled(state)
         self.__freqtxt.setEnabled(state)
         self.__tune.setEnabled(state)
         self.__relay_sel.setEnabled(state)
@@ -830,4 +871,11 @@ class UI(QMainWindow):
         self.__movepos.setEnabled(state)
         self.__nudgefwd.setEnabled(state)
         self.__nudgerev.setEnabled(state)
+    
+    # Additive state for VNA    
+    def __w_vna_enable_disable(self, state):
+        self.__cal.setEnabled(state)
+        self.__freqtxt.setEnabled(state)
+        self.__tune.setEnabled(state)
+        self.__getres.setEnabled(state)
         
