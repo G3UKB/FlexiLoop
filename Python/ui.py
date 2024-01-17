@@ -215,6 +215,22 @@ class UI(QMainWindow):
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         
+        # VNA status
+        self.st_lb0 = QLabel()
+        self.st_lb0.setText('VNA: ')
+        self.statusBar.addPermanentWidget(self.st_lb0)
+        self.__st_vna = QLabel()
+        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
+            self.__st_vna.setText('present')
+            self.__st_vna.setObjectName("stgreen")
+        else:
+            self.__st_vna.setText('absent')
+            self.__st_vna.setObjectName("stred")
+        self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
+        self.statusBar.addPermanentWidget(self.__st_vna)
+        
+        self.statusBar.addPermanentWidget(VLine())
+        
         # Arduino status
         self.st_lbl = QLabel()
         self.st_lbl.setText('Arduino: ')
@@ -738,6 +754,15 @@ class UI(QMainWindow):
             self.__maxvalue.setText(str(loop[0]))
         # Update SWR
         self.__auto_swrval.setText(str(self.__auto_swr))
+        
+        # Update VNA status
+        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
+            self.__st_vna.setText('present')
+            self.__st_vna.setObjectName("stgreen")
+        else:
+            self.__st_vna.setText('absent')
+            self.__st_vna.setObjectName("stred")
+        self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
         
         # Set widgets
         self.__set_widget_state(widget_state)

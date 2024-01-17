@@ -159,6 +159,8 @@ class Config(QDialog):
         self.__serialporttxt.setMaximumWidth(80)
         grid.addWidget(self.__serialporttxt, 0, 1)
         grid.setAlignment(QtCore.Qt.AlignLeft)
+        
+        # Close gaps
         grid.setRowStretch(1, 1)
         grid.setColumnStretch(2, 1)
 
@@ -174,6 +176,8 @@ class Config(QDialog):
         self.__steptxt.setValue(self.__model[CONFIG][CAL][ACTUATOR_STEPS])
         self.__steptxt.setMinimumWidth(80)
         grid.addWidget(self.__steptxt, 0, 1)
+        
+        # Close gaps
         grid.setRowStretch(1, 1)
         grid.setColumnStretch(2, 1)
     
@@ -237,6 +241,7 @@ class Config(QDialog):
         self.__shorttotxt.setMinimumWidth(80)
         grid.addWidget(self.__shorttotxt, 4, 1)
         
+        # Close gaps
         grid.setRowStretch(5, 1)
         grid.setColumnStretch(2, 1)
         
@@ -246,8 +251,8 @@ class Config(QDialog):
         # DRIVER_ID = 20  # MiniVNA Tiny
         # DRIVER_PORT = 'COM4'
         # CAL_FILE = '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal'
-        # SCAN_MODE = 'REFL'
-        # EXPORTS = 'csv'
+        # SCAN_MODE = 'REFL' Fixed
+        # EXPORTS = 'csv' Fixed
         # EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}'
         # VNA_JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar'
         # Decoder defs
@@ -284,19 +289,15 @@ class Config(QDialog):
         
         vnamodelabel = QLabel('Scan Mode')
         grid.addWidget(vnamodelabel, 4, 0)
-        self.__vnamodetxt = QLineEdit()
-        self.__vnamodetxt.setObjectName("dialog")
-        self.__vnamodetxt.setText(self.__model[CONFIG][VNA_CONF][SCAN_MODE])
-        self.__vnamodetxt.setToolTip('Set Scan Mode')
+        self.__vnamodetxt = QLabel(SCAN_MODE)
+        self.__vnamodetxt.setToolTip('Fixed Scan Mode')
         self.__vnamodetxt.setMaximumWidth(80)
         grid.addWidget(self.__vnamodetxt, 4, 1)
         
         vnatypelabel = QLabel('Export File Type')
         grid.addWidget(vnatypelabel, 5, 0)
-        self.__vnatypetxt = QLineEdit()
-        self.__vnatypetxt.setObjectName("dialog")
-        self.__vnatypetxt.setText(self.__model[CONFIG][VNA_CONF][EXPORTS])
-        self.__vnatypetxt.setToolTip('Set export type')
+        self.__vnatypetxt = QLabel(EXPORTS)
+        self.__vnatypetxt.setToolTip('Fixed export type')
         self.__vnatypetxt.setMaximumWidth(80)
         grid.addWidget(self.__vnatypetxt, 5, 1)
         
@@ -357,6 +358,7 @@ class Config(QDialog):
         grid.addWidget(self.__exportdialog, 9, 2)
         self.__exportdialog.clicked.connect(self.__do_export_path)
         
+        # Close gaps
         grid.setRowStretch(10, 1)
         grid.setColumnStretch(3, 1)
         
@@ -394,8 +396,6 @@ class Config(QDialog):
             self.__model[CONFIG][VNA_CONF][VNA_PRESENT] = VNA_NO
         self.__model[CONFIG][VNA_CONF][DRIVER_ID] = self.__vnadrivertxt.value()
         self.__model[CONFIG][VNA_CONF][DRIVER_PORT] = self.__vnaporttxt.text()
-        self.__model[CONFIG][VNA_CONF][SCAN_MODE] = self.__vnamodetxt.text()
-        self.__model[CONFIG][VNA_CONF][EXPORTS] = self.__vnatypetxt.text()
         self.__model[CONFIG][VNA_CONF][EXPORT_FILENAME] = self.__vnanametxt.text()
         self.__model[CONFIG][VNA_CONF][CAL_FILE] = self.__vnacalpathtxt.text()
         self.__model[CONFIG][VNA_CONF][VNA_JAR] = self.__vnajarpathtxt.text()
@@ -408,11 +408,17 @@ class Config(QDialog):
         self.close()
     
     def __do_cal_path(self):
-        self.__vnacalpathtxt.setText(QFileDialog.getOpenFileName(self, 'Open file')[0])
+        file = QFileDialog.getOpenFileName(self, 'Open file')[0]
+        if len(file) > 0:
+            self.__vnacalpathtxt.setText(file)
         
     def __do_jar_path(self):
-        self.__vnajarpathtxt.setText(QFileDialog.getOpenFileName(self, 'Open file')[0])
+        file = QFileDialog.getOpenFileName(self, 'Open file')[0]
+        if len(file) > 0:
+            self.__vnajarpathtxt.setText(file)
         
     def __do_export_path(self):
-        self.__vnaexportpathtxt.setText(QFileDialog.getOpenFileName(self, 'Open file')[0])
+        file = QFileDialog.getOpenFileName(self, 'Open file')[0]
+        if len(file) > 0:
+            self.__vnaexportpathtxt.setText(file)
     

@@ -71,8 +71,6 @@ flexi_loop_model = {
             DRIVER_ID: 20,
             DRIVER_PORT: 'COM4',
             CAL_FILE: '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal',
-            SCAN_MODE: 'REFL',
-            EXPORTS: 'csv',
             EXPORT_FILENAME: 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}',
             VNA_JAR: '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar',
             EXPORT_PATH: '../VNAJ/vnaJ.3.3/export',
