@@ -39,6 +39,8 @@ from defs import *
 VERB = False
 # Set False when testing
 MODEL = True
+# Pause at end of processing SLEEP_TIMER secs
+SLEEP_TIMER = 0.02
 
 #=====================================================
 # Manage all serial comms to the Arduino
@@ -63,21 +65,28 @@ class SerialComms(threading.Thread):
         self.logger = logging.getLogger('root')
 
         self.__model = model
+        self.__port = port
         self.__q = q
         self.__cb = main_callback
         self.__originalcb = main_callback
         self.term = False
         
+        self.__ser = None
+        self.__ticks = (HEARTBEAT_TIMER/1000)/SLEEP_TIMER
+        self.__heartbeat = self.__ticks
+
+    def connect(self):
         try:
-            self.__ser = serial.Serial(port, 9600, timeout=1)
-        except:
-            self.logger.info("Failed to initialise Arduino port. Is the Arduino connected?")
+            self.__ser = serial.Serial(self.__port, 9600, timeout=1)
+        except Exception as e:
+            #self.logger.info("Failed to initialise Arduino port. Is the Arduino connected?")
             if MODEL: self.__model[STATE][ARDUINO][ONLINE] = False
-            return
+            return False
         
         if MODEL: self.__model[STATE][ARDUINO][ONLINE] = True
         self.__ser.reset_input_buffer()
-
+        return True
+        
     def steal_callback( self, new_callback) :
         """ Steal the dispatcher callback """
         self.__cb = new_callback
@@ -110,6 +119,25 @@ class SerialComms(threading.Thread):
                 self.logger.info(str(e))
                 #self.__cb('fatal: {0}'.format(e))
                 break
+            
+            # Check Arduino alive
+            self.__heartbeat -= 1
+            if self.__heartbeat <= 0:
+                self.__heartbeat = self.__ticks
+                # Time to check
+                heartbeat = True
+                try:
+                    name, (success, msg, val) = self.send(b"z;", 1)
+                    if not success:
+                        heartbeat = False
+                except:
+                    heartbeat = False
+                if not heartbeat:
+                    # This will get picked up and a reconnect attempted
+                    if MODEL: self.__model[STATE][ARDUINO][ONLINE] = False
+                    self.__ser.close()
+                    break
+                
         self.logger.info("Comms thread exiting...")
     
     # ===============================================================

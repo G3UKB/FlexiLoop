@@ -58,13 +58,12 @@ class API:
         
         # Params
         self.__model = model
+        self.__port = port
         self.__cb = callback
         
         # Create a SerialComms instance
         self.__s_q = queue.Queue(10)
-        self.__serial_comms = serialcomms.SerialComms(model, port, self.__s_q, self.serial_callback)
-        # and start the thread
-        self.__serial_comms.start()
+        self.__serial_comms = serialcomms.SerialComms(self.__model, self.__port, self.__s_q, self.serial_callback)
         
         # Create a VNA instance
         self.__vna = vna.VNA(model)
@@ -81,15 +80,35 @@ class API:
         self.__tune.start()
         
         # State
+        self.__serial_running = False
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
         self.__absolute_pos = -1
     
+    def init_comms(self):
+        if self.__serial_running:
+            # We were running but there has been a disconnection
+            # We need to start again as a thread cannot be restarted
+            self.__serial_comms = None
+            self.__serial_comms = serialcomms.SerialComms(self.__model, self.__port, self.__s_q, self.serial_callback)
+            if self.__serial_comms.connect():
+                self.__serial_comms.start()
+                self.__serial_running = True
+                return True
+        else:
+            # Not yet running so we can connect and start the thread
+            if self.__serial_comms.connect():
+                self.__serial_comms.start()
+                self.__serial_running = True
+                return True     
+        return False
+            
     # Termination
     def terminate(self):
-        self.__serial_comms.terminate()
-        self.__serial_comms.join()
+        if self.__serial_running:
+            self.__serial_comms.terminate()
+            self.__serial_comms.join()
         self.__cal.terminate()
         self.__cal.join()
         self.__tune.terminate()

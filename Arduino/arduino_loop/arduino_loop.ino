@@ -74,6 +74,7 @@ void process(String data) {
   *     comma separated command
   *     full stop separated parameters
   *     semicolon terminator character
+  *   o Heartbeat : z;
   *   o Set speed (slow, medium, fast) : s,s[m][f].;
   *   o Move to home position : h;
   *   o Move to max extension : x;
@@ -95,6 +96,10 @@ void process(String data) {
   // Switch on command type
   switch (cmd) {
     
+    case 'z':
+      Serial.print("z;");
+      break;
+
     case 'a':
       digitalWrite(RLY_PIN, HIGH);
       Serial.print("RlyOn;");

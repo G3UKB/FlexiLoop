@@ -80,7 +80,7 @@ flexi_loop_model = {
         WINDOWS: {
             MAIN_WIN: [300,300,500,200],
             CONFIG_WIN: [300,300,300,300],
-            MEM_WIN: [300,300,520,300],
+            SETPOINT_WIN: [300,300,520,300],
         },
         ARDUINO: {
             ONLINE: False,

@@ -58,7 +58,7 @@ VNA_CONF = 'VNA_CONF'
 WINDOWS = 'WINDOWS'
 MAIN_WIN = 'MAIN_WIN'
 CONFIG_WIN = 'CONFIG_WIN'
-MEM_WIN = 'MEM_WIN'
+SETPOINT_WIN = 'SETPOINT_WIN'
 # Arduino section
 ARDUINO = 'ARDUINO'
 ONLINE = 'ONLINE'
@@ -71,6 +71,8 @@ ACT_POS = 'ACT_POS'
 CONFIG_PATH = '../config/flexi_loop.cfg'
 # Run idle processing every IDLE_TICKER ms
 IDLE_TICKER = 250
+# Check Arduino every HEARTBEAT_TIMER ms
+HEARTBEAT_TIMER = 1000
 
 # Loop selection
 LOOP_1 = 1

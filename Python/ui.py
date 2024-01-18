@@ -39,6 +39,7 @@ from defs import *
 from utils import *
 import api
 import config
+import setpoints
 
 # Vertical line
 class VLine(QFrame):
@@ -62,9 +63,13 @@ class UI(QMainWindow):
         
         # Create the API instance
         self.__api = api.API(model, port, self.callback)
+        self.__api.init_comms()
         
         # Create the config dialog
         self.__config_dialog = config.Config(self.__model)
+        
+        # Create the setpoint dialog
+        self.__sp_dialog = setpoints.Setpoint(self.__model)
         
         #Loop status
         self.__selected_loop = 1
@@ -608,7 +613,7 @@ class UI(QMainWindow):
     def __do_sp(self):
         # Invoke the setpoint dialog
         # This allows setting and navigating setpoints.
-        pass
+        self.__sp_dialog.show()
     
     def __do_tune(self):
         self.__set_vna_mode()
@@ -756,7 +761,9 @@ class UI(QMainWindow):
                     self.__relay_sel.setCurrentText(VNA)
             self.__st_act.setText(self.__current_activity)
         else:
-            # Not online so we can't do anything except exit
+            # Try to bring on-line
+            self.__api.init_comms()
+            # Not online yet so we can't do anything except exit
             widget_state = W_DISABLE_ALL
             # off-line indicator
             self.__st_ard.setText('off-line')
