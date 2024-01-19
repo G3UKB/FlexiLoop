@@ -49,8 +49,11 @@ class Setpoint(QDialog):
         self.logger = logging.getLogger('root')
         
         self.__model = model
+        
+        # Local vars
+        self.__loop = -1
      
-    # Set the back colour
+        # Set the back colour
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))
         self.setPalette(palette)
@@ -81,6 +84,9 @@ class Setpoint(QDialog):
                          
         self.setWindowTitle('Flexi-Loop Setpoint Management')
         
+        # Start idle processing
+        QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
+        
     #=======================================================
     # Create all widgets
     def __populate(self):
@@ -90,11 +96,19 @@ class Setpoint(QDialog):
         grid = QGridLayout()
         self.setLayout(grid)
     
+        # Heading
+        heading = QGroupBox('')
+        headbox = QHBoxLayout()
+        heading.setLayout(headbox)
+        self.__looplabel = QLabel('Setpoints for loop [%d]' % self.__loop)
+        headbox.addWidget(self.__looplabel)
+        grid.addWidget(heading,0, 0, 1, 3)
+        
         # Table area
         self.__table = QTableWidget()
         self.__table.setColumnCount(4)
         self.__table.setHorizontalHeaderLabels(('Name','Freq','SWR','Position'))
-        grid.addWidget(self.__table,0,0, 1, 3)
+        grid.addWidget(self.__table, 1, 0, 1, 3)
         self.__table.currentItemChanged.connect(self.__row_click)
         self.__table.doubleClicked.connect(self.__row_double_click)
         
@@ -103,20 +117,63 @@ class Setpoint(QDialog):
         self.__moveto.setToolTip('Move to selected setpoint')
         self.__moveto.clicked.connect(self.__do_moveto)
         self.__moveto.setMinimumHeight(20)
-        grid.addWidget(self.__moveto, 1, 0)
+        grid.addWidget(self.__moveto, 2, 0)
         
         self.__remove = QPushButton("Remove")
         self.__remove.setToolTip('Remove selected setpoint')
         self.__remove.clicked.connect(self.__do_remove)
         self.__remove.setMinimumHeight(20)
-        grid.addWidget(self.__remove, 1, 1)
+        grid.addWidget(self.__remove, 2, 1)
         
         self.__exit = QPushButton("Close")
         self.__exit.setToolTip('Close the application')
         self.__exit.clicked.connect(self.__do_close)
         self.__exit.setMinimumHeight(20)
-        grid.addWidget(self.__exit, 1, 2)     
+        grid.addWidget(self.__exit, 2, 2)     
         
+        # New entry area
+        new_entry = QGroupBox('New')
+        hbox = QHBoxLayout()
+        new_entry.setLayout(hbox)
+        
+        namelabel = QLabel('Name')
+        hbox.addWidget(namelabel)
+        self.__nametxt = QLineEdit()
+        self.__nametxt.setToolTip('Name the setpoint')
+        self.__nametxt.setMaximumWidth(80)
+        hbox.addWidget(self.__nametxt)
+
+        freqlabel = QLabel('Freq')
+        hbox.addWidget(freqlabel)
+        self.__freqtxt = QLineEdit()
+        self.__freqtxt.setToolTip('Record frequency')
+        self.__freqtxt.setInputMask('000.000;0')
+        self.__freqtxt.setMaximumWidth(80)
+        hbox.addWidget(self.__freqtxt)
+        
+        swrlabel = QLabel('SWR')
+        hbox.addWidget(swrlabel)
+        self.__swrtxt = QLineEdit()
+        self.__swrtxt.setToolTip('Record SWR')
+        self.__swrtxt.setInputMask('0.0;0')
+        self.__swrtxt.setMaximumWidth(80)
+        hbox.addWidget(self.__swrtxt)
+        
+        self.__add = QPushButton("Add")
+        self.__add.setToolTip('Add new setpoint')
+        self.__add.clicked.connect(self.__do_add)
+        self.__add.setMinimumHeight(20)
+        hbox.addWidget(self.__add)
+        
+        grid.addWidget(new_entry, 3, 0, 1, 3)
+    
+    #=======================================================
+    # PUBLIC
+    #
+    def set_loop(self, loop):
+        self.__loop = loop
+        self.__looplabel.setText('Setpoints for loop [%d]' % self.__loop)
+    
     #=======================================================
     # Window events
     def closeEvent(self, event):
@@ -147,10 +204,35 @@ class Setpoint(QDialog):
     def __do_remove(self):
         pass
     
+    def __do_add(self):
+        # Get data
+        name = self.__nametxt.text()
+        freq = self.__freqtxt.text()
+        swr = self.__swrtxt.text()
+        # Create new row
+        rowPosition = self.__table.rowCount()
+        self.__table.insertRow(rowPosition)
+        self.__table.setItem(rowPosition, 0, QTableWidgetItem(name))
+        self.__table.setItem(rowPosition, 1, QTableWidgetItem(freq))
+        self.__table.setItem(rowPosition, 2, QTableWidgetItem(swr))
+        self.__table.setItem(rowPosition, 3, QTableWidgetItem('100'))
+        # Add to model
+        #self.__update_model()
+    
     def __do_close(self):
         self.close()
     
-    
+ 
+    #=======================================================
+    # Idle time
+    def __idleProcessing(self):
+        QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
+        
+        if len(self.__nametxt.text()) > 0 and len(self.__freqtxt.text()) and len(self.__swrtxt.text()) > 0:
+            self.__add.setEnabled(True)
+        else:
+            self.__add.setEnabled(False)
+        
 #=========================================================================================
 '''
 def __idleProcessing(self):

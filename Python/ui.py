@@ -613,6 +613,7 @@ class UI(QMainWindow):
     def __do_sp(self):
         # Invoke the setpoint dialog
         # This allows setting and navigating setpoints.
+        self.__sp_dialog.set_loop(self.__selected_loop)
         self.__sp_dialog.show()
     
     def __do_tune(self):
