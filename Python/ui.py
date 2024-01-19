@@ -828,6 +828,7 @@ class UI(QMainWindow):
                 self.__abort.setEnabled(False)
                 self.__loop_sel.setEnabled(True)
                 self.__cal.setEnabled(True)
+                self.__sp.setEnabled(True)
                 
             elif state == W_LONG_RUNNING:
                 # All disable except close and abort

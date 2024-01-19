@@ -87,9 +87,36 @@ class Setpoint(QDialog):
         #=======================================================
            
         # Set main layout
-        layout = QGridLayout()
-        self.setLayout(layout)
+        grid = QGridLayout()
+        self.setLayout(grid)
     
+        # Table area
+        self.__table = QTableWidget()
+        self.__table.setColumnCount(4)
+        self.__table.setHorizontalHeaderLabels(('Name','Freq','SWR','Position'))
+        grid.addWidget(self.__table,0,0, 1, 3)
+        self.__table.currentItemChanged.connect(self.__row_click)
+        self.__table.doubleClicked.connect(self.__row_double_click)
+        
+        # Button area
+        self.__moveto = QPushButton("Move to")
+        self.__moveto.setToolTip('Move to selected setpoint')
+        self.__moveto.clicked.connect(self.__do_moveto)
+        self.__moveto.setMinimumHeight(20)
+        grid.addWidget(self.__moveto, 1, 0)
+        
+        self.__remove = QPushButton("Remove")
+        self.__remove.setToolTip('Remove selected setpoint')
+        self.__remove.clicked.connect(self.__do_remove)
+        self.__remove.setMinimumHeight(20)
+        grid.addWidget(self.__remove, 1, 1)
+        
+        self.__exit = QPushButton("Close")
+        self.__exit.setToolTip('Close the application')
+        self.__exit.clicked.connect(self.__do_close)
+        self.__exit.setMinimumHeight(20)
+        grid.addWidget(self.__exit, 1, 2)     
+        
     #=======================================================
     # Window events
     def closeEvent(self, event):
@@ -107,7 +134,93 @@ class Setpoint(QDialog):
         
     #=======================================================
     # User events
+    
+    def __row_click(self):
+        pass
+    
+    def __row_double_click(self):
+        pass
+    
+    def __do_moveto(self):
+        pass
+    
+    def __do_remove(self):
+        pass
+    
     def __do_close(self):
         self.close()
     
     
+#=========================================================================================
+'''
+def __idleProcessing(self):
+    QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
+    
+    if len(self.__nametxt.text()) > 0 and len(self.__freqtxt.text()) > 0:
+        self.__nametxt.setEnabled(True)
+        self.__freqtxt.setEnabled(True)
+        
+def __do_add_mem(self):
+    # Get data
+    name = self.__nametxt.text()
+    freq = self.__freqtxt.text()
+    low,high,tx,ant = self.__settings()
+    if low: ind = 'low-range'
+    else: ind = 'high-range'
+    # Create new row
+    rowPosition = self.__table.rowCount()
+    self.__table.insertRow(rowPosition)
+    self.__table.setItem(rowPosition, 0, QTableWidgetItem(name))
+    self.__table.setItem(rowPosition, 1, QTableWidgetItem(freq))
+    self.__table.setItem(rowPosition, 2, QTableWidgetItem(ind))
+    self.__table.setItem(rowPosition, 3, QTableWidgetItem(str(tx)))
+    self.__table.setItem(rowPosition, 4, QTableWidgetItem(str(ant)))
+    # Add to model
+    self.__update_model()
+
+def __do_update_mem(self):
+    # Get data
+    name = self.__nametxt.text()
+    freq = self.__freqtxt.text()
+    low,high,tx,ant = self.__settings()
+    if low: ind = 'low-range'
+    else: ind = 'high-range'
+    # Update row
+    rowPosition = self.__table.currentRow()
+    self.__table.setItem(rowPosition, 0, QTableWidgetItem(name))
+    self.__table.setItem(rowPosition, 1, QTableWidgetItem(freq))
+    self.__table.setItem(rowPosition, 2, QTableWidgetItem(ind))
+    self.__table.setItem(rowPosition, 3, QTableWidgetItem(str(tx)))
+    self.__table.setItem(rowPosition, 4, QTableWidgetItem(str(ant)))
+    # Update model
+    self.__update_model()
+    
+def __do_run_mem(self):
+    r = self.__table.currentRow()
+    ind = self.__table.item(r, 2).text()
+    tx = self.__table.item(r, 3).text()
+    ant = self.__table.item(r, 4).text()
+    # Execute tuner commands
+    self.__callback(ind, tx, ant)
+        
+def __do_remove_mem(self):
+    r = self.__table.currentRow()
+    self.__table.removeRow(r)
+    # Remove from model
+    self.__update_model()
+
+def __row_click(self):
+    r = self.__table.currentRow()
+    if r != -1:
+        self.__nametxt.setText(self.__table.item(r, 0).text())
+        self.__freqtxt.setText(self.__table.item(r, 1).text())
+    
+def __row_double_click(self):
+    self.__do_run_mem
+    
+def __do_save(self):
+    # Save model
+    persist.saveCfg(CONFIG_PATH, self.__model)
+    # and hide window
+    self.hide()
+'''
