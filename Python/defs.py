@@ -48,6 +48,11 @@ HOME = 'HOME'
 CAL_L1 = 'CAL_L1'
 CAL_L2 = 'CAL_L2'
 CAL_L3 = 'CAL_L3'
+# Setpoint section
+SETPOINTS = 'SETPOINTS'
+SP_L1 = 'SP_L1'
+SP_L2 = 'SP_L2'
+SP_L3 = 'SP_L3'
 # VNA section
 VNA_CONF = 'VNA_CONF'
 

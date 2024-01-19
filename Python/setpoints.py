@@ -191,7 +191,9 @@ class Setpoint(QDialog):
         
     #=======================================================
     # User events
-    
+    def __do_close(self):
+        self.close()
+
     def __row_click(self):
         pass
     
@@ -216,13 +218,28 @@ class Setpoint(QDialog):
         self.__table.setItem(rowPosition, 1, QTableWidgetItem(freq))
         self.__table.setItem(rowPosition, 2, QTableWidgetItem(swr))
         self.__table.setItem(rowPosition, 3, QTableWidgetItem('100'))
-        # Add to model
-        #self.__update_model()
+        # Manage model
+        self.__update_model()
     
-    def __do_close(self):
-        self.close()
+    def __update_model(self):
+        if self.__loop == 1:
+           item = SP_L1
+        elif self.__loop == 2:
+           item = SP_L2
+        elif self.__loop == 3:
+           item = SP_L3
+        else:
+            # Problem
+            pass
+            
+        self.__model[CONFIG][SETPOINTS][item].clear()    
+        for r in range(0, self.__table.rowCount()):
+            name = self.__table.item(r, 0).text()
+            freq = self.__table.item(r, 1).text()
+            swr = self.__table.item(r, 2).text() 
+            pos = self.__table.item(r, 3).text()
+            self.__model[CONFIG][SETPOINTS][item][name] = [freq, swr, pos]
     
- 
     #=======================================================
     # Idle time
     def __idleProcessing(self):

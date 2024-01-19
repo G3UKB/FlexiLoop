@@ -66,6 +66,11 @@ flexi_loop_model = {
             CAL_L2: [],
             CAL_L3: [],
         },
+        SETPOINTS: {
+            SP_L1: {},
+            SP_L2: {},
+            SP_L3: {},
+        },
         VNA_CONF: {
             VNA_PRESENT: VNA_YES,
             DRIVER_ID: 20,
