@@ -73,10 +73,11 @@ class Calibrate(threading.Thread):
         self.__vna = vna
         self.__model = model
         self.__cb = callback
-        
+                
         self.__end_points = [-1,-1]
         self.term = False
         self.__abort = False
+        self.__vna = False
         
         self.__event = threading.Event()
         self.__wait_for = ""
@@ -127,6 +128,12 @@ class Calibrate(threading.Thread):
     def __calibrate(self, args):
         loop, steps = args
         cal_map = []
+        
+        # Do we have a VNA
+        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
+            self.__vna = True
+        else:
+            self.__vna = False
         
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
@@ -251,7 +258,8 @@ class Calibrate(threading.Thread):
             return False, None, None
         self.__event.clear()
         # Get res freq approx as its a full sweep takes a while
-        r, [(fmax, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_MAX)
+        #r, [(fmax, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_MAX)
+        r, [(fmax, swr)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_MAX)
         if not r:
             self.logger.warning("Failed to get max frequency!")
             return False, "Failed to get max frequency!", []
@@ -266,7 +274,8 @@ class Calibrate(threading.Thread):
             return False, None, None
         self.__event.clear()
         # get res freq
-        r, [(fhome, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_HOME)
+        #r, [(fhome, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_HOME)
+        r, [(fhome, swr)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_HOME)
         if not r:
             self.logger.warning("Failed to get min frequency!")
             return False, "Failed to get min frequency!", []
@@ -312,7 +321,8 @@ class Calibrate(threading.Thread):
             fhigh = fhome - (nextf_approx * counter) + 10000
             flow = fhome - (nextf_approx * (counter+1)) - 10000
             # Need a little more accuracy so every 1KHz should suffice
-            r, [(f, swr)] = self.__vna.fres(flow, fhigh, INC_1K, hint = VNA_MID)
+            #r, [(f, swr)] = self.__vna.fres(flow, fhigh, INC_1K, hint = VNA_MID)
+            r, [(f, swr)] = self.__get_current(flow, fhigh, INC_1K, VNA_MID)
             if not r:
                 self.logger.inwarningfo("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m
@@ -334,6 +344,12 @@ class Calibrate(threading.Thread):
         # Return the map
         return True, "", m
     
+    def __get_current(self, flow, fhigh, inc, hint):
+        if self.__vna:
+            return self.__vna.fres(flow, fhigh, inc, hint = hint)
+        else:
+            # Get readings from user
+        
     # =========================================================================
     # Callback from comms module
     # Note this is called on the comms thread and stolen from api.py
