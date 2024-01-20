@@ -29,7 +29,7 @@ import traceback
 import logging
 
 # PyQt5 imports
-from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip
+from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip, QAbstractItemView
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QStatusBar, QTabWidget, QTableWidget, QInputDialog, QFileDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QTableWidgetItem
@@ -106,6 +106,7 @@ class Setpoint(QDialog):
         
         # Table area
         self.__table = QTableWidget()
+        self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.__table.setColumnCount(4)
         self.__table.setHorizontalHeaderLabels(('Name','Freq','SWR','Position'))
         grid.addWidget(self.__table, 1, 0, 1, 3)
@@ -173,6 +174,7 @@ class Setpoint(QDialog):
     def set_loop(self, loop):
         self.__loop = loop
         self.__looplabel.setText('Setpoints for loop [%d]' % self.__loop)
+        self.__populate_table()
     
     #=======================================================
     # Window events
@@ -221,17 +223,27 @@ class Setpoint(QDialog):
         # Manage model
         self.__update_model()
     
+    #=======================================================
+    # Helpers
+    def __populate_table(self):
+        key = self.__get_loop_item()
+        sps = self.__model[CONFIG][SETPOINTS][key]
+        row = 0
+        while self.__table.rowCount() > 0:
+            self.__table.removeRow(0);
+
+        for item in sps.items():
+            self.__table.insertRow(row)
+            self.__table.setItem(row, 0, QTableWidgetItem(item[0]))
+            self.__table.setItem(row, 1, QTableWidgetItem(item[1][0]))
+            self.__table.setItem(row, 2, QTableWidgetItem(item[1][1]))
+            self.__table.setItem(row, 3, QTableWidgetItem(item[1][2]))
+            row += 1
+        if self.__table.rowCount() > 0:
+            self.__table.selectRow(0)
+        
     def __update_model(self):
-        if self.__loop == 1:
-           item = SP_L1
-        elif self.__loop == 2:
-           item = SP_L2
-        elif self.__loop == 3:
-           item = SP_L3
-        else:
-            # Problem
-            pass
-            
+        item = self.__get_loop_item()    
         self.__model[CONFIG][SETPOINTS][item].clear()    
         for r in range(0, self.__table.rowCount()):
             name = self.__table.item(r, 0).text()
@@ -239,6 +251,19 @@ class Setpoint(QDialog):
             swr = self.__table.item(r, 2).text() 
             pos = self.__table.item(r, 3).text()
             self.__model[CONFIG][SETPOINTS][item][name] = [freq, swr, pos]
+            
+    def __get_loop_item(self):
+        if self.__loop == 1:
+           item = SP_L1
+        elif self.__loop == 2:
+           item = SP_L2
+        elif self.__loop == 3:
+           item = SP_L3
+        else:
+            # Should not happen
+            self.logger.warn("Invalid loop id %d" % self.__loop)
+            item = SP_L1
+        return item
     
     #=======================================================
     # Idle time
@@ -249,6 +274,15 @@ class Setpoint(QDialog):
             self.__add.setEnabled(True)
         else:
             self.__add.setEnabled(False)
+            
+        r = self.__table.currentRow()
+        if r == -1:
+            # No row selected
+            self.__moveto.setEnabled(False)
+            self.__remove.setEnabled(False)
+        else:
+            self.__moveto.setEnabled(True)
+            self.__remove.setEnabled(True) 
         
 #=========================================================================================
 '''
