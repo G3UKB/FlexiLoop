@@ -206,22 +206,32 @@ class Setpoint(QDialog):
         pass
     
     def __do_remove(self):
-        pass
+        r = self.__table.currentRow()
+        if r != -1:
+            name = self.__table.item(r, 0).text()
+            sps = self.__model[CONFIG][SETPOINTS][self.__get_loop_item()]
+            del sps[name]
+            self.__table.removeRow(r);
+            self.__populate_table()
     
     def __do_add(self):
         # Get data
         name = self.__nametxt.text()
         freq = self.__freqtxt.text()
         swr = self.__swrtxt.text()
-        # Create new row
-        rowPosition = self.__table.rowCount()
-        self.__table.insertRow(rowPosition)
-        self.__table.setItem(rowPosition, 0, QTableWidgetItem(name))
-        self.__table.setItem(rowPosition, 1, QTableWidgetItem(freq))
-        self.__table.setItem(rowPosition, 2, QTableWidgetItem(swr))
-        self.__table.setItem(rowPosition, 3, QTableWidgetItem('100'))
-        # Manage model
-        self.__update_model()
+        pos = self.__model[STATE][ARDUINO][ACT_POS]
+        if pos != -1:
+            # Create new row
+            rowPosition = self.__table.rowCount()
+            self.__table.insertRow(rowPosition)
+            self.__table.setItem(rowPosition, 0, QTableWidgetItem(name))
+            self.__table.setItem(rowPosition, 1, QTableWidgetItem(freq))
+            self.__table.setItem(rowPosition, 2, QTableWidgetItem(swr))
+            self.__table.setItem(rowPosition, 3, QTableWidgetItem(str(pos)))
+            # Manage model
+            self.__update_model()
+        else:
+            self.logger.warn("No loop position available for add()")
     
     #=======================================================
     # Helpers
