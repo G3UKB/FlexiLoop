@@ -77,7 +77,8 @@ class Calibrate(threading.Thread):
         self.__end_points = [-1,-1]
         self.term = False
         self.__abort = False
-        self.__vna = False
+        self.__manual = False
+        self.__man_cb = None
         
         self.__event = threading.Event()
         self.__wait_for = ""
@@ -126,14 +127,10 @@ class Calibrate(threading.Thread):
         self.__comms.restore_callback()
         
     def __calibrate(self, args):
-        loop, steps = args
+        loop, steps, manual, callback = args
         cal_map = []
-        
-        # Do we have a VNA
-        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
-            self.__vna = True
-        else:
-            self.__vna = False
+        self.__manual = manual
+        self.__man_cb = callback
         
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
@@ -345,11 +342,12 @@ class Calibrate(threading.Thread):
         return True, "", m
     
     def __get_current(self, flow, fhigh, inc, hint):
-        if self.__vna:
-            return self.__vna.fres(flow, fhigh, inc, hint = hint)
+        if self.__manual:
+            # We must interact with the UI to get user input for the readings
+            f, swr = self.__man_cb(hint)
+            return True, [(f, swr)]
         else:
-            # Get readings from user
-            pass
+            return self.__vna.fres(flow, fhigh, inc, hint = hint)
         
     # =========================================================================
     # Callback from comms module

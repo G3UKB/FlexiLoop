@@ -125,6 +125,12 @@ VNA_MAX = 'MAX'
 VNA_MID = 'MID'
 VNA_RANDOM = 'RANDOM'
 
+# Hints for manual calibration mode
+MAN_NONE = 'MAN_NONE'
+MAN_HOME = 'MAN_HOME'
+MAN_MAX = 'MAN_MAX'
+MAN_STEP = 'MAN_STEP'
+
 # Number of steps for calibration
 # Resonant frequency and feedback value at each step forms part of calibration
 ACTUATOR_STEPS = 'ACTUATOR_STEPS'
@@ -139,7 +145,12 @@ W_NO_CONFIG = 'WNoConfig'
 W_LONG_RUNNING = 'WLongRunning'
 W_FREE_RUNNING = 'WFreeRunning'
 W_NORMAL = 'WNormal'
-            
+   
+# Manual calibration data states
+MANUAL_IDLE = 0
+MANUAL_DATA_REQD = 1
+MANUAL_DATA_AVAILABLE = 2
+
 #=======================================================================
 # VNA parameters
 #

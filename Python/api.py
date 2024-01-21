@@ -118,9 +118,9 @@ class API:
         self.__tune.join()
     
     # Perform a calibration for the given loop    
-    def calibrate(self, loop):
+    def calibrate(self, loop, manual):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS]]))
+        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual]))
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):

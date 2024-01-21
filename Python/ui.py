@@ -66,7 +66,7 @@ class UI(QMainWindow):
         self.__qt_app = qt_app
         
         # Create the API instance
-        self.__api = api.API(model, port, self.callback, self.msg_callback)
+        self.__api = api.API(model, port, self.callback, self.msg_callback, self.man_cal_callback)
         self.__api.init_comms()
         
         # Create the config dialog
@@ -129,6 +129,12 @@ class UI(QMainWindow):
         # Default to TX side
         self.__relay_state = TX
         
+        # Manual calibration status
+        self.__man_hint = MAN_NONE
+        self.__man_cal_state = MANUAL_IDLE
+        self.__ man_freq = 0.0
+        self.__man_swr = 1.0
+        
     #=======================================================
     # PUBLIC
     #
@@ -149,9 +155,22 @@ class UI(QMainWindow):
     #=======================================================
     # CALLBACKS
     #
-    # Note this can be called from any thread
+    # Note this can be called from any thread to output messages to the transcript
     def msg_callback(self, data):
         self.__msgq.put(data)
+    
+    # This is called when doing a manual calibration to set the hint and get the next data items.
+    # This is called on the calibration thread so will not interrupt the UI
+    def man_cal_callback(self, hint):
+        # We set the hint and set data required flag and wait for the state to go to data available
+        if self.__man_cal_state != MANUAL_IDLE:
+            print ("Manual processing expected idle")
+            return (7.1, 1.0)
+        self.__man_cal_state = MANUAL_DATA_REQD
+        while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
+            sleep 0.2
+        self.__man_cal_state = MANUAL_IDLE    
+        return (self.__ man_freq, self.__man_swr)    
         
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
@@ -650,6 +669,14 @@ class UI(QMainWindow):
         self.__api.abort_activity()
     
     def __do_cal(self):
+        
+        manual = False
+        # VNA check
+        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
+            # No VNA present so we do a manual config
+            manualcal.show()
+            manual = True
+            
         self.__set_vna_mode()
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
@@ -657,7 +684,7 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__st_act.setText(CALIBRATE)
         self.__long_running = True
-        if self.__api.calibrate(loop):
+        if self.__api.calibrate(loop, manual):
             if loop == 1:
                 self.__l1label.setObjectName("stgreen")
                 self.__l1label.setStyleSheet(self.__l1label.styleSheet())
@@ -890,6 +917,9 @@ class UI(QMainWindow):
                 # Keep history between 50 and 100
                 for n in range(0, 50):
                     self.__msglist.takeitem(n)
+        
+        # Manage manual data entry state
+        
         
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
