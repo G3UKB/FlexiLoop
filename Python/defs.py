@@ -150,6 +150,7 @@ W_NORMAL = 'WNormal'
 MANUAL_IDLE = 0
 MANUAL_DATA_REQD = 1
 MANUAL_DATA_AVAILABLE = 2
+MANUAL_NEXT = 3
 
 #=======================================================================
 # VNA parameters

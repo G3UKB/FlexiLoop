@@ -163,11 +163,13 @@ class UI(QMainWindow):
     # This is called on the calibration thread so will not interrupt the UI
     def man_cal_callback(self, hint):
         # We set the hint and set data required flag and wait for the state to go to data available
-        if self.__man_cal_state != MANUAL_IDLE:
-            print ("Manual processing expected idle")
-            return (7.1, 1.0)
         self.__man_cal_state = MANUAL_DATA_REQD
         while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
+            sleep 0.2
+        r = (self.__ man_freq, self.__man_swr)
+        self.__ man_freq = 0.0
+        self.__man_swr = 1.0
+        while self.__man_cal_state != MANUAL_NEXT:
             sleep 0.2
         self.__man_cal_state = MANUAL_IDLE    
         return (self.__ man_freq, self.__man_swr)    
@@ -807,10 +809,14 @@ class UI(QMainWindow):
     #=======================================================
     # Manual calibration events
     def __do_man_save():
-        pass
+        self.__ man_freq = self.__freqtxt.text()
+        self.__man_swr = self.__swrtxt.text()
+        self.__man_cal_state = MANUAL_DATA_AVAILABLE
     
     def __do_man_next():
-        pass
+        self.__freqtxt.setText('')
+        self.__swrtxt.setText('')
+        self.__man_cal_state = MANUAL_NEXT
     
     #=======================================================
     # Helpers
@@ -919,7 +925,22 @@ class UI(QMainWindow):
                     self.__msglist.takeitem(n)
         
         # Manage manual data entry state
-        
+        if self.__man_cal_state == MANUAL_IDLE:
+            self.__freqtxt.setEnabled(False)
+            self.__swrtxt.setEnabled(False)
+            self.__save.setEnabled(False)
+            self.__next.setEnabled(False)
+        elif self.__man_cal_state == MANUAL_DATA_REQD:
+            self.__freqtxt.setEnabled(True)
+            self.__swrtxt.setEnabled(True)
+            if len(self.__freqtxt.text()) > 0 and len(self.__swrtxt.text()) > 0  
+                self.__save.setEnabled(True)
+            self.__next.setEnabled(False)
+        elif self.__man_cal_state == MANUAL_DATA_AVAILABLE:
+            self.__freqtxt.setEnabled(False)
+            self.__swrtxt.setEnabled(False)
+            self.__save.setEnabled(False)
+            self.__next.setEnabled(True)
         
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
