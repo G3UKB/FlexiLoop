@@ -42,14 +42,15 @@ import api
 # Main config dialog        
 class Config(QDialog):
     
-    def __init__(self, model):
+    def __init__(self, model, msgs):
         super(Config, self).__init__()
 
         # Get root logger
         self.logger = logging.getLogger('root')
         
         self.__model = model
-     
+        self.__msgs = msgs
+        
     # Set the back colour
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))

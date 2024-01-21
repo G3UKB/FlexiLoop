@@ -27,12 +27,13 @@
 import sys
 import traceback
 import logging
+import queue
 
 # PyQt5 imports
 from PyQt5.QtWidgets import QMainWindow, QApplication, QToolTip
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QHBoxLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QListWidget, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QHBoxLayout, QTableWidgetItem
 
 # Application imports
 from defs import *
@@ -58,18 +59,21 @@ class UI(QMainWindow):
         # Get root logger
         self.logger = logging.getLogger('root')
         
+        # Create message q
+        self.__msgq = queue.Queue(100)
+        
         self.__model = model
         self.__qt_app = qt_app
         
         # Create the API instance
-        self.__api = api.API(model, port, self.callback)
+        self.__api = api.API(model, port, self.callback, self.msg_callback)
         self.__api.init_comms()
         
         # Create the config dialog
-        self.__config_dialog = config.Config(self.__model)
+        self.__config_dialog = config.Config(self.__model, self.msg_callback)
         
         # Create the setpoint dialog
-        self.__sp_dialog = setpoints.Setpoint(self.__model)
+        self.__sp_dialog = setpoints.Setpoint(self.__model, self.msg_callback)
         
         #Loop status
         self.__selected_loop = 1
@@ -143,8 +147,12 @@ class UI(QMainWindow):
         return self.__qt_app.exec_()
     
     #=======================================================
-    # CALLBACK
+    # CALLBACKS
     #
+    # Note this can be called from any thread
+    def msg_callback(self, data):
+        self.__msgq.put(data)
+        
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
         # Everything south of the API is threaded so as not to block
@@ -397,6 +405,56 @@ class UI(QMainWindow):
         sps.setLayout(hbox1)
         self.__loopgrid.addWidget(sps, 1, 5, 1, 3)
         
+        # If no VNA we can put up the manual calibration box
+        manualcal = QGroupBox('Manual Input')
+        manualgrid = QGridLayout()
+        manualcal.setLayout(manualgrid)
+        
+        gap = QWidget()
+        manualgrid.addWidget(gap, 0, 0)
+        
+        # Data entry
+        freqlabel = QLabel('Freq')
+        manualgrid.addWidget(freqlabel, 0, 1)
+        self.__freqtxt = QLineEdit()
+        self.__freqtxt.setInputMask('000.000;0')
+        self.__freqtxt.setToolTip('Resonant frequency')
+        self.__freqtxt.setMaximumWidth(80)
+        manualgrid.addWidget(self.__freqtxt, 0, 2)
+        
+        swrlabel = QLabel('SWR')
+        manualgrid.addWidget(swrlabel, 0, 3)
+        self.__swrtxt = QLineEdit()
+        self.__swrtxt.setInputMask('0.0;0')
+        self.__swrtxt.setToolTip('SWR at resonance')
+        self.__swrtxt.setMaximumWidth(80)
+        manualgrid.addWidget(self.__swrtxt, 0, 4)
+        
+        gap = QWidget()
+        manualgrid.addWidget(gap, 0, 5)
+        
+        # Button area
+        self.__save = QPushButton("Save")
+        self.__save.setToolTip('Use the current values for this calibration point')
+        self.__save.clicked.connect(self.__do_man_save)
+        self.__save.setMinimumHeight(20)
+        manualgrid.addWidget(self.__save, 0, 6)
+        
+        self.__next = QPushButton("Next")
+        self.__next.setToolTip('Move to next calibration point')
+        self.__next.clicked.connect(self.__do_man_next)
+        self.__next.setMinimumHeight(20)
+        manualgrid.addWidget(self.__next, 0, 7)
+        
+        self.__loopgrid.addWidget(manualcal, 2, 0, 1, 8)
+        
+        # Space out
+        manualgrid.setColumnStretch(0, 1)
+        manualgrid.setColumnStretch(5, 2)
+        
+        # Unhide for testing
+        manualcal.hide()
+        
         # -------------------------------------------
         # Auto area
         self.__autogrid = QGridLayout()
@@ -554,6 +612,10 @@ class UI(QMainWindow):
         self.__nudgerev.setToolTip('Nudge reverse...')
         self.__mangrid.addWidget(self.__nudgerev, 3,5)
         self.__nudgerev.clicked.connect(self.__do_nudge_rev)
+        
+        # Message area
+        self.__msglist = QListWidget()
+        self.__grid.addWidget(self.__msglist, 4, 0, 1, 4)
         
     #=======================================================
     # Window events
@@ -714,6 +776,15 @@ class UI(QMainWindow):
             self.__minvalue.setText('0.0')
             self.__maxvalue.setText('0.0')
     
+    
+    #=======================================================
+    # Manual calibration events
+    def __do_man_save():
+        pass
+    
+    def __do_man_next():
+        pass
+    
     #=======================================================
     # Helpers
     def __set_tx_mode(self):
@@ -808,6 +879,17 @@ class UI(QMainWindow):
         
         # Set widgets
         self.__set_widget_state(widget_state)
+        
+        # Output any messages
+        if self.__msgq.qsize() > 0:
+            while self.__msgq.qsize() > 0:
+                msg = self.__msgq.get()
+                self.__msglist.insertItem(0, msg)
+            # Cull messages?
+            if self.__msglist.count() > 100:
+                # Keep history between 50 and 100
+                for n in range(0, 50):
+                    self.__msglist.takeitem(n)
         
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)

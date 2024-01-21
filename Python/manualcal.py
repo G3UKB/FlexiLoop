@@ -71,10 +71,14 @@ class ManualInput(QDialog):
     # PRIVATE
     #
     # Basic initialisation
-    def __initUI(self, hint):
-                         
+    def run(self, hint):          
         self.setWindowTitle('Flexi-Loop Manual Calibration [%s]' % hint)
-        
+        self.__freqtxt.setText('')
+        self.__swrtxt.setText('')
+    
+    def results(self):
+        return (self.__swrtxt.text(), self.__freqtxt.text())
+    
     #=======================================================
     # Create all widgets
     def __populate(self):
@@ -113,9 +117,9 @@ class ManualInput(QDialog):
     #=======================================================
     # Window events
     def closeEvent(self, event):
-        self.close()
+        self.hide()
 
     #=======================================================
     # User events
     def __do_close(self):
-        self.close()
+        self.hide()

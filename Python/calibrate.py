@@ -349,6 +349,7 @@ class Calibrate(threading.Thread):
             return self.__vna.fres(flow, fhigh, inc, hint = hint)
         else:
             # Get readings from user
+            pass
         
     # =========================================================================
     # Callback from comms module

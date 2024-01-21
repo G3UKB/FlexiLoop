@@ -51,7 +51,7 @@ VERB = False
 class API:
     
     # Initialisation
-    def __init__(self, model, port, callback):
+    def __init__(self, model, port, callback, msgs):
         
         # Get root logger
         self.logger = logging.getLogger('root')
@@ -60,6 +60,7 @@ class API:
         self.__model = model
         self.__port = port
         self.__cb = callback
+        self.__msgs = msgs
         
         # Create a SerialComms instance
         self.__s_q = queue.Queue(10)
@@ -88,6 +89,7 @@ class API:
     
     def init_comms(self):
         if self.__serial_running:
+            self.__msgs('Serial comms running')
             # We were running but there has been a disconnection
             # We need to start again as a thread cannot be restarted
             self.__serial_comms = None
@@ -99,6 +101,7 @@ class API:
         else:
             # Not yet running so we can connect and start the thread
             if self.__serial_comms.connect():
+                self.__msgs('Serial comms running')
                 self.__serial_comms.start()
                 self.__serial_running = True
                 return True     

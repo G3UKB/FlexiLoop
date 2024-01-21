@@ -42,13 +42,14 @@ import api
 # Setpoint config dialog        
 class Setpoint(QDialog):
     
-    def __init__(self, model):
+    def __init__(self, model, msgs):
         super(Setpoint, self).__init__()
 
         # Get root logger
         self.logger = logging.getLogger('root')
         
         self.__model = model
+        self.__msgs = msgs
         
         # Local vars
         self.__loop = -1
