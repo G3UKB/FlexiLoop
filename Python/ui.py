@@ -66,7 +66,7 @@ class UI(QMainWindow):
         self.__qt_app = qt_app
         
         # Create the API instance
-        self.__api = api.API(model, port, self.callback, self.msg_callback, self.man_cal_callback)
+        self.__api = api.API(model, port, self.callback, self.msg_callback)
         self.__api.init_comms()
         
         # Create the config dialog
@@ -132,8 +132,8 @@ class UI(QMainWindow):
         # Manual calibration status
         self.__man_hint = MAN_NONE
         self.__man_cal_state = MANUAL_IDLE
-        self.__ man_freq = 0.0
-        self.__man_swr = 1.0
+        self.__man_cal_freq = 0.0
+        self.__man_cal_swr = 1.0
         
     #=======================================================
     # PUBLIC
@@ -165,14 +165,14 @@ class UI(QMainWindow):
         # We set the hint and set data required flag and wait for the state to go to data available
         self.__man_cal_state = MANUAL_DATA_REQD
         while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
-            sleep 0.2
-        r = (self.__ man_freq, self.__man_swr)
-        self.__ man_freq = 0.0
-        self.__man_swr = 1.0
+            sleep (0.2)
+        r = (self.__man_cal_freq, self.__man_cal_swr)
+        self.__man_cal_freq = 0.0
+        self.__man_cal_swr = 1.0
         while self.__man_cal_state != MANUAL_NEXT:
-            sleep 0.2
+            sleep (0.2)
         self.__man_cal_state = MANUAL_IDLE    
-        return (self.__ man_freq, self.__man_swr)    
+        return (self.__man_cal_freq, self.__man_cal_swr)    
         
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
@@ -427,9 +427,9 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(sps, 1, 5, 1, 3)
         
         # If no VNA we can put up the manual calibration box
-        manualcal = QGroupBox('Manual Input')
+        self.__manualcal = QGroupBox('Manual Input')
         manualgrid = QGridLayout()
-        manualcal.setLayout(manualgrid)
+        self.__manualcal.setLayout(manualgrid)
         
         gap = QWidget()
         manualgrid.addWidget(gap, 0, 0)
@@ -467,14 +467,14 @@ class UI(QMainWindow):
         self.__next.setMinimumHeight(20)
         manualgrid.addWidget(self.__next, 0, 7)
         
-        self.__loopgrid.addWidget(manualcal, 2, 0, 1, 8)
+        self.__loopgrid.addWidget(self.__manualcal, 2, 0, 1, 8)
         
         # Space out
         manualgrid.setColumnStretch(0, 1)
         manualgrid.setColumnStretch(5, 2)
         
         # Unhide for testing
-        manualcal.hide()
+        self.__manualcal.hide()
         
         # -------------------------------------------
         # Auto area
@@ -676,7 +676,7 @@ class UI(QMainWindow):
         # VNA check
         if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
             # No VNA present so we do a manual config
-            manualcal.show()
+            self.__manualcal.show()
             manual = True
             
         self.__set_vna_mode()
@@ -686,7 +686,7 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__st_act.setText(CALIBRATE)
         self.__long_running = True
-        if self.__api.calibrate(loop, manual):
+        if self.__api.calibrate(loop, manual, self.msg_callback, self.man_cal_callback):
             if loop == 1:
                 self.__l1label.setObjectName("stgreen")
                 self.__l1label.setStyleSheet(self.__l1label.styleSheet())
@@ -700,6 +700,7 @@ class UI(QMainWindow):
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
         self.__set_tx_mode()
+        self.__manualcal.hide()
     
     def __do_sp(self):
         # Invoke the setpoint dialog
@@ -809,8 +810,8 @@ class UI(QMainWindow):
     #=======================================================
     # Manual calibration events
     def __do_man_save():
-        self.__ man_freq = self.__freqtxt.text()
-        self.__man_swr = self.__swrtxt.text()
+        self.__man_cal_freq = self.__freqtxt.text()
+        self.__man_cal_swr = self.__swrtxt.text()
         self.__man_cal_state = MANUAL_DATA_AVAILABLE
     
     def __do_man_next():
@@ -933,7 +934,7 @@ class UI(QMainWindow):
         elif self.__man_cal_state == MANUAL_DATA_REQD:
             self.__freqtxt.setEnabled(True)
             self.__swrtxt.setEnabled(True)
-            if len(self.__freqtxt.text()) > 0 and len(self.__swrtxt.text()) > 0  
+            if len(self.__freqtxt.text()) > 0 and len(self.__swrtxt.text()) > 0: 
                 self.__save.setEnabled(True)
             self.__next.setEnabled(False)
         elif self.__man_cal_state == MANUAL_DATA_AVAILABLE:

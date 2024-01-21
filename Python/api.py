@@ -40,7 +40,6 @@ import serialcomms
 import calibrate
 import vna
 import tune
-import pirelay
 
 # Verbose flag
 VERB = False
@@ -118,9 +117,9 @@ class API:
         self.__tune.join()
     
     # Perform a calibration for the given loop    
-    def calibrate(self, loop, manual, callback):
+    def calibrate(self, loop, manual, callback, man_cal):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual, callback]))
+        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual, callback, man_cal]))
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):
