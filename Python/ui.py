@@ -156,8 +156,8 @@ class UI(QMainWindow):
     # CALLBACKS
     #
     # Note this can be called from any thread to output messages to the transcript
-    def msg_callback(self, data):
-        self.__msgq.put(data)
+    def msg_callback(self, data, msgtype=MSG_INFO):
+        self.__msgq.put((data, msgtype))
     
     # This is called when doing a manual calibration to set the hint and get the next data items.
     # This is called on the calibration thread so will not interrupt the UI
@@ -171,8 +171,9 @@ class UI(QMainWindow):
         self.__man_cal_swr = 1.0
         while self.__man_cal_state != MANUAL_NEXT:
             sleep (0.2)
-        self.__man_cal_state = MANUAL_IDLE    
-        return (self.__man_cal_freq, self.__man_cal_swr)    
+        self.__man_cal_state = MANUAL_IDLE
+        print('Returning ',r)
+        return r    
         
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
@@ -555,9 +556,7 @@ class UI(QMainWindow):
         self.__runfwd = QPushButton("Run Fwd >>")
         self.__runfwd.setToolTip('Run actuator forward...')
         self.__subgrid.addWidget(self.__runfwd, 0,6)
-        self.__runfwd.clicked.connect(self.__do_run_fwd)
-        
-        
+        self.__runfwd.clicked.connect(self.__do_run_fwd)    
         
         #----------------------------------
         # Get current
@@ -676,17 +675,16 @@ class UI(QMainWindow):
         # VNA check
         if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
             # No VNA present so we do a manual config
-            self.__manualcal.show()
             manual = True
-            
-        self.__set_vna_mode()
+        
+        #self.__set_vna_mode()
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
         self.__current_activity = CALIBRATE
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__st_act.setText(CALIBRATE)
         self.__long_running = True
-        if self.__api.calibrate(loop, manual, self.msg_callback, self.man_cal_callback):
+        if self.__api.calibrate(loop, manual, self.man_cal_callback):
             if loop == 1:
                 self.__l1label.setObjectName("stgreen")
                 self.__l1label.setStyleSheet(self.__l1label.styleSheet())
@@ -699,7 +697,7 @@ class UI(QMainWindow):
                 self.__l3label.setObjectName("stgreen")
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
-        self.__set_tx_mode()
+        #self.__set_tx_mode()
         self.__manualcal.hide()
     
     def __do_sp(self):
@@ -809,12 +807,12 @@ class UI(QMainWindow):
     
     #=======================================================
     # Manual calibration events
-    def __do_man_save():
+    def __do_man_save(self):
         self.__man_cal_freq = self.__freqtxt.text()
         self.__man_cal_swr = self.__swrtxt.text()
         self.__man_cal_state = MANUAL_DATA_AVAILABLE
     
-    def __do_man_next():
+    def __do_man_next(self):
         self.__freqtxt.setText('')
         self.__swrtxt.setText('')
         self.__man_cal_state = MANUAL_NEXT
@@ -866,6 +864,14 @@ class UI(QMainWindow):
                     self.__tg_ard.setText(VNA)
                     self.__relay_sel.setCurrentText(VNA)
             self.__st_act.setText(self.__current_activity)
+            
+            # Show manual entry if required
+            if self.__current_activity == CALIBRATE:
+                if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
+                    # No VNA present so we do a manual config
+                    self.__manualcal.show()
+            else:
+                self.__manualcal.hide()
         else:
             # Try to bring on-line
             self.__api.init_comms()
@@ -917,8 +923,14 @@ class UI(QMainWindow):
         # Output any messages
         if self.__msgq.qsize() > 0:
             while self.__msgq.qsize() > 0:
-                msg = self.__msgq.get()
+                msg, msgtype = self.__msgq.get()
                 self.__msglist.insertItem(0, msg)
+                if msgtype == MSG_INFO:
+                    self.__msglist.item(0).setForeground(QColor(33,82,3))
+                elif msgtype == MSG_ALERT:
+                    self.__msglist.item(0).setForeground(QColor(191,13,13))
+                else:
+                    self.__msglist.item(0).setForeground(QColor(33,82,3))
             # Cull messages?
             if self.__msglist.count() > 100:
                 # Keep history between 50 and 100
@@ -1017,8 +1029,5 @@ class UI(QMainWindow):
     
     # Additive state for VNA    
     def __w_vna_enable_disable(self, state):
-        self.__cal.setEnabled(state)
-        self.__freqtxt.setEnabled(state)
-        self.__tune.setEnabled(state)
         self.__getres.setEnabled(state)
         

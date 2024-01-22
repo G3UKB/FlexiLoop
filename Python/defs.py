@@ -101,6 +101,8 @@ MSREV = 'msRev'
 MOVETO = 'MoveTo'
 TUNE = 'Tune'
 RESONANCE = 'Resonance'
+RLYON = 'RlyOn'
+RLYOFF = 'RlyOff'
 # Pseudo activities
 STATUS = 'Status'
 ABORT = 'Abort'
@@ -151,6 +153,10 @@ MANUAL_IDLE = 0
 MANUAL_DATA_REQD = 1
 MANUAL_DATA_AVAILABLE = 2
 MANUAL_NEXT = 3
+
+# Hints for messages
+MSG_INFO = 'MSG_INFO'
+MSG_ALERT = 'MSG_ALERT'
 
 #=======================================================================
 # VNA parameters

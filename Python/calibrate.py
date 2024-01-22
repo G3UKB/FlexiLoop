@@ -61,7 +61,7 @@ VERB = False
 #===================================================== 
 class Calibrate(threading.Thread):
 
-    def __init__(self, comms, comms_q, cal_q, vna, model, callback):
+    def __init__(self, comms, comms_q, cal_q, vna, model, callback, msgs):
         super(Calibrate, self).__init__()
         
         # Get root logger
@@ -73,6 +73,7 @@ class Calibrate(threading.Thread):
         self.__vna = vna
         self.__model = model
         self.__cb = callback
+        self.__msg_cb = msgs
                 
         self.__end_points = [-1,-1]
         self.term = False
@@ -127,15 +128,13 @@ class Calibrate(threading.Thread):
         self.__comms.restore_callback()
         
     def __calibrate(self, args):
-        loop, steps, manual, callback = args
+        loop, steps, self.__manual, self.__man_cb = args
         cal_map = []
-        self.__manual = manual
-        self.__man_cb = callback
-        
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
         if not r:
             # Calibrate end points
+            self.__msg_cb("Calibrating potentiometer feedback end points...")
             r = self.cal_end_points()
             if not r[0]:
                 if self.__abort:
@@ -246,6 +245,7 @@ class Calibrate(threading.Thread):
         m.clear()
         
         # Move max and take a reading
+        self.__msg_cb("Calibrating maximum frequency...")
         self.__comms_q.put(('max', []))
         # Wait response
         self.__wait_for = 'Max'
@@ -262,6 +262,7 @@ class Calibrate(threading.Thread):
             return False, "Failed to get max frequency!", []
         
         # Move home and take a reading
+        self.__msg_cb("Calibrating minimum frequency...")
         self.__comms_q.put(('home', []))
         # Wait response
         self.__wait_for = 'Home'
@@ -299,6 +300,7 @@ class Calibrate(threading.Thread):
         m[2].append([int(home), fhome])
         
         # Add intermediate positions
+        self.__msg_cb("Calibrating step frequencies...")
         next_inc = home + inc
         counter = 0
         while next_inc < maximum:
@@ -344,6 +346,7 @@ class Calibrate(threading.Thread):
     def __get_current(self, flow, fhigh, inc, hint):
         if self.__manual:
             # We must interact with the UI to get user input for the readings
+            self.__msg_cb("Please enter frequency and swr for this calibration point", MSG_ALERT)
             f, swr = self.__man_cb(hint)
             return True, [(f, swr)]
         else:

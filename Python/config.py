@@ -262,7 +262,7 @@ class Config(QDialog):
         vnaavaillabel = QLabel('VNA Present?')
         grid.addWidget(vnaavaillabel, 0, 0)
         self.__vnaavailtog = QCheckBox('')
-        self.__vnaavailtog.setToolTip('Set number of seconds to wait for short running actions')
+        self.__vnaavailtog.setToolTip('Uncheck if there is no VNA connected')
         if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
             self.__vnaavailtog.setChecked(True)
         else:

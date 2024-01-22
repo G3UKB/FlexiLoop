@@ -70,7 +70,7 @@ class API:
         
         # Create a Calibration instance
         self.__c_q = queue.Queue(10)
-        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, self.__vna, model, self.cal_callback)
+        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, self.__vna, model, self.cal_callback, msgs)
         # and start the thread
         self.__cal.start()
         
@@ -117,9 +117,9 @@ class API:
         self.__tune.join()
     
     # Perform a calibration for the given loop    
-    def calibrate(self, loop, manual, callback, man_cal):
+    def calibrate(self, loop, manual, man_cb):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual, callback, man_cal]))
+        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual, man_cb]))
         
     # Perform a re-calibration for the given loop    
     def re_calibrate(self, loop):
