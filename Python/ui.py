@@ -438,19 +438,19 @@ class UI(QMainWindow):
         # Data entry
         freqlabel = QLabel('Freq')
         manualgrid.addWidget(freqlabel, 0, 1)
-        self.__freqtxt = QLineEdit()
-        self.__freqtxt.setInputMask('000.000;0')
-        self.__freqtxt.setToolTip('Resonant frequency')
-        self.__freqtxt.setMaximumWidth(80)
-        manualgrid.addWidget(self.__freqtxt, 0, 2)
+        self.__manfreqtxt = QLineEdit()
+        self.__manfreqtxt.setInputMask('000.000;0')
+        self.__manfreqtxt.setToolTip('Resonant frequency')
+        self.__manfreqtxt.setMaximumWidth(80)
+        manualgrid.addWidget(self.__manfreqtxt, 0, 2)
         
         swrlabel = QLabel('SWR')
         manualgrid.addWidget(swrlabel, 0, 3)
-        self.__swrtxt = QLineEdit()
-        self.__swrtxt.setInputMask('0.0;0')
-        self.__swrtxt.setToolTip('SWR at resonance')
-        self.__swrtxt.setMaximumWidth(80)
-        manualgrid.addWidget(self.__swrtxt, 0, 4)
+        self.__manswrtxt = QLineEdit()
+        self.__manswrtxt.setInputMask('0.0;0')
+        self.__manswrtxt.setToolTip('SWR at resonance')
+        self.__manswrtxt.setMaximumWidth(80)
+        manualgrid.addWidget(self.__manswrtxt, 0, 4)
         
         gap = QWidget()
         manualgrid.addWidget(gap, 0, 5)
@@ -808,13 +808,14 @@ class UI(QMainWindow):
     #=======================================================
     # Manual calibration events
     def __do_man_save(self):
-        self.__man_cal_freq = self.__freqtxt.text()
-        self.__man_cal_swr = self.__swrtxt.text()
+        self.__man_cal_freq = self.manfreqtxt.text()
+        self.__man_cal_swr = self.__manswrtxt.text()
         self.__man_cal_state = MANUAL_DATA_AVAILABLE
+        print(self.manfreqtxt.text(), self.__manswrtxt.text(), self.__man_cal_freq, self.__man_cal_swr)
     
     def __do_man_next(self):
-        self.__freqtxt.setText('')
-        self.__swrtxt.setText('')
+        self.manfreqtxt.setText('')
+        self.__manswrtxt.setText('')
         self.__man_cal_state = MANUAL_NEXT
     
     #=======================================================
@@ -939,19 +940,19 @@ class UI(QMainWindow):
         
         # Manage manual data entry state
         if self.__man_cal_state == MANUAL_IDLE:
-            self.__freqtxt.setEnabled(False)
-            self.__swrtxt.setEnabled(False)
+            self.__manfreqtxt.setEnabled(False)
+            self.__manswrtxt.setEnabled(False)
             self.__save.setEnabled(False)
             self.__next.setEnabled(False)
         elif self.__man_cal_state == MANUAL_DATA_REQD:
-            self.__freqtxt.setEnabled(True)
-            self.__swrtxt.setEnabled(True)
-            if len(self.__freqtxt.text()) > 0 and len(self.__swrtxt.text()) > 0: 
+            self.__manfreqtxt.setEnabled(True)
+            self.__manswrtxt.setEnabled(True)
+            if len(self.__manfreqtxt.text()) > 0 and len(self.__manswrtxt.text()) > 0: 
                 self.__save.setEnabled(True)
             self.__next.setEnabled(False)
         elif self.__man_cal_state == MANUAL_DATA_AVAILABLE:
-            self.__freqtxt.setEnabled(False)
-            self.__swrtxt.setEnabled(False)
+            self.__manfreqtxt.setEnabled(False)
+            self.__manswrtxt.setEnabled(False)
             self.__save.setEnabled(False)
             self.__next.setEnabled(True)
         
