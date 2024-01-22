@@ -926,11 +926,11 @@ class UI(QMainWindow):
                 msg, msgtype = self.__msgq.get()
                 self.__msglist.insertItem(0, msg)
                 if msgtype == MSG_INFO:
-                    self.__msglist.item(0).setForeground(QColor(33,82,3))
+                    self.__msglist.item(0).setForeground(QColor(60,60,60))
                 elif msgtype == MSG_ALERT:
                     self.__msglist.item(0).setForeground(QColor(191,13,13))
                 else:
-                    self.__msglist.item(0).setForeground(QColor(33,82,3))
+                    self.__msglist.item(0).setForeground(QColor(60,60,60))
             # Cull messages?
             if self.__msglist.count() > 100:
                 # Keep history between 50 and 100
