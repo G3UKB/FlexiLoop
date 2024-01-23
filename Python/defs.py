@@ -156,6 +156,7 @@ MANUAL_NEXT = 3
 
 # Hints for messages
 MSG_INFO = 'MSG_INFO'
+MSG_STATUS = 'MSG_STATUS'
 MSG_ALERT = 'MSG_ALERT'
 
 #=======================================================================

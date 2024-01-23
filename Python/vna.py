@@ -84,14 +84,13 @@ class VNA:
                 i = random.randint(1,self.__model[CONFIG][CAL][ACTUATOR_STEPS])
                 return True, [(self.__high_f - (i * self.__inc_f), self.__swr)]
             else:
-                if self.__current_step >= self.__model[CONFIG][CAL][ACTUATOR_STEPS]:
+                if self.__current_step > self.__model[CONFIG][CAL][ACTUATOR_STEPS]:
                     print ("Steps %d are running off end. Restarting at 1." % (self.__current_step))
                     self.__current_step = 1
-                else:
-                    # We step from high to low frequency
-                    f_now = self.__high_f - (self.__current_step * self.__inc_f)
-                    self.__current_step += 1
-                    return True, [(round(f_now, 2), self.__swr)]
+                # We step from high to low frequency
+                f_now = self.__high_f - (self.__current_step * self.__inc_f)
+                self.__current_step += 1
+                return True, [(round(f_now, 2), self.__swr)]
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go

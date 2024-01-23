@@ -116,8 +116,7 @@ class SerialComms(threading.Thread):
                     sleep(0.02)
             except Exception as e:
                 # Something went wrong
-                self.logger.info(str(e))
-                #self.__cb('fatal: {0}'.format(e))
+                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. [%s]' % str(e))
                 break
             
             # Check Arduino alive
@@ -136,6 +135,7 @@ class SerialComms(threading.Thread):
                     # This will get picked up and a reconnect attempted
                     if MODEL: self.__model[STATE][ARDUINO][ONLINE] = False
                     self.__ser.close()
+                    self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
                     break
                 
         self.logger.info("Comms thread exiting...")
@@ -229,7 +229,7 @@ class SerialComms(threading.Thread):
         msg = ""
         retries = 5
         while(1):
-            if VERB: print("Sending ", cmd)
+            if VERB: self.logger.info("Sending {0}".format(cmd))
             self.__ser.write(cmd)
             self.__ser.flush()
             sleep(0.1)
@@ -290,16 +290,16 @@ class SerialComms(threading.Thread):
                 # Found terminator character
                 if "Status" in acc:
                     # Its a status message so return this directly
-                    if VERB: self.logger.info("Status: %s" % acc)
+                    if VERB: self.logger.info("Status: {0}".format(acc))
                     self.__cb(self.__encode(acc))
                     acc = ""
                     continue
                 # Otherwise its a response to the command
-                if VERB: self.logger.info("Response: %s" % acc)
+                if VERB: self.logger.info("Response: {0}".format(acc))
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
-                    if VERB: self.logger.info("More data available %d - collecting... " % ser.in_waiting)
+                    if VERB: self.logger.info("More data available {0} - collecting... ".format(ser.in_waiting))
                     acc = ""
                     continue
                 success = True

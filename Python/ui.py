@@ -172,7 +172,6 @@ class UI(QMainWindow):
         while self.__man_cal_state != MANUAL_NEXT:
             sleep (0.2)
         self.__man_cal_state = MANUAL_IDLE
-        print('Returning ',r)
         return r    
         
     def callback(self, data):
@@ -207,7 +206,7 @@ class UI(QMainWindow):
             if name == self.__current_activity:
                 if success:
                     # Action any data
-                    if name == 'Pos':
+                    if name == POS:
                         # Update position
                         self.__current_pos = args[0]
                     elif name == CALIBRATE:
@@ -698,7 +697,6 @@ class UI(QMainWindow):
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
         #self.__set_tx_mode()
-        self.__manualcal.hide()
     
     def __do_sp(self):
         # Invoke the setpoint dialog
@@ -811,7 +809,6 @@ class UI(QMainWindow):
         self.__man_cal_freq = self.__manfreqtxt.text()
         self.__man_cal_swr = self.__manswrtxt.text()
         self.__man_cal_state = MANUAL_DATA_AVAILABLE
-        print(self.__manfreqtxt.text(), self.__manswrtxt.text(), self.__man_cal_freq, self.__man_cal_swr)
     
     def __do_man_next(self):
         self.__manfreqtxt.setText('')
@@ -928,6 +925,8 @@ class UI(QMainWindow):
                 self.__msglist.insertItem(0, msg)
                 if msgtype == MSG_INFO:
                     self.__msglist.item(0).setForeground(QColor(60,60,60))
+                elif msgtype == MSG_STATUS:
+                    self.__msglist.item(0).setForeground(QColor(33,82,3))
                 elif msgtype == MSG_ALERT:
                     self.__msglist.item(0).setForeground(QColor(191,13,13))
                 else:

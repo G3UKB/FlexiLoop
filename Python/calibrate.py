@@ -166,6 +166,7 @@ class Calibrate(threading.Thread):
             self.logger.warning ("Error in calibration map: " % msg)
             return ('Calibrate', (False, msg, cal_map))
         
+        self.__msg_cb("Calibration complete", MSG_STATUS)
         return ('Calibrate', (True, "", cal_map))
         
     def __re_calibrate_loop(self, args):
@@ -331,7 +332,6 @@ class Calibrate(threading.Thread):
             
         # Add the max position
         m[2].append([int(maximum), fmax])
-        
         if MODEL:
             if loop == 1:
                 self.__model[CONFIG][CAL][CAL_L1] = m
@@ -372,7 +372,7 @@ class Calibrate(threading.Thread):
                 offset = val[0] - home
                 self.__cb((name, (True, "", [str(int((offset/span)*100))])))
         elif name == ABORT:
-            # Just release whever was going on
+            # Just release whatever was going on
             # It should then pick up the abort flag
             self.__abort = True
             self.__event.set() 
