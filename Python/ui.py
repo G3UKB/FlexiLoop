@@ -808,13 +808,13 @@ class UI(QMainWindow):
     #=======================================================
     # Manual calibration events
     def __do_man_save(self):
-        self.__man_cal_freq = self.manfreqtxt.text()
+        self.__man_cal_freq = self.__manfreqtxt.text()
         self.__man_cal_swr = self.__manswrtxt.text()
         self.__man_cal_state = MANUAL_DATA_AVAILABLE
-        print(self.manfreqtxt.text(), self.__manswrtxt.text(), self.__man_cal_freq, self.__man_cal_swr)
+        print(self.__manfreqtxt.text(), self.__manswrtxt.text(), self.__man_cal_freq, self.__man_cal_swr)
     
     def __do_man_next(self):
-        self.manfreqtxt.setText('')
+        self.__manfreqtxt.setText('')
         self.__manswrtxt.setText('')
         self.__man_cal_state = MANUAL_NEXT
     

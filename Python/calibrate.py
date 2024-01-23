@@ -348,7 +348,7 @@ class Calibrate(threading.Thread):
             # We must interact with the UI to get user input for the readings
             self.__msg_cb("Please enter frequency and swr for this calibration point", MSG_ALERT)
             f, swr = self.__man_cb(hint)
-            return True, [(f, swr)]
+            return True, [(float(f), float(swr))]
         else:
             return self.__vna.fres(flow, fhigh, inc, hint = hint)
         
