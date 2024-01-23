@@ -120,6 +120,7 @@ class SerialComms(threading.Thread):
                 break
             
             # Check Arduino alive
+            '''
             self.__heartbeat -= 1
             if self.__heartbeat <= 0:
                 self.__heartbeat = self.__ticks
@@ -137,7 +138,7 @@ class SerialComms(threading.Thread):
                     self.__ser.close()
                     self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
                     break
-                
+            '''    
         self.logger.info("Comms thread exiting...")
     
     # ===============================================================
