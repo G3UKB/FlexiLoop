@@ -104,23 +104,7 @@ class SerialComms(threading.Thread):
     def run(self):
         self.logger.info("Running...")
         while not self.term:
-            try:
-                if self.__q.qsize() > 0:
-                    while self.__q.qsize() > 0:
-                        name, args = self.__q.get()
-                        # By default this is synchronous so will wait for the response
-                        # Response goes to main code callback, we don't care here
-                        self.__dispatch(name, args)
-                        self.__q.task_done()
-                else:
-                    sleep(0.02)
-            except Exception as e:
-                # Something went wrong
-                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. [%s]' % str(e))
-                break
-            
-            # Check Arduino alive
-            '''
+            # Heartbeat
             self.__heartbeat -= 1
             if self.__heartbeat <= 0:
                 self.__heartbeat = self.__ticks
@@ -138,7 +122,23 @@ class SerialComms(threading.Thread):
                     self.__ser.close()
                     self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
                     break
-            '''    
+            # Process messages
+            try:
+                if self.__q.qsize() > 0:
+                    while self.__q.qsize() > 0:
+                        name, args = self.__q.get()
+                        #print("Got ", name, args)
+                        # By default this is synchronous so will wait for the response
+                        # Response goes to main code callback, we don't care here
+                        self.__dispatch(name, args)
+                        self.__q.task_done()
+                else:
+                    sleep(SLEEP_TIMER)
+            except Exception as e:
+                # Something went wrong
+                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. [%s]' % str(e))
+                break
+                
         self.logger.info("Comms thread exiting...")
     
     # ===============================================================
@@ -306,6 +306,7 @@ class SerialComms(threading.Thread):
                 success = True
                 break
         if success:
+            #print("Response ", self.__encode(acc))
             return(self.__encode(acc))
         else:
             return (name, (success, msg, val))
