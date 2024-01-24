@@ -382,6 +382,12 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
+        self.__calview = QPushButton("...")
+        self.__calview.setToolTip('View calibrations')
+        self.__calview.setObjectName("view")
+        self.__loopgrid.addWidget(self.__calview, 1, 1)
+        self.__calview.clicked.connect(self.__do_cal_view)
+        
         s = QGroupBox('Calibrate Status')
         hbox = QHBoxLayout()
         self.__l1label = QLabel('Loop-1')
@@ -400,12 +406,12 @@ class UI(QMainWindow):
         self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
-        self.__loopgrid.addWidget(s, 1, 1, 1, 3)
+        self.__loopgrid.addWidget(s, 1, 2, 1, 3)
         
         # Set points
         self.__sp = QPushButton("Setpoints...")
         self.__sp.setToolTip('Manage setpoints for loop...')
-        self.__loopgrid.addWidget(self.__sp, 1, 4)
+        self.__loopgrid.addWidget(self.__sp, 1, 5)
         self.__sp.clicked.connect(self.__do_sp)
         
         sps = QGroupBox('Setpoint Status')
@@ -426,7 +432,7 @@ class UI(QMainWindow):
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
-        self.__loopgrid.addWidget(sps, 1, 5, 1, 3)
+        self.__loopgrid.addWidget(sps, 1, 6, 1, 3)
         
         # If no VNA we can put up the manual calibration box
         self.__manualcal = QGroupBox('Manual Input')
@@ -701,6 +707,9 @@ class UI(QMainWindow):
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
         self.__switch_mode = TX
+    
+    def __do_cal_view(self):
+        pass
     
     def __do_sp(self):
         # Invoke the setpoint dialog
