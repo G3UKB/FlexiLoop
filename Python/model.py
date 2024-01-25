@@ -61,7 +61,7 @@ flexi_loop_model = {
             # Feedback values for min and max
             HOME: -1,
             MAX: -1,
-            # Loop 1-3 [f at home (highest f), f at max extension (lowest f), [[f, feedback value], [...], ...]]
+            # Loop 1-3 [f at home (highest f), f at max extension (lowest f), [[f, swr, feedback value], [...], ...]]
             CAL_L1: [],
             CAL_L2: [],
             CAL_L3: [],
@@ -86,6 +86,7 @@ flexi_loop_model = {
             MAIN_WIN: [300,300,500,200],
             CONFIG_WIN: [300,300,300,300],
             SETPOINT_WIN: [300,300,520,300],
+            CALVIEW_WIN: [300,300,300,200],
         },
         ARDUINO: {
             ONLINE: False,

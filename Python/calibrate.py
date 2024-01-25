@@ -257,7 +257,7 @@ class Calibrate(threading.Thread):
         self.__event.clear()
         # Get res freq approx as its a full sweep takes a while
         #r, [(fmax, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_MAX)
-        r, [(fmax, swr)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_MAX)
+        r, [(fmax, swrmax)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_MAX)
         if not r:
             self.logger.warning("Failed to get max frequency!")
             return False, "Failed to get max frequency!", []
@@ -274,7 +274,7 @@ class Calibrate(threading.Thread):
         self.__event.clear()
         # get res freq
         #r, [(fhome, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_HOME)
-        r, [(fhome, swr)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_HOME)
+        r, [(fhome, swrhome)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_HOME)
         if not r:
             self.logger.warning("Failed to get min frequency!")
             return False, "Failed to get min frequency!", []
@@ -298,7 +298,7 @@ class Calibrate(threading.Thread):
         nextf_approx = home
         
         # Add the home position
-        m[2].append([int(home), fhome])
+        m[2].append([int(home), fhome, swrhome])
         
         # Add intermediate positions
         self.__msg_cb("Calibrating step frequencies...")
@@ -326,12 +326,12 @@ class Calibrate(threading.Thread):
             if not r:
                 self.logger.inwarningfo("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m
-            m[2].append([int(next_inc), f])
+            m[2].append([int(next_inc), f, swr])
             next_inc += inc
             counter += 1
             
         # Add the max position
-        m[2].append([int(maximum), fmax])
+        m[2].append([int(maximum), fmax, swrmax])
         if MODEL:
             if loop == 1:
                 self.__model[CONFIG][CAL][CAL_L1] = m

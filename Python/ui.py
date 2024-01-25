@@ -41,6 +41,7 @@ from utils import *
 import api
 import config
 import setpoints
+import calview
 
 # Vertical line
 class VLine(QFrame):
@@ -74,6 +75,9 @@ class UI(QMainWindow):
         
         # Create the setpoint dialog
         self.__sp_dialog = setpoints.Setpoint(self.__model, self.msg_callback)
+        
+        # Create the calibration view dialog
+        self.__calview_dialog = calview.Calview(self.__model, self.msg_callback)
         
         #Loop status
         self.__selected_loop = 1
@@ -709,7 +713,9 @@ class UI(QMainWindow):
         self.__switch_mode = TX
     
     def __do_cal_view(self):
-        pass
+        # Invoke the calview dialog
+        self.__calview_dialog.set_loop(self.__selected_loop)
+        self.__calview_dialog.show()
     
     def __do_sp(self):
         # Invoke the setpoint dialog
