@@ -104,7 +104,7 @@ class Calview(QDialog):
         self.__table = QTableWidget()
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.__table.setColumnCount(3)
-        self.__table.setHorizontalHeaderLabels(('Freq','SWR','Position'))
+        self.__table.setHorizontalHeaderLabels(('Position', 'Freq', 'SWR',))
         grid.addWidget(self.__table, 1, 0, 1, 3)
         
         # Button area
