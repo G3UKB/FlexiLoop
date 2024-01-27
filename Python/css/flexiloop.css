@@ -91,6 +91,17 @@ QPushButton#dialog {
     font: 14px;
 }
 
+QPushButton::disabled#dialog {
+    min-height: 20px;
+    min-width: 30px;
+    background-color: rgb(200,197,191);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border: 1px solid rgb(24,74,101);
+    border-radius: 5px;
+    font: 14px;
+}
+
 QPushButton::pressed {
     background-color: rgb(97,97,97);
 }
@@ -159,6 +170,15 @@ QComboBox {
     font: 14px;
 }
 
+QComboBox::disabled {
+    background-color: rgb(131,124,114);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
 /* SpinBox */
 QSpinBox {
     min-height: 20px;
@@ -170,10 +190,30 @@ QSpinBox {
     font: 14px;
 }
 
+QSpinBox::disabled {
+    min-height: 20px;
+    background-color: rgb(131,124,114);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
 QSpinBox#dialog {
     min-height: 20px;
     background-color: rgb(200,197,191);
     color: rgb(24,74,101);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
+QSpinBox::disabled#dialog {
+    min-height: 20px;
+    background-color: rgb(200,197,191);
+    color: rgb(97,97,97);
     border-style: outset;
     border-width: 1px;
     border-radius: 5px;

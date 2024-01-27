@@ -389,6 +389,9 @@ class Config(QDialog):
             self.__vnacalpathtxt.setEnabled(True)
             self.__vnajarpathtxt.setEnabled(True)
             self.__vnaexportpathtxt.setEnabled(True)
+            self.__caldialog.setEnabled(True)
+            self.__jardialog.setEnabled(True)
+            self.__exportdialog.setEnabled(True)
         else:
             self.__vnadrivertxt.setEnabled(False)
             self.__vnaporttxt.setEnabled(False)
@@ -396,6 +399,9 @@ class Config(QDialog):
             self.__vnacalpathtxt.setEnabled(False)
             self.__vnajarpathtxt.setEnabled(False)
             self.__vnaexportpathtxt.setEnabled(False)
+            self.__caldialog.setEnabled(False)
+            self.__jardialog.setEnabled(False)
+            self.__exportdialog.setEnabled(False)
         
     def __do_save(self):
         # Move every field to the model
