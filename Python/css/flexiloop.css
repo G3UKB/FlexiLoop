@@ -191,10 +191,30 @@ QLineEdit {
     font: 20px;
 }
 
+QLineEdit::disabled {
+    min-height: 25px;
+    background-color: rgb(131,124,114);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 20px;
+}
+
 QLineEdit#dialog {
     min-height: 20px;
     background-color: rgb(200,197,191);
     color: rgb(24,74,101);
+    border-style: outset;
+    border-width: 1px;
+    border-radius: 5px;
+    font: 14px;
+}
+
+QLineEdit::disabled#dialog {
+    min-height: 20px;
+    background-color: rgb(200,197,191);
+    color: rgb(97,97,97);
     border-style: outset;
     border-width: 1px;
     border-radius: 5px;

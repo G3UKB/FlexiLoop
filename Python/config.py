@@ -267,6 +267,7 @@ class Config(QDialog):
             self.__vnaavailtog.setChecked(True)
         else:
             self.__vnaavailtog.setChecked(False)
+        self.__vnaavailtog.stateChanged.connect(self.__vnastate)
         grid.addWidget(self.__vnaavailtog, 0, 1)
         
         vnadriverlabel = QLabel('VNA Driver')
@@ -380,6 +381,22 @@ class Config(QDialog):
         
     #=======================================================
     # User events
+    def __vnastate(self):
+        if self.__vnaavailtog.isChecked():
+            self.__vnadrivertxt.setEnabled(True)
+            self.__vnaporttxt.setEnabled(True)
+            self.__vnanametxt.setEnabled(True)
+            self.__vnacalpathtxt.setEnabled(True)
+            self.__vnajarpathtxt.setEnabled(True)
+            self.__vnaexportpathtxt.setEnabled(True)
+        else:
+            self.__vnadrivertxt.setEnabled(False)
+            self.__vnaporttxt.setEnabled(False)
+            self.__vnanametxt.setEnabled(False)
+            self.__vnacalpathtxt.setEnabled(False)
+            self.__vnajarpathtxt.setEnabled(False)
+            self.__vnaexportpathtxt.setEnabled(False)
+        
     def __do_save(self):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
