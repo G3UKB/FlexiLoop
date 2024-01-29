@@ -33,7 +33,7 @@ import queue
 from PyQt5.QtWidgets import QMainWindow, QApplication, QToolTip
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QListWidget, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QHBoxLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QMenuBar, QMenu, QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QListWidget, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QHBoxLayout, QTableWidgetItem
 
 # Application imports
 from defs import *
@@ -251,6 +251,25 @@ class UI(QMainWindow):
         self.setWindowTitle('Flexi-Loop Controller')
         
         #======================================================================================
+        # Configure the menu bar
+        self.menubar = QMenuBar(self)
+        self.setMenuBar(self.menubar)
+        
+        self.filemenu = QMenu("&File", self)
+        self.menubar.addMenu(self.filemenu)
+        self.exitaction = QAction(self)
+        self.exitaction.setText("&Exit")
+        self.filemenu.addAction(self.exitaction)
+        self.exitaction.triggered.connect(self.__do_close)
+        
+        self.editmenu = QMenu("&Edit", self)
+        self.menubar.addMenu(self.editmenu)
+        self.configaction = QAction(self)
+        self.configaction.setText("&Config")
+        self.editmenu.addAction(self.configaction)
+        self.configaction.triggered.connect(self.__do_config)
+        
+        #======================================================================================
         # Configure the status bar
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
@@ -335,25 +354,11 @@ class UI(QMainWindow):
         self.__central_widget.setLayout(self.__grid)
         
         # -------------------------------------------
-        # Menu type area
-        self.__menugrid = QGridLayout()
-        wmen = QGroupBox('')
-        wmen.setLayout(self.__menugrid)
-        self.__grid.addWidget(wmen, 0,0,1,4)
-        
-        self.__config = QPushButton("Config")
-        self.__config.setEnabled(True)
-        self.__config.setToolTip('Manage configuration...')
-        self.__config.clicked.connect(self.__do_config)
-        self.__config.setMinimumHeight(20)
-        self.__menugrid.addWidget(self.__config, 0,0)
-        
-        # -------------------------------------------
         # Loop area
         self.__loopgrid = QGridLayout()
         w1 = QGroupBox('Loop')
         w1.setLayout(self.__loopgrid)
-        self.__grid.addWidget(w1, 1,0,1,4)
+        self.__grid.addWidget(w1, 0,0,1,4)
         
         looplabel = QLabel('Select Loop')
         self.__loopgrid.addWidget(looplabel, 0, 0)
@@ -479,7 +484,7 @@ class UI(QMainWindow):
         self.__next.setMinimumHeight(20)
         manualgrid.addWidget(self.__next, 0, 7)
         
-        self.__loopgrid.addWidget(self.__manualcal, 2, 0, 1, 8)
+        self.__loopgrid.addWidget(self.__manualcal, 1, 0, 1, 8)
         
         # Space out
         manualgrid.setColumnStretch(0, 1)
@@ -493,7 +498,7 @@ class UI(QMainWindow):
         self.__autogrid = QGridLayout()
         w2 = QGroupBox('Auto')
         w2.setLayout(self.__autogrid)
-        self.__grid.addWidget(w2, 2,0,1,4)
+        self.__grid.addWidget(w2, 1,0,1,4)
         self.__autogrid.setColumnMinimumWidth(5,300)
         
         freqlabel = QLabel('Freq')
@@ -521,7 +526,7 @@ class UI(QMainWindow):
         self.__mangrid = QGridLayout()
         w3 = QGroupBox('Manual')
         w3.setLayout(self.__mangrid)
-        self.__grid.addWidget(w3, 3,0,1,4)
+        self.__grid.addWidget(w3, 2,0,1,4)
         
         # Sub grid
         self.__subgrid = QGridLayout()
@@ -646,7 +651,7 @@ class UI(QMainWindow):
         
         # Message area
         self.__msglist = QListWidget()
-        self.__grid.addWidget(self.__msglist, 4, 0, 1, 4)
+        self.__grid.addWidget(self.__msglist, 3, 0, 1, 4)
         
     #=======================================================
     # Window events
