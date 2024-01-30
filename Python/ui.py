@@ -399,17 +399,17 @@ class UI(QMainWindow):
         
         s = QGroupBox('Calibrate Status')
         hbox = QHBoxLayout()
-        self.__l1label = QLabel('Loop-1')
+        self.__l1label = QLabel('1')
         hbox.addWidget(self.__l1label)
         self.__l1label.setObjectName("stred")
         self.__l1label.setStyleSheet(self.__l1label.styleSheet())
         self.__l1label.setAlignment(QtCore.Qt.AlignCenter)
-        self.__l2label = QLabel('Loop-2')
+        self.__l2label = QLabel('2')
         hbox.addWidget(self.__l2label)
         self.__l2label.setObjectName("stred")
         self.__l2label.setStyleSheet(self.__l2label.styleSheet())
         self.__l2label.setAlignment(QtCore.Qt.AlignCenter)
-        self.__l3label = QLabel('Loop-3')
+        self.__l3label = QLabel('3')
         hbox.addWidget(self.__l3label)
         self.__l3label.setObjectName("stred")
         self.__l3label.setStyleSheet(self.__l3label.styleSheet())
@@ -425,19 +425,25 @@ class UI(QMainWindow):
         
         sps = QGroupBox('Setpoint Status')
         hbox1 = QHBoxLayout()
-        self.__l4label = QLabel('Loop-1')
+        
+        count = len(self.__model[CONFIG][SETPOINTS][SP_L1])
+        self.__l4label = QLabel('1 [%d]' % count)
         hbox1.addWidget(self.__l4label)
-        self.__l4label.setObjectName("stred")
+        self.__l4label.setObjectName("stblue")
         self.__l4label.setStyleSheet(self.__l4label.styleSheet())
         self.__l4label.setAlignment(QtCore.Qt.AlignCenter)
-        self.__l5label = QLabel('Loop-2')
+        
+        count = len(self.__model[CONFIG][SETPOINTS][SP_L2])
+        self.__l5label = QLabel('2 [%d]' % count)
         hbox1.addWidget(self.__l5label)
-        self.__l5label.setObjectName("stred")
+        self.__l5label.setObjectName("stblue")
         self.__l5label.setStyleSheet(self.__l5label.styleSheet())
         self.__l5label.setAlignment(QtCore.Qt.AlignCenter)
-        self.__l6label = QLabel('Loop-3')
+        
+        count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
+        self.__l6label = QLabel('3 [%d]' % count)
         hbox1.addWidget(self.__l6label)
-        self.__l6label.setObjectName("stred")
+        self.__l6label.setObjectName("stblue")
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
@@ -928,6 +934,14 @@ class UI(QMainWindow):
         if self.__loop_status[2]:
             self.__l3label.setObjectName("stgreen")
             self.__l3label.setStyleSheet(self.__l3label.styleSheet())
+            
+        # Update setpoint counts
+        count = len(self.__model[CONFIG][SETPOINTS][SP_L1])
+        self.__l4label.setText('1 [%d]' % count)
+        count = len(self.__model[CONFIG][SETPOINTS][SP_L2])
+        self.__l5label.setText('2 [%d]' % count)
+        count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
+        self.__l6label.setText('3 [%d]' % count)
         
         # Adjust buttons for loop status
         if self.__model[STATE][ARDUINO][ONLINE]:
