@@ -75,7 +75,9 @@ class Tune(threading.Thread):
         self.term = True
         
     def run(self):
+        # Run until terminate
         while not self.term:
+            # Wait until told to execute
             while not self.one_pass:
                 sleep(0.1)
                 if self.term: return
@@ -131,41 +133,44 @@ class Tune(threading.Thread):
             self.__event.wait()
             self.__event.clear()
             
-            # Stage 2 tweak SWR
-            r, [(f, swr)] = self.__vna.fswr(self.__freq)
-            last_swr = swr
-            try_for = 10
-            dir = FWD
-            if r:
-                # Tweek if necessary
-                while swr > 1.5:
-                    if try_for <= 0:
-                        self.logger.info("Unable to reduce SWR to less than 1.5 {}".format(swr))
-                        self.__cb(("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
-                        break
-                    if dir == FWD:
-                        #self.__serial_comms.nudge_fwd()
-                        self.__s_q.put(('nudge_fwd', []))
-                        sleep(1)
-                    else:
-                        #self.__serial_comms.nudge_rev()
-                        self.__s_q.put(('nudge_rev', []))
-                        sleep(1)
-                    r, swr = self.__vna.fswr(self.__freq)
-                    if swr < last_swr:
-                        last_swr = swr
-                        try_for -= 1
-                        continue
-                    else:
-                        dir = REV
-                        last_swr = swr
-                        try_for -= 1
-                        continue
-                self.__cb((TUNE, (True, "", [swr])))
-            else:
-                self.logger.inwarningfo("Failed to obtain a SWR reading for freq {}".format(self.__freq))
-                self.__cb((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
+            # Stage 2 tweak SWR if we have a VNA
+            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
+                r, [(f, swr)] = self.__vna.fswr(self.__freq)
+                last_swr = swr
+                try_for = 10
+                dir = FWD
+                if r:
+                    # Tweek if necessary
+                    while swr > 1.5:
+                        if try_for <= 0:
+                            self.logger.info("Unable to reduce SWR to less than 1.5 {}".format(swr))
+                            self.__cb(("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
+                            break
+                        if dir == FWD:
+                            #self.__serial_comms.nudge_fwd()
+                            self.__s_q.put(('nudge_fwd', []))
+                            sleep(1)
+                        else:
+                            #self.__serial_comms.nudge_rev()
+                            self.__s_q.put(('nudge_rev', []))
+                            sleep(1)
+                        r, swr = self.__vna.fswr(self.__freq)
+                        if swr < last_swr:
+                            last_swr = swr
+                            try_for -= 1
+                            continue
+                        else:
+                            dir = REV
+                            last_swr = swr
+                            try_for -= 1
+                            continue
+                    self.__cb((TUNE, (True, "", [swr])))
+                else:
+                    self.logger.inwarningfo("Failed to obtain a SWR reading for freq {}".format(self.__freq))
+                    self.__cb((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
+            # Give back callback
             self.__serial_comms.restore_callback()
+            
         print("Tune thread  exiting...")
               
     #=======================================================
