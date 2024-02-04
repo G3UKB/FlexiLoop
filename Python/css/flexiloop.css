@@ -160,6 +160,11 @@ QLabel#stblue {
     font: 14px;
 }
 
+QLabel#storange {
+    color: rgb(139,69,5);
+    font: 14px;
+}
+
 QLabel#minmax {
     color: rgb(65,62,56);
     font: 20px;
