@@ -147,22 +147,22 @@ QLabel {
 
 QLabel#stgreen {
     color: rgb(33,82,3);
-    font: 14px;
+    font: 16px;
 }
 
 QLabel#stred {
     color: rgb(191,13,13);
-    font: 14px;
+    font: 16px;
 }
 
 QLabel#stblue {
     color: rgb(24,74,101);
-    font: 14px;
+    font: 16px;
 }
 
 QLabel#storange {
     color: rgb(139,69,5);
-    font: 14px;
+    font: 16px;
 }
 
 QLabel#minmax {

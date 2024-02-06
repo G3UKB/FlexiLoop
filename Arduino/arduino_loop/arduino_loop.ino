@@ -34,10 +34,11 @@
 #define HOME 0
 #define MAX 1
 #define RLY_PIN 22
+#define DEFAULT_SPEED 200
 
 // Instance of motor driver
 DualMC33926MotorShield md;
-int current_speed = 250; // Current speed in range 0 to +-400
+int current_speed = DEFAULT_SPEED; // Current speed in range 0 to +-400
 
 // Setup runs once on startup
 void setup() {
@@ -111,6 +112,10 @@ void process(String data) {
       break;
 
     case 's':
+      // Parse out the speed
+      int speed = parse_int(data, 2);
+      // Set as current speed
+      current_speed = speed;
       Serial.print("Speed;");
       break;
 

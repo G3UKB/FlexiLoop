@@ -167,7 +167,11 @@ class SerialComms(threading.Thread):
         self.__cb(disp_tab[name](args))
         
     def __speed(self, args):
-        return self.send(b"s;", 1)
+        speed = args[0]
+        b = bytearray(b"s,")
+        b += str(speed).encode('utf-8')
+        b += b'.;'
+        return self.send(b, 2)
             
     def __home(self, args):
         return self.send(b"h;", 30)

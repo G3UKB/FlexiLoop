@@ -118,6 +118,11 @@ RES_TIMEOUT = 'RES_TIMEOUT'
 MOVE_TIMEOUT = 'MOVE_TIMEOUT'
 SHORT_TIMEOUT = 'SHORT_TIMEOUT'
 
+# Speed
+SLOW = 100
+MEDIUM = 200
+FAST = 300
+
 # Target selection dependent on relay on/off
 TX = 'TX'
 VNA = 'VNA'

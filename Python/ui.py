@@ -86,7 +86,7 @@ class UI(QMainWindow):
     
         # Set the back colour
         palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))
+        palette.setColor(QtGui.QPalette.Background,QtGui.QColor(158,152,143))
         self.setPalette(palette)
 
         # Set the tooltip style
@@ -753,7 +753,19 @@ class UI(QMainWindow):
             self.__set_vna_mode()
     
     def __speed_change(self):
-        pass
+        tspeed = self.__speed_sel.currentText()
+        if tspeed == 'Slow':
+            speed = SLOW
+        elif tspeed == 'Medium':
+            speed = MEDIUM
+        elif tspeed == 'Fast':
+            speed = FAST
+        else:
+            speed = MEDIUM
+        self.__current_activity = SPEED
+        self.__st_act.setText(SPEED)
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
+        self.__api.speed_change(speed)
     
     def __do_run_fwd(self):
         self.__current_activity = RUNFWD
