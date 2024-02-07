@@ -450,7 +450,7 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(sps, 1, 6, 1, 3)
         
         # If no VNA we can put up the manual calibration box
-        self.__manualcal = QGroupBox('Manual')
+        self.__manualcal = QGroupBox('Entry')
         manualgrid = QGridLayout()
         self.__manualcal.setLayout(manualgrid)
         
@@ -747,9 +747,9 @@ class UI(QMainWindow):
     def __relay_change(self):
         target = self.__relay_sel.currentText()
         if target == TX:
-            self.__set_tx_mode()
+            self.__switch_mode = TX
         else:
-            self.__set_vna_mode()
+            self.__switch_mode = VNA
     
     def __speed_change(self):
         tspeed = self.__speed_sel.currentText()
@@ -900,6 +900,13 @@ class UI(QMainWindow):
             else:
                 # No activity
                 widget_state = W_NORMAL
+                # Check relay status
+                if self.__switch_mode != self.__last_switch_mode:
+                    self.__last_switch_mode = self.__switch_mode
+                    if self.__switch_mode == VNA:
+                        self.__set_vna_mode()
+                    else:
+                        self.__set_tx_mode()
                 self.__long_running = False
                 self.__free_running = False
                 if self.__relay_state == TX:
@@ -908,13 +915,7 @@ class UI(QMainWindow):
                 elif self.__relay_state == VNA:
                     self.__tg_ard.setText(VNA)
                     self.__relay_sel.setCurrentText(VNA)
-                # Check relay status
-                if self.__switch_mode != self.__last_switch_mode:
-                    self.__last_switch_mode = self.__switch_mode
-                    if self.__switch_mode == VNA:
-                        self.__set_vna_mode()
-                    else:
-                        self.__set_tx_mode()
+                
                     
             self.__st_act.setText(self.__current_activity)
             
