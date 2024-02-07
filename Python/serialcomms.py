@@ -104,6 +104,7 @@ class SerialComms(threading.Thread):
     def run(self):
         self.logger.info("Running...")
         while not self.term:
+            
             # Heartbeat
             self.__heartbeat -= 1
             if self.__heartbeat <= 0:
@@ -122,6 +123,7 @@ class SerialComms(threading.Thread):
                     self.__ser.close()
                     self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
                     break
+            
             # Process messages
             try:
                 if self.__q.qsize() > 0:

@@ -92,13 +92,28 @@ void process(String data) {
   *   o Relay de-energise : b;
   */
   char cmd = data[0];
+
+  // There is an issue with the compiler :-
+  // If you declare a variable with a case
+  // the code hangs and will never progress 
+  // to later cases.
   int ms;
+  int speed;
+  int val;
   
   // Switch on command type
   switch (cmd) {
     
     case 'z':
       Serial.print("z;");
+      break;
+
+    case 's':
+      // Parse out the speed
+      speed = parse_int(data, 2);
+      // Set as current speed
+      current_speed = speed;
+      Serial.print("Speed;");
       break;
 
     case 'a':
@@ -109,14 +124,6 @@ void process(String data) {
     case 'b':
       digitalWrite(RLY_PIN, LOW);
       Serial.print("RlyOff;");
-      break;
-
-    case 's':
-      // Parse out the speed
-      int speed = parse_int(data, 2);
-      // Set as current speed
-      current_speed = speed;
-      Serial.print("Speed;");
       break;
 
     case 'h':
@@ -194,7 +201,7 @@ void process(String data) {
 
     case 'm':
       // Parse out the value to move to
-      int val = parse_int(data, 2);
+      val = parse_int(data, 2);
       
       if (move_to_feedback_value(val)) {
         Serial.print("MoveTo: ");

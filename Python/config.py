@@ -129,23 +129,24 @@ class Config(QDialog):
         
         # Action buttons
         self.__save = QPushButton("Save")
-        #self.__save.setObjectName("dialog")
         self.__save.setMaximumWidth(30)
         self.__save.setToolTip('Save changes ...')
         common.addWidget(self.__save, 0, 0)
         self.__save.clicked.connect(self.__do_save)
         self.__cancel = QPushButton("Cancel")
-        #self.__cancel.setObjectName("dialog")
         self.__cancel.setMaximumWidth(30)
         self.__cancel.setToolTip('Cancel changes ...')
         common.addWidget(self.__cancel, 0, 1)
         self.__cancel.clicked.connect(self.__do_cancel)
         self.__close = QPushButton("Close")
-        #self.__close.setObjectName("dialog")
         self.__close.setMaximumWidth(30)
         self.__close.setToolTip('Close configuration')
-        common.addWidget(self.__close, 0, 2)
+        common.addWidget(self.__close, 0, 3)
         self.__close.clicked.connect(self.__do_close)
+        
+        gap = QWidget()
+        common.addWidget(gap, 0, 2)
+        common.setColumnStretch(2, 1)
         
     #=======================================================
     # Populate dialog

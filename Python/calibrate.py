@@ -246,7 +246,7 @@ class Calibrate(threading.Thread):
         m.clear()
         
         # Move max and take a reading
-        self.__msg_cb("Calibrating maximum frequency...")
+        self.__msg_cb("Calibrating low frequency...")
         self.__comms_q.put(('max', []))
         # Wait response
         self.__wait_for = 'Max'
@@ -259,11 +259,11 @@ class Calibrate(threading.Thread):
         #r, [(fmax, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_MAX)
         r, [(fmax, swrmax)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_MAX)
         if not r:
-            self.logger.warning("Failed to get max frequency!")
-            return False, "Failed to get max frequency!", []
+            self.logger.warning("Failed to get low frequency!")
+            return False, "Failed to get low frequency!", []
         
         # Move home and take a reading
-        self.__msg_cb("Calibrating minimum frequency...")
+        self.__msg_cb("Calibrating high frequency...")
         self.__comms_q.put(('home', []))
         # Wait response
         self.__wait_for = 'Home'
@@ -276,8 +276,8 @@ class Calibrate(threading.Thread):
         #r, [(fhome, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_HOME)
         r, [(fhome, swrhome)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_HOME)
         if not r:
-            self.logger.warning("Failed to get min frequency!")
-            return False, "Failed to get min frequency!", []
+            self.logger.warning("Failed to get high frequency!")
+            return False, "Failed to get high frequency!", []
         
         # Save limits for this loop
         m = [fhome, fmax, []]
@@ -346,7 +346,7 @@ class Calibrate(threading.Thread):
     def __get_current(self, flow, fhigh, inc, hint):
         if self.__manual:
             # We must interact with the UI to get user input for the readings
-            self.__msg_cb("Please enter frequency and swr for this calibration point", MSG_ALERT)
+            self.__msg_cb("Please enter frequency and swr for this calibration point [%s]" % hint, MSG_ALERT)
             f, swr = self.__man_cb(hint)
             return True, [(float(f), float(swr))]
         else:

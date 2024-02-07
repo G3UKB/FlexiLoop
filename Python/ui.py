@@ -370,14 +370,14 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
-        minlabel = QLabel('Min freq')
+        minlabel = QLabel('Low freq')
         self.__loopgrid.addWidget(minlabel, 0, 2)
         minlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue = QLabel('0.0')
         self.__minvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue.setObjectName("minmax")
         self.__loopgrid.addWidget(self.__minvalue, 0, 3)
-        maxlabel = QLabel('Max freq')
+        maxlabel = QLabel('High freq')
         self.__loopgrid.addWidget(maxlabel, 0, 4)
         maxlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__maxvalue = QLabel('0.0')
@@ -450,7 +450,7 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(sps, 1, 6, 1, 3)
         
         # If no VNA we can put up the manual calibration box
-        self.__manualcal = QGroupBox('Manual Input')
+        self.__manualcal = QGroupBox('Manual')
         manualgrid = QGridLayout()
         self.__manualcal.setLayout(manualgrid)
         
@@ -490,7 +490,7 @@ class UI(QMainWindow):
         self.__next.setMinimumHeight(20)
         manualgrid.addWidget(self.__next, 0, 7)
         
-        self.__loopgrid.addWidget(self.__manualcal, 1, 0, 1, 8)
+        self.__loopgrid.addWidget(self.__manualcal, 2, 0, 1, 8)
         
         # Space out
         manualgrid.setColumnStretch(0, 1)
@@ -704,7 +704,6 @@ class UI(QMainWindow):
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
         self.__current_activity = CALIBRATE
-        print("Set CALIBRATE")
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__st_act.setText(CALIBRATE)
         self.__long_running = True
