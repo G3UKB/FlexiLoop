@@ -31,7 +31,7 @@ import logging
 from defs import *
 import decode
 
-SIMULATE = True
+SIMULATE = False
 
 """
     Perform a sweep using the command line utility from vna/j.
@@ -59,7 +59,7 @@ class VNA:
             self.__swr = 1.0            # Always return 1.0
         
         # Create decoder
-        self.__dec = decode.Decode()
+        self.__dec = decode.Decode(model)
         
     def fres(self, startFreq, stopFreq, incFreq, hint = HOME):
         """
@@ -72,7 +72,6 @@ class VNA:
             incFreq     --  take reading every incFreq in Hz 
             optional hint -- MIN, MAX, MID (used in simulation)
         """
-        
         if SIMULATE:
             if hint == VNA_HOME:
                 self.__current_step = 1
@@ -111,6 +110,7 @@ class VNA:
         Arguments:
             freq   --  freq in Hz
         """
+        print('fswr')
         if SIMULATE:
             return True, [(freq, self.__swr)]
         
@@ -152,6 +152,7 @@ class VNA:
                 steps       --  steps between start and stop (minimum 2 gives one reading at each freq)
                 
         """
+        
         try:
             params = []
             params.append('java')

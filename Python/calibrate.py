@@ -350,7 +350,8 @@ class Calibrate(threading.Thread):
             f, swr = self.__man_cb(hint)
             return True, [(float(f), float(swr))]
         else:
-            return self.__vna.fres(flow, fhigh, inc, hint = hint)
+            r, [f, swr] = self.__vna.fres(flow, fhigh, inc, hint = hint)
+            return r, [float(f)/1000000.0, swr]
         
     # =========================================================================
     # Callback from comms module

@@ -38,10 +38,12 @@ Decode data set written to the output file by the vna/j command line program.
 
 class Decode:
     
-    def __init__(self):
+    def __init__(self, model):
         
         # Get root logger
         self.logger = logging.getLogger('root')
+        
+        self.__model = model
     
     def decode_fres(self):
         """ Find the resonant frequency in the result set """
@@ -102,13 +104,7 @@ class Decode:
         """ Read the result file """
         
         try:
-            if sys.platform == 'win32':
-                exportPath = WIN_EXPORT_PATH
-            elif sys.platform == 'linux':
-                exportPath = LIN_EXPORT_PATH
-            else:
-                print('Unsupported platform %s' % (sys.platform))
-                return
+            exportPath = self.__model[CONFIG][VNA_CONF][EXPORT_PATH]
             newest = max(glob.iglob(exportPath + '/*.csv'), key=os.path.getctime)
             f = open(newest)
             data = f.readlines()
