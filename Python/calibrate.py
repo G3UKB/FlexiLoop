@@ -294,8 +294,9 @@ class Calibrate(threading.Thread):
         inc = span/steps
         # Calc approx freq inc for each step
         fspanhz = int((fhome-fmax) * 1000000)
-        fsteps = fspanhz/steps
-        nextf_approx = home
+        fhzperstep = fspanhz/steps
+        # Centre next approx freq
+        nextf_approx = int(home * 1000000)
         
         # Add the home position
         m[2].append([int(home), fhome, swrhome])
@@ -329,6 +330,8 @@ class Calibrate(threading.Thread):
             m[2].append([int(next_inc), f, swr])
             next_inc += inc
             counter += 1
+            nextf_approx += fhzperstep
+            print('********** %s, %s ***************' % (fhigh, flow))
             
         # Add the max position
         m[2].append([int(maximum), fmax, swrmax])
@@ -348,10 +351,12 @@ class Calibrate(threading.Thread):
             # We must interact with the UI to get user input for the readings
             self.__msg_cb("Please enter frequency and swr for this calibration point [%s]" % hint, MSG_ALERT)
             f, swr = self.__man_cb(hint)
+            # This gives a MHz freq
             return True, [(float(f), float(swr))]
         else:
-            r, [f, swr] = self.__vna.fres(flow, fhigh, inc, hint = hint)
-            return r, [float(f)/1000000.0, swr]
+            # This gives a Hz freq so conversion necessary
+            (r, [(f, swr)]) = self.__vna.fres(flow, fhigh, inc, hint = hint)
+            return (r, [(float(f)/1000000.0, swr)])
         
     # =========================================================================
     # Callback from comms module

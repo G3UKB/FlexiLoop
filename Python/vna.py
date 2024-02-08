@@ -72,6 +72,7 @@ class VNA:
             incFreq     --  take reading every incFreq in Hz 
             optional hint -- MIN, MAX, MID (used in simulation)
         """
+        
         if SIMULATE:
             if hint == VNA_HOME:
                 self.__current_step = 1
