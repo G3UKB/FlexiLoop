@@ -31,7 +31,7 @@ import logging
 from defs import *
 import decode
 
-SIMULATE = False
+SIMULATE = True
 
 """
     Perform a sweep using the command line utility from vna/j.
@@ -76,13 +76,13 @@ class VNA:
         if SIMULATE:
             if hint == VNA_HOME:
                 self.__current_step = 1
-                return True, [(self.__high_f, self.__swr)]
+                return True, [(int(self.__high_f *1000000.0), self.__swr)]
             elif hint == VNA_MAX:
                 self.__current_step = 1
-                return True, [(self.__low_f, self.__swr)]
+                return True, [(int(self.__low_f *1000000), self.__swr)]
             elif hint == VNA_RANDOM:
                 i = random.randint(1,self.__model[CONFIG][CAL][ACTUATOR_STEPS])
-                return True, [(self.__high_f - (i * self.__inc_f), self.__swr)]
+                return True, [(int((self.__high_f - (i * self.__inc_f)) *1000000.0), self.__swr)]
             else:
                 if self.__current_step > self.__model[CONFIG][CAL][ACTUATOR_STEPS]:
                     print ("Steps %d are running off end. Restarting at 1." % (self.__current_step))
@@ -90,7 +90,7 @@ class VNA:
                 # We step from high to low frequency
                 f_now = self.__high_f - (self.__current_step * self.__inc_f)
                 self.__current_step += 1
-                return True, [(round(f_now, 2), self.__swr)]
+                return True, [(int(f_now * 1000000.0), self.__swr)]
         
         if (stopFreq - startFreq) >= 1000:
             # Good to go

@@ -294,9 +294,10 @@ class Calibrate(threading.Thread):
         inc = span/steps
         # Calc approx freq inc for each step
         fspanhz = int((fhome-fmax) * 1000000)
-        fhzperstep = fspanhz/steps
+        fhzperstep = int(fspanhz/steps)
         # Centre next approx freq
-        nextf_approx = int(home * 1000000)
+        nextf_approx = int(fhome * 1000000)
+        hzhome = int(fhome * 1000000)
         
         # Add the home position
         m[2].append([int(home), fhome, swrhome])
@@ -319,8 +320,8 @@ class Calibrate(threading.Thread):
             # We don't want to do a full frequency scan for this loop on every point as it would take for ever.
             # We need to split the scan into chunks
             # The chunk should encompass each resonant frequency at the offset.
-            fhigh = fhome - (nextf_approx * counter) + 10000
-            flow = fhome - (nextf_approx * (counter+1)) - 10000
+            fhigh = hzhome - (fhzperstep * counter)
+            flow = hzhome - (fhzperstep * (counter+1))
             # Need a little more accuracy so every 1KHz should suffice
             #r, [(f, swr)] = self.__vna.fres(flow, fhigh, INC_1K, hint = VNA_MID)
             r, [(f, swr)] = self.__get_current(flow, fhigh, INC_1K, VNA_MID)
@@ -330,8 +331,7 @@ class Calibrate(threading.Thread):
             m[2].append([int(next_inc), f, swr])
             next_inc += inc
             counter += 1
-            nextf_approx += fhzperstep
-            print('********** %s, %s ***************' % (fhigh, flow))
+            #nextf_approx += fhzperstep
             
         # Add the max position
         m[2].append([int(maximum), fmax, swrmax])
