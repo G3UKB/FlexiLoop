@@ -124,8 +124,8 @@ MEDIUM = 200
 FAST = 300
 
 # Target selection dependent on relay on/off
-TX = 'TX'
-VNA = 'VNA'
+RADIO = 'Radio'
+ANALYSER = 'Analyser'
 
 # Hints to vna.py for simulation mode
 VNA_HOME = 'HOME'

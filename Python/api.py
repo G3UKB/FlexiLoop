@@ -211,10 +211,10 @@ class API:
     def abort_activity(self):
         self.__s_q.put(('abort', []))
         
-    def tx_mode(self):
+    def radio_mode(self):
         self.__s_q.put(('relay_off', []))
         
-    def vna_mode(self):
+    def alalyser_mode(self):
         self.__s_q.put(('relay_on', []))
     
     # =========================================================================    

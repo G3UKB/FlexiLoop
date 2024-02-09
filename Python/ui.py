@@ -109,7 +109,7 @@ class UI(QMainWindow):
         self.__long_running = False
         self.__free_running = False
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
-        self.__switch_mode = TX
+        self.__switch_mode = RADIO
         self.__last_switch_mode= self.__switch_mode
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -132,8 +132,8 @@ class UI(QMainWindow):
         self.__auto_swr = '_._'
         self.__man_swr = '_._'
         
-        # Default to TX side
-        self.__relay_state = TX
+        # Default to radio side
+        self.__relay_state = RADIO
         
         # Manual calibration status
         self.__man_hint = MAN_NONE
@@ -307,7 +307,7 @@ class UI(QMainWindow):
         self.tg_lbl.setText('Target: ')
         self.statusBar.addPermanentWidget(self.tg_lbl)
         self.__tg_ard = QLabel()
-        self.__tg_ard.setText('TX')
+        self.__tg_ard.setText(RADIO)
         self.__tg_ard.setObjectName("stred")
         self.__tg_ard.setStyleSheet(self.__tg_ard.styleSheet())
         self.statusBar.addPermanentWidget(self.__tg_ard)
@@ -542,14 +542,14 @@ class UI(QMainWindow):
         
         #----------------------------------
         # Target select
-        relaylabel = QLabel('Target (TX/VNA)')
+        relaylabel = QLabel('Target')
         self.__subgrid.addWidget(relaylabel, 0, 0)
         self.__relay_sel = QComboBox()
         self.__relay_sel.setMinimumHeight(20)
         self.__relay_sel.setMaximumWidth(70)
         self.__relay_sel.setMinimumWidth(70)
-        self.__relay_sel.addItem("TX")
-        self.__relay_sel.addItem("VNA")
+        self.__relay_sel.addItem(RADIO)
+        self.__relay_sel.addItem(ANALYSER)
         self.__subgrid.addWidget(self.__relay_sel, 0, 1)
         self.__relay_sel.currentIndexChanged.connect(self.__relay_change)
         
@@ -565,19 +565,23 @@ class UI(QMainWindow):
         self.__subgrid.addWidget(self.__speed_sel, 0, 3)
         self.__speed_sel.currentIndexChanged.connect(self.__speed_change)
         
+        gap = QWidget()
+        self.__subgrid.addWidget(gap, 0, 4)
+        self.__subgrid.setColumnStretch(4, 1)
+        
         self.__runrev = QPushButton("<< Run Rev")
         self.__runrev.setToolTip('Run actuator reverse...')
-        self.__subgrid.addWidget(self.__runrev, 0,4)
+        self.__subgrid.addWidget(self.__runrev, 0,5)
         self.__runrev.clicked.connect(self.__do_run_rev)
         
         self.__stopact = QPushButton("Stop")
         self.__stopact.setToolTip('Stop actuator')
-        self.__subgrid.addWidget(self.__stopact, 0,5)
+        self.__subgrid.addWidget(self.__stopact, 0,6)
         self.__stopact.clicked.connect(self.__do_stop_act)
         
         self.__runfwd = QPushButton("Run Fwd >>")
         self.__runfwd.setToolTip('Run actuator forward...')
-        self.__subgrid.addWidget(self.__runfwd, 0,6)
+        self.__subgrid.addWidget(self.__runfwd, 0,7)
         self.__runfwd.clicked.connect(self.__do_run_fwd)    
         
         #----------------------------------
@@ -699,7 +703,7 @@ class UI(QMainWindow):
             manual = True
         
         # Switch to auto or manual VNA
-        self.__switch_mode = VNA
+        self.__switch_mode = ANALYSER
         # Do the calibrate sequence
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
@@ -720,7 +724,7 @@ class UI(QMainWindow):
                 self.__l3label.setObjectName("stgreen")
                 self.__l3label.setStyleSheet(self.__l3label.styleSheet())
                 self.__loop_status[2] = True
-        self.__switch_mode = TX
+        self.__switch_mode = RADIO
     
     def __do_cal_view(self):
         # Invoke the calview dialog
@@ -734,7 +738,7 @@ class UI(QMainWindow):
         self.__sp_dialog.show()
     
     def __do_tune(self):
-        self.__switch_mode = VNA
+        self.__switch_mode = ANALYSER
         loop = int(self.__loop_sel.currentText())
         freq = float(self.freqtxt.displayText())
         self.__st_act.setText(TUNE)
@@ -742,14 +746,14 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_freq(loop, freq)
-        self.__switch_mode = TX
+        self.__switch_mode = RADIO
         
     def __relay_change(self):
         target = self.__relay_sel.currentText()
-        if target == TX:
-            self.__switch_mode = TX
+        if target == RADIO:
+            self.__switch_mode = RADIO
         else:
-            self.__switch_mode = VNA
+            self.__switch_mode = ANALYSER
     
     def __speed_change(self):
         tspeed = self.__speed_sel.currentText()
@@ -784,10 +788,10 @@ class UI(QMainWindow):
         self.__api.free_stop()
     
     def __do_res(self):
-        self.__switch_mode = VNA
-        self.__tg_ard.setText(VNA)
-        self.__relay_sel.setCurrentText(VNA)
-        self.__relay_state = VNA
+        self.__switch_mode = ANALYSER
+        self.__tg_ard.setText(ANALYSER)
+        self.__relay_sel.setCurrentText(ANALYSER)
+        self.__relay_state = ANALYSER
         self.__current_activity = RESONANCE
         self.__st_act.setText(RESONANCE)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT]*(1000/IDLE_TICKER)
@@ -796,7 +800,7 @@ class UI(QMainWindow):
             self.__freqval.setText(f)
             self.__swrres.setText(swr)
         self.__current_activity = NONE
-        self.__switch_mode = TX
+        self.__switch_mode = RADIO
     
     def __do_pos(self):
         self.__current_activity = MOVETO
@@ -862,18 +866,18 @@ class UI(QMainWindow):
     def __set_tx_mode(self):
         self.__current_activity = RLYOFF
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
-        self.__api.tx_mode()
-        self.__tg_ard.setText(TX)
-        self.__relay_sel.setCurrentText(TX)
-        self.__relay_state = TX
+        self.__api.radio_mode()
+        self.__tg_ard.setText(RADIO)
+        self.__relay_sel.setCurrentText(RADIO)
+        self.__relay_state = RADIO
             
     def __set_vna_mode(self):
         self.__current_activity = RLYON
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
-        self.__api.vna_mode()
-        self.__tg_ard.setText(VNA)
-        self.__relay_sel.setCurrentText(VNA)
-        self.__relay_state = VNA
+        self.__api.analyser_mode()
+        self.__tg_ard.setText(ANALYSER)
+        self.__relay_sel.setCurrentText(ANALYSER)
+        self.__relay_state = ANALYSER
         
     #=======================================================
     # Background activities
@@ -903,20 +907,19 @@ class UI(QMainWindow):
                 # Check relay status
                 if self.__switch_mode != self.__last_switch_mode:
                     self.__last_switch_mode = self.__switch_mode
-                    if self.__switch_mode == VNA:
-                        self.__set_vna_mode()
+                    if self.__switch_mode == ANALYSER:
+                        self.__set_analyser_mode()
                     else:
-                        self.__set_tx_mode()
+                        self.__set_radio_mode()
                 self.__long_running = False
                 self.__free_running = False
-                if self.__relay_state == TX:
-                    self.__tg_ard.setText(TX)
-                    self.__relay_sel.setCurrentText(TX)
-                elif self.__relay_state == VNA:
-                    self.__tg_ard.setText(VNA)
-                    self.__relay_sel.setCurrentText(VNA)
+                if self.__relay_state == RADIO:
+                    self.__tg_ard.setText(RADIO)
+                    self.__relay_sel.setCurrentText(RADIO)
+                elif self.__relay_state == ANALYSER:
+                    self.__tg_ard.setText(ANALYSER)
+                    self.__relay_sel.setCurrentText(ANALYSER)
                 
-                    
             self.__st_act.setText(self.__current_activity)
             
             # Show manual entry if required

@@ -1,0 +1,11 @@
+{
+  "set_selection": "true", 
+  "version": "1.0.12", 
+  "name": "CALIBRATE", 
+  "indent_relative": "false", 
+  "type": "snippet", 
+  "value": [
+    "!@#_anchorCALIBRATE!@#_currentPos"
+  ], 
+  "auto_abbreviation": "false"
+}

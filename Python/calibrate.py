@@ -37,8 +37,6 @@ import model
 import serialcomms
 import vna
 
-# Set False when testing
-MODEL = True
 VERB = False
 
 # This is a relatively slow process.
@@ -135,20 +133,17 @@ class Calibrate(threading.Thread):
         if not r:
             # Calibrate end points
             self.__msg_cb("Calibrating potentiometer feedback end points...")
-            r = self.cal_end_points()
-            if not r[0]:
+            r, msg = self.cal_end_points()
+            if not r:
                 if self.__abort:
                     self.__abort = False
-                    return (ABORT, (False, "Operation aborted!", []))
+                    return (ABORT, (False, "Operation aborted by user!", cal_map))
                 else:
-                    return ('Calibrate', (False, "Unable to retrieve or create end points!", cal_map))
+                    return (CALIBRATE, (False, msg, cal_map))
             r, self.__end_points = self.retrieve_end_points()
             if not r:
                 # We have a problem
-                if MODEL:
-                    return ('Calibrate', (False, "Unable to retrieve or create end points!", cal_map))
-                else:
-                    return ('Calibrate', (True, "Test, no model", cal_map))
+                return (CALIBRATE, (False, "Unable to retrieve or create end points!", cal_map))
         
         # Create a calibration map for loop
         r, cal_map = self.retrieve_map(loop)
@@ -158,17 +153,18 @@ class Calibrate(threading.Thread):
                 if not r:
                     if self.__abort:
                         self.__abort = False
-                        return (ABORT, (False, "Operation aborted!", []))
+                        return (ABORT, (False, "Operation aborted by user!", []))
                     else:
                         # We have a problem
-                        return ('Calibrate', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
+                        return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
             self.logger.warning ("Error in calibration map: " % msg)
-            return ('Calibrate', (False, msg, cal_map))
+            return (CALIBRATE, (False, msg, cal_map))
         
         self.__msg_cb("Calibration complete", MSG_STATUS)
         return ('Calibrate', (True, "", cal_map))
-        
+     
+    # TBD delete or make work. Maybe add a delete calibration   
     def __re_calibrate_loop(self, args):
         loop, steps = args
         
@@ -188,12 +184,8 @@ class Calibrate(threading.Thread):
         
     def retrieve_end_points(self):
         
-        if MODEL:
-            h = self.__model[CONFIG][CAL][HOME]
-            m = self.__model[CONFIG][CAL][MAX]
-        else:
-            h = -1
-            m = -1
+        h = self.__model[CONFIG][CAL][HOME]
+        m = self.__model[CONFIG][CAL][MAX]
             
         if h==-1 or m==-1:
             return False, [h, m]
@@ -213,28 +205,29 @@ class Calibrate(threading.Thread):
             self.__event.wait()
             if self.__abort:
                 self.__event.clear()
-                return False, None, None
+                return False, "Aborted by user!"
             self.__event.clear()
             if act[2] != None: extents[act[2]] = self.__args[0]      
         
-        if MODEL:
-            self.__model[CONFIG][CAL][HOME] = extents[0]
-            self.__model[CONFIG][CAL][MAX] = extents[1]
+        home = extents[0]
+        maximum = extents[1]
+        if abs(home - maximum) < 2:
+            return False, "Actuator did not move!"
+        
+        self.__model[CONFIG][CAL][HOME] = extents[0]
+        self.__model[CONFIG][CAL][MAX] = extents[1]
             
-        return True, extents[0], extents[1]
+        return True, ""
     
     def retrieve_map(self, loop):
-        if MODEL:
-            if loop == 1:
-                return True, self.__model[CONFIG][CAL][CAL_L1]
-            elif loop == 2:
-                return True, self.__model[CONFIG][CAL][CAL_L2]
-            elif loop == 3:
-                return True, self.__model[CONFIG][CAL][CAL_L3]
-            else:
-                return False, []
+        if loop == 1:
+            return True, self.__model[CONFIG][CAL][CAL_L1]
+        elif loop == 2:
+            return True, self.__model[CONFIG][CAL][CAL_L2]
+        elif loop == 3:
+            return True, self.__model[CONFIG][CAL][CAL_L3]
         else:
-            return True, []
+            return False, []
 
     def create_map(self, loop, steps):
         
@@ -278,6 +271,11 @@ class Calibrate(threading.Thread):
         if not r:
             self.logger.warning("Failed to get high frequency!")
             return False, "Failed to get high frequency!", []
+        
+        if abs(fhome - fmax) < 2:
+            # Looks like the actuator didn't move
+            self.logger.warning("Actuator did not move, calibration abandoned!")
+            return False, "Actuator did not move!", [])
         
         # Save limits for this loop
         m = [fhome, fmax, []]
@@ -335,13 +333,13 @@ class Calibrate(threading.Thread):
             
         # Add the max position
         m[2].append([int(maximum), fmax, swrmax])
-        if MODEL:
-            if loop == 1:
-                self.__model[CONFIG][CAL][CAL_L1] = m
-            elif loop == 2:
-                self.__model[CONFIG][CAL][CAL_L2] = m
-            elif loop == 3:
-                self.__model[CONFIG][CAL][CAL_L3] = m
+        
+        if loop == 1:
+            self.__model[CONFIG][CAL][CAL_L1] = m
+        elif loop == 2:
+            self.__model[CONFIG][CAL][CAL_L2] = m
+        elif loop == 3:
+            self.__model[CONFIG][CAL][CAL_L3] = m
             
         # Return the map
         return True, "", m
