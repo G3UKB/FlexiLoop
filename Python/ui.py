@@ -209,6 +209,9 @@ class UI(QMainWindow):
             
             # Get current event data
             (name, (success, msg, args)) = data
+            if len(msg) > 0 and not success:
+                self.msg_callback(msg, MSG_ALERT)
+                
             if name == self.__current_activity:
                 if success:
                     # Action any data

@@ -275,7 +275,7 @@ class Calibrate(threading.Thread):
         if abs(fhome - fmax) < 2:
             # Looks like the actuator didn't move
             self.logger.warning("Actuator did not move, calibration abandoned!")
-            return False, "Actuator did not move!", [])
+            return False, "Actuator did not move!", []
         
         # Save limits for this loop
         m = [fhome, fmax, []]
