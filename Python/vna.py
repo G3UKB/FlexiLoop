@@ -31,7 +31,7 @@ import logging
 from defs import *
 import decode
 
-SIMULATE = False
+SIMULATE = True
 
 """
     Perform a sweep using the command line utility from vna/j.

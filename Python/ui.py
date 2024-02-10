@@ -986,12 +986,6 @@ class UI(QMainWindow):
         count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
         self.__l6label.setText('3 [%d]' % count)
         
-        # Adjust buttons for loop status
-        if self.__model[STATE][ARDUINO][ONLINE]:
-            if not self.__loop_status[self.__selected_loop-1]:
-                # Current loop is not configured
-                widget_state = W_NO_CONFIG
-        
         # Update min/max frequencies
         loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
