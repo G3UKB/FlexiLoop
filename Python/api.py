@@ -214,7 +214,7 @@ class API:
     def radio_mode(self):
         self.__s_q.put(('relay_off', []))
         
-    def alalyser_mode(self):
+    def analyser_mode(self):
         self.__s_q.put(('relay_on', []))
     
     # =========================================================================    

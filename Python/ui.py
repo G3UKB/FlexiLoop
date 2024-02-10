@@ -111,6 +111,8 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__switch_mode = RADIO
         self.__last_switch_mode= self.__switch_mode
+        self.__saved_mode = self.__switch_mode
+        
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
         maximum = self.__model[CONFIG][CAL][MAX]
@@ -222,13 +224,19 @@ class UI(QMainWindow):
                         # Update the loop status
                         if self.__selected_loop != -1:
                             self.__loop_status[self.__selected_loop-1] = True
+                        # Switch mode back to what is was before any change for long running activities
+                        self.__switch_mode = self.__saved_mode
                     elif name == TUNE:
                         self.__swr = args[0]
                     self.logger.info ('Activity %s completed successfully' % (self.__current_activity))
                     self.__current_activity = NONE
                     self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
+                    # Switch mode back to what is was before any change for long running activities
+                    self.__switch_mode = self.__saved_mode
                 else:
                     self.logger.info ('Activity %s completed but failed!' % (self.__current_activity))
+                    self.__current_activity = NONE
+                    self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
             elif name == STATUS:
                 # We expect status at any time
                 self.__current_pos = args[0]
@@ -705,8 +713,10 @@ class UI(QMainWindow):
             # No VNA present so we do a manual config
             manual = True
         
-        # Switch to auto or manual VNA
+        # Switch to ANALYSER, swich back is done in the callback
+        self.__saved_mode = self.__last_switch_mode
         self.__switch_mode = ANALYSER
+        
         # Do the calibrate sequence
         loop = int(self.__loop_sel.currentText())
         self.__selected_loop = loop
@@ -714,20 +724,8 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__st_act.setText(CALIBRATE)
         self.__long_running = True
-        if self.__api.calibrate(loop, manual, self.man_cal_callback):
-            if loop == 1:
-                self.__l1label.setObjectName("stgreen")
-                self.__l1label.setStyleSheet(self.__l1label.styleSheet())
-                self.__loop_status[0] = True
-            elif loop == 2:
-                self.__l2label.setObjectName("stgreen")
-                self.__l2label.setStyleSheet(self.__l2label.styleSheet())
-                self.__loop_status[1] = True
-            elif loop == 3:
-                self.__l3label.setObjectName("stgreen")
-                self.__l3label.setStyleSheet(self.__l3label.styleSheet())
-                self.__loop_status[2] = True
-        self.__switch_mode = RADIO
+        # Dispatches on separate thread
+        self.__api.calibrate(loop, manual, self.man_cal_callback)
     
     def __do_cal_view(self):
         # Invoke the calview dialog
@@ -741,7 +739,10 @@ class UI(QMainWindow):
         self.__sp_dialog.show()
     
     def __do_tune(self):
+        # Switch to ANALYSER, swich back is done in the callback
+        self.__saved_mode = self.__last_switch_mode
         self.__switch_mode = ANALYSER
+        
         loop = int(self.__loop_sel.currentText())
         freq = float(self.freqtxt.displayText())
         self.__st_act.setText(TUNE)
@@ -749,7 +750,6 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_freq(loop, freq)
-        self.__switch_mode = RADIO
         
     def __relay_change(self):
         target = self.__relay_sel.currentText()
@@ -866,7 +866,7 @@ class UI(QMainWindow):
     
     #=======================================================
     # Helpers
-    def __set_tx_mode(self):
+    def __set_radio_mode(self):
         self.__current_activity = RLYOFF
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.radio_mode()
@@ -874,7 +874,7 @@ class UI(QMainWindow):
         self.__relay_sel.setCurrentText(RADIO)
         self.__relay_state = RADIO
             
-    def __set_vna_mode(self):
+    def __set_analyser_mode(self):
         self.__current_activity = RLYON
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.analyser_mode()
