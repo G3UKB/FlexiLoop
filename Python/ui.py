@@ -397,15 +397,20 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__maxvalue, 0, 5)
         
         # Calibration
-        self.__cal = QPushButton("(Re)Calibrate...")
+        self.__cal = QPushButton("Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
+        self.__caldel = QPushButton("Delete")
+        self.__caldel.setToolTip('Delete calibration')
+        self.__loopgrid.addWidget(self.__caldel, 1, 1)
+        self.__caldel.clicked.connect(self.__do_cal_del)
+        
         self.__calview = QPushButton("...")
         self.__calview.setToolTip('View calibrations')
         self.__calview.setObjectName("view")
-        self.__loopgrid.addWidget(self.__calview, 1, 1)
+        self.__loopgrid.addWidget(self.__calview, 1, 2)
         self.__calview.clicked.connect(self.__do_cal_view)
         
         s = QGroupBox('Calibrate Status')
@@ -426,12 +431,12 @@ class UI(QMainWindow):
         self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
-        self.__loopgrid.addWidget(s, 1, 2, 1, 3)
+        self.__loopgrid.addWidget(s, 1, 3, 1, 3)
         
         # Set points
         self.__sp = QPushButton("Setpoints...")
         self.__sp.setToolTip('Manage setpoints for loop...')
-        self.__loopgrid.addWidget(self.__sp, 1, 5)
+        self.__loopgrid.addWidget(self.__sp, 1, 6)
         self.__sp.clicked.connect(self.__do_sp)
         
         sps = QGroupBox('Setpoint Status')
@@ -458,7 +463,7 @@ class UI(QMainWindow):
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
-        self.__loopgrid.addWidget(sps, 1, 6, 1, 3)
+        self.__loopgrid.addWidget(sps, 1, 7, 1, 3)
         
         # If no VNA we can put up the manual calibration box
         self.__manualcal = QGroupBox('Entry')
@@ -732,6 +737,26 @@ class UI(QMainWindow):
         self.__calview_dialog.set_loop(self.__selected_loop)
         self.__calview_dialog.show()
     
+    def __do_cal_del(self):
+        # Delete calibration for this loop
+        loop = self.__selected_loop
+        
+        if loop == 1:
+            self.__loop_status[0] = False
+            self.__l1label.setObjectName("stred")
+            self.__l1label.setStyleSheet(self.__l1label.styleSheet())
+            self.__model[CONFIG][CAL][CAL_L1].clear()
+        elif loop == 2:
+            self.__loop_status[1] = False
+            self.__l2label.setObjectName("stred")
+            self.__l2label.setStyleSheet(self.__l1label.styleSheet())
+            self.__model[CONFIG][CAL][CAL_L2].clear()
+        elif loop == 3:
+            self.__loop_status[2] = False
+            self.__l3label.setObjectName("stred")
+            self.__l3label.setStyleSheet(self.__l1label.styleSheet())
+            self.__model[CONFIG][CAL][CAL_L3].clear()
+        
     def __do_sp(self):
         # Invoke the setpoint dialog
         # This allows setting and navigating setpoints.
@@ -1076,11 +1101,16 @@ class UI(QMainWindow):
                 self.__w_vna_enable_disable(True)
             else:
                 self.__w_vna_enable_disable(False)
+         
+        # Enable delete if loop calibrated       
+        if self.__loop_status[self.__selected_loop]:
+            self.__caldel.setEnabled(True)
         
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
         self.__loop_sel.setEnabled(state)
         self.__cal.setEnabled(state)
+        self.__caldel.setEnabled(state)
         self.__sp.setEnabled(state)
         self.__freqtxt.setEnabled(state)
         self.__tune.setEnabled(state)

@@ -116,7 +116,6 @@ class Calibrate(threading.Thread):
     def __dispatch(self, name, args):
         disp_tab = {
             'calibrate': self.__calibrate,
-            're_calibrate_loop': self.__re_calibrate_loop,
         }
         # Execute and return response
         # We need to steal the callback for the comms thread
@@ -164,24 +163,6 @@ class Calibrate(threading.Thread):
         self.__msg_cb("Calibration complete", MSG_STATUS)
         return ('Calibrate', (True, "", cal_map))
      
-    # TBD delete or make work. Maybe add a delete calibration   
-    def __re_calibrate_loop(self, args):
-        loop, steps = args
-        
-        r, self.__end_points = retrieve_end_points()
-        if not r:
-            # Calibrate end points
-            self.cal_end_points()
-            r, self.__end_points = self.retrieve_end_points()
-            if not r:
-                # We have a problem
-                return ('ReCalibrateLoop', (False, "Unable to retrieve or create end points!", cal_map))
-        r, msg, cal_map = self.create_map(loop, steps)
-        if not r:
-            # We have a problem
-            return ('ReCalibrateLoop', (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
-        return ('ReCalibrateLoop', (True, "", cal_map))
-        
     def retrieve_end_points(self):
         
         h = self.__model[CONFIG][CAL][HOME]
