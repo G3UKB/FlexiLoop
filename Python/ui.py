@@ -236,7 +236,8 @@ class UI(QMainWindow):
                 else:
                     self.logger.info ('Activity %s completed but failed!' % (self.__current_activity))
                     self.__current_activity = NONE
-                    self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
+                    # Switch mode back to what is was before any change for long running activities
+                    self.__switch_mode = self.__saved_mode
             elif name == STATUS:
                 # We expect status at any time
                 self.__current_pos = args[0]
@@ -244,7 +245,8 @@ class UI(QMainWindow):
             elif name == ABORT:
                 # User hit the abort button
                 self.__current_activity = NONE
-                self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
+                # Switch mode back to what is was before any change for long running activities
+                self.__switch_mode = self.__saved_mode
                 self.logger.info("Activity aborted by user!")
             else:
                 self.logger.info ('Waiting for activity %s to completed but got activity %s! Continuing to wait' % (self.__current_activity, name))
@@ -1099,6 +1101,8 @@ class UI(QMainWindow):
         # Enable delete if loop calibrated       
         if self.__loop_status[self.__selected_loop]:
             self.__caldel.setEnabled(True)
+        else:
+            self.__caldel.setEnabled(False)
         
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
