@@ -33,7 +33,7 @@ import queue
 from PyQt5.QtWidgets import QMainWindow, QApplication, QToolTip
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QMenuBar, QMenu, QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QListWidget, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QHBoxLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QMenuBar, QMenu, QStatusBar, QTableWidget, QInputDialog, QFrame, QGroupBox, QListWidget, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QHBoxLayout, QTableWidgetItem
 
 # Application imports
 from defs import *
@@ -740,24 +740,29 @@ class UI(QMainWindow):
         self.__calview_dialog.show()
     
     def __do_cal_del(self):
-        # Delete calibration for this loop
         loop = self.__selected_loop
         
-        if loop == 1:
-            self.__loop_status[0] = False
-            self.__l1label.setObjectName("stred")
-            self.__l1label.setStyleSheet(self.__l1label.styleSheet())
-            self.__model[CONFIG][CAL][CAL_L1].clear()
-        elif loop == 2:
-            self.__loop_status[1] = False
-            self.__l2label.setObjectName("stred")
-            self.__l2label.setStyleSheet(self.__l1label.styleSheet())
-            self.__model[CONFIG][CAL][CAL_L2].clear()
-        elif loop == 3:
-            self.__loop_status[2] = False
-            self.__l3label.setObjectName("stred")
-            self.__l3label.setStyleSheet(self.__l1label.styleSheet())
-            self.__model[CONFIG][CAL][CAL_L3].clear()
+        # Ask user if they really want to delete the calibration
+        qm = QMessageBox
+        ret = qm.question(self,'', "Do you want to delete the calibration for loop %d?" % loop, qm.Yes | qm.No)
+
+        if ret == qm.Yes:
+            # Delete calibration for this loop
+            if loop == 1:
+                self.__loop_status[0] = False
+                self.__l1label.setObjectName("stred")
+                self.__l1label.setStyleSheet(self.__l1label.styleSheet())
+                self.__model[CONFIG][CAL][CAL_L1].clear()
+            elif loop == 2:
+                self.__loop_status[1] = False
+                self.__l2label.setObjectName("stred")
+                self.__l2label.setStyleSheet(self.__l1label.styleSheet())
+                self.__model[CONFIG][CAL][CAL_L2].clear()
+            elif loop == 3:
+                self.__loop_status[2] = False
+                self.__l3label.setObjectName("stred")
+                self.__l3label.setStyleSheet(self.__l1label.styleSheet())
+                self.__model[CONFIG][CAL][CAL_L3].clear()
         
     def __do_sp(self):
         # Invoke the setpoint dialog
@@ -1101,8 +1106,8 @@ class UI(QMainWindow):
         # Enable delete if loop calibrated       
         if self.__loop_status[self.__selected_loop]:
             self.__caldel.setEnabled(True)
-        else:
-            self.__caldel.setEnabled(False)
+        #else:
+        #    self.__caldel.setEnabled(False)
         
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
