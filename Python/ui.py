@@ -95,13 +95,7 @@ class UI(QMainWindow):
                            background-color: darkgray; 
                            color: black; 
                            border: #8ad4ff solid 1px
-                           }''')
-        
-        # Initialise the GUI
-        self.__initUI()
-        
-        # Populate
-        self.__populate()
+                           }''')   
         
         # Local state holders
         # Current (long running) activity
@@ -115,6 +109,7 @@ class UI(QMainWindow):
         self.__last_switch_mode= self.__switch_mode
         self.__saved_mode = self.__switch_mode
         self.__deferred_activity = None
+        self.__current_speed = MEDIUM
         
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -145,6 +140,12 @@ class UI(QMainWindow):
         self.__man_cal_state = MANUAL_IDLE
         self.__man_cal_freq = 0.0
         self.__man_cal_swr = 1.0
+        
+        # Initialise the GUI
+        self.__initUI()
+        
+        # Populate
+        self.__populate()
         
     #=======================================================
     # PUBLIC
@@ -235,7 +236,7 @@ class UI(QMainWindow):
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
                     elif name == TUNE:
-                        self.__swr = args[0]
+                        self.__auto_swr = args[0]
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
                     self.logger.info ('Activity %s completed successfully' % (self.__current_activity))
@@ -591,9 +592,15 @@ class UI(QMainWindow):
         self.__speed_sel.setMaximumWidth(70)
         self.__speed_sel.setMinimumWidth(70)
         self.__speed_sel.addItem("Slow")
-        self.__speed_sel.addItem("Med")
+        self.__speed_sel.addItem("Medium")
         self.__speed_sel.addItem("Fast")
         self.__subgrid.addWidget(self.__speed_sel, 0, 3)
+        if self.__current_speed == SLOW:
+            self.__speed_sel.setCurrentIndex(0)
+        elif self.__current_speed == MEDIUM:
+            self.__speed_sel.setCurrentIndex(1)
+        else:
+            self.__speed_sel.setCurrentIndex(2)
         self.__speed_sel.currentIndexChanged.connect(self.__speed_change)
         
         gap = QWidget()
@@ -798,7 +805,7 @@ class UI(QMainWindow):
         
         # This will kick off when the callback from the relay change arrives
         self.__st_act.setText(TUNE)
-        self.__deferred_activity = self.__do_cal_deferred
+        self.__deferred_activity = self.__do_tune_deferred
         
     def __do_tune_deferred(self):
         # Deferred activity for TUNE
@@ -817,17 +824,17 @@ class UI(QMainWindow):
     def __speed_change(self):
         tspeed = self.__speed_sel.currentText()
         if tspeed == 'Slow':
-            speed = SLOW
+            self.__current_speed = SLOW
         elif tspeed == 'Medium':
-            speed = MEDIUM
+            self.__current_speed = MEDIUM
         elif tspeed == 'Fast':
-            speed = FAST
+            self.__current_speed = FAST
         else:
-            speed = MEDIUM
+            self.__current_speed = MEDIUM
         self.__current_activity = SPEED
         self.__st_act.setText(SPEED)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
-        self.__api.speed_change(speed)
+        self.__api.speed_change(self.__current_speed)
     
     def __do_run_fwd(self):
         self.__current_activity = RUNFWD

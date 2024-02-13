@@ -168,6 +168,9 @@ class Tune(threading.Thread):
                 else:
                     self.logger.inwarningfo("Failed to obtain a SWR reading for freq {}".format(self.__freq))
                     self.__cb((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
+            else:
+                # No VNA so cant return an SWR
+                self.__cb((TUNE, (True, "", ["?.?"])))
             # Give back callback
             self.__serial_comms.restore_callback()
             
