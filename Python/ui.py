@@ -177,13 +177,18 @@ class UI(QMainWindow):
         self.__man_cal_state = MANUAL_DATA_REQD
         while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
             sleep (0.2)
-        r = (self.__man_cal_freq, self.__man_cal_swr)
-        self.__man_cal_freq = 0.0
-        self.__man_cal_swr = 1.0
-        while self.__man_cal_state != MANUAL_NEXT:
-            sleep (0.2)
-        self.__man_cal_state = MANUAL_IDLE
-        return r    
+        
+        if self.__is_float(self.__man_cal_freq) and self.__is_float(self.__man_cal_swr):
+            r = (self.__man_cal_freq, self.__man_cal_swr)
+            self.__man_cal_freq = 0.0
+            self.__man_cal_swr = 1.0
+            while self.__man_cal_state != MANUAL_NEXT:
+                sleep (0.2)
+            self.__man_cal_state = MANUAL_IDLE
+            return True, r
+        else:
+            self.__man_cal_state = MANUAL_DATA_REQD
+            return False, (None, None)
         
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
@@ -932,7 +937,16 @@ class UI(QMainWindow):
         self.__tg_ard.setText(ANALYSER)
         self.__relay_sel.setCurrentText(ANALYSER)
         self.__relay_state = ANALYSER
-        
+     
+    def __is_float(self, value):
+        if value is None:
+            return False
+        try:
+            float(value)
+            return True
+        except:
+            return False
+
     #=======================================================
     # Background activities
     def __idleProcessing(self):

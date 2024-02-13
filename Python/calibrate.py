@@ -329,9 +329,12 @@ class Calibrate(threading.Thread):
         if self.__manual:
             # We must interact with the UI to get user input for the readings
             self.__msg_cb("Please enter frequency and swr for this calibration point [%s]" % hint, MSG_ALERT)
-            f, swr = self.__man_cb(hint)
-            # This gives a MHz freq
-            return True, [(float(f), float(swr))]
+            # This is a manual entry so no reason why it should fail unless no entry
+            while True:
+                r, (f, swr) = self.__man_cb(hint)
+                if r:
+                    # This gives a MHz freq
+                    return True, [(float(f), float(swr))]
         else:
             # This gives a Hz freq so conversion necessary
             (r, [(f, swr)]) = self.__vna.fres(flow, fhigh, inc, hint = hint)
