@@ -105,6 +105,8 @@ class UI(QMainWindow):
         
         # Local state holders
         # Current (long running) activity
+        self.__selected_loop = 1
+        self.__tune_freq = 0.0
         self.__current_activity = NONE
         self.__long_running = False
         self.__free_running = False
@@ -112,6 +114,7 @@ class UI(QMainWindow):
         self.__switch_mode = RADIO
         self.__last_switch_mode= self.__switch_mode
         self.__saved_mode = self.__switch_mode
+        self.__deferred_activity = None
         
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -228,11 +231,15 @@ class UI(QMainWindow):
                         self.__switch_mode = self.__saved_mode
                     elif name == TUNE:
                         self.__swr = args[0]
+                        # Switch mode back to what is was before any change for long running activities
+                        self.__switch_mode = self.__saved_mode
                     self.logger.info ('Activity %s completed successfully' % (self.__current_activity))
-                    self.__current_activity = NONE
-                    self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
-                    # Switch mode back to what is was before any change for long running activities
-                    self.__switch_mode = self.__saved_mode
+                    # Do we have a deferred activity
+                    if self.__deferred_activity != None:
+                        self.__deferred_activity()
+                        self.__deferred_activity = None
+                    else:
+                        self.__current_activity = NONE
                 else:
                     self.logger.info ('Activity %s completed but failed!' % (self.__current_activity))
                     self.__current_activity = NONE
@@ -531,6 +538,7 @@ class UI(QMainWindow):
         self.__freqtxt.setToolTip('Set tune frequency')
         self.__freqtxt.setInputMask('000.000;0')
         self.__freqtxt.setMaximumWidth(80)
+        self.__freqtxt.textChanged.connect(self.__auto_text)
         self.__autogrid.addWidget(self.__freqtxt, 0, 1)
         
         swrlabel = QLabel('SWR')
@@ -714,25 +722,27 @@ class UI(QMainWindow):
         self.__api.abort_activity()
     
     def __do_cal(self):
-        manual = False
-        # VNA check
-        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
-            # No VNA present so we do a manual config
-            manual = True
-        
-        # Switch to ANALYSER, swich back is done in the callback
+        # Switch to ANALYSER, switch back is done in the callback
         self.__saved_mode = self.__last_switch_mode
         self.__switch_mode = ANALYSER
         
+        # This will kick off when the callback from the relay change arrives
+        self.__st_act.setText(CALIBRATE)
+        self.__deferred_activity = self.__do_cal_deferred
+        
+    def __do_cal_deferred(self):
+        # VNA check
+        manual = False
+        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
+            # No VNA present so we do a manual config
+            manual = True
+            
         # Do the calibrate sequence
-        loop = int(self.__loop_sel.currentText())
-        self.__selected_loop = loop
         self.__current_activity = CALIBRATE
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
-        self.__st_act.setText(CALIBRATE)
         self.__long_running = True
         # Dispatches on separate thread
-        self.__api.calibrate(loop, manual, self.man_cal_callback)
+        self.__api.calibrate(self.__selected_loop, manual, self.man_cal_callback)
     
     def __do_cal_view(self):
         # Invoke the calview dialog
@@ -744,7 +754,7 @@ class UI(QMainWindow):
         
         # Ask user if they really want to delete the calibration
         qm = QMessageBox
-        ret = qm.question(self,'', "Do you want to delete the calibration for loop %d?" % loop, qm.Yes | qm.No)
+        ret = qm.question(self,'', "Do you want to delete the calibration data for loop %d?" % loop, qm.Yes | qm.No)
 
         if ret == qm.Yes:
             # Delete calibration for this loop
@@ -770,18 +780,27 @@ class UI(QMainWindow):
         self.__sp_dialog.set_loop(self.__selected_loop)
         self.__sp_dialog.show()
     
+    def __auto_text(self, text):
+        try:
+            self.__tune_freq = float(text)
+        except:
+            self.__tune_freq = 0.0
+        
     def __do_tune(self):
         # Switch to ANALYSER, swich back is done in the callback
         self.__saved_mode = self.__last_switch_mode
         self.__switch_mode = ANALYSER
         
-        loop = int(self.__loop_sel.currentText())
-        freq = float(self.freqtxt.displayText())
+        # This will kick off when the callback from the relay change arrives
         self.__st_act.setText(TUNE)
+        self.__deferred_activity = self.__do_cal_deferred
+        
+    def __do_tune_deferred(self):
+        # Deferred activity for TUNE
         self.__current_activity = TUNE
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
-        self.__api.move_to_freq(loop, freq)
+        self.__api.move_to_freq(self.__selected_loop, self.__tune_freq)
         
     def __relay_change(self):
         target = self.__relay_sel.currentText()
@@ -1103,11 +1122,13 @@ class UI(QMainWindow):
             else:
                 self.__w_vna_enable_disable(False)
          
-        # Enable delete if loop calibrated       
-        if self.__loop_status[self.__selected_loop]:
+        # Enable/disable calibrate/delete according the loop state
+        if self.__loop_status[self.__selected_loop-1]:
             self.__caldel.setEnabled(True)
-        #else:
-        #    self.__caldel.setEnabled(False)
+            self.__cal.setEnabled(False)
+        else:
+            self.__caldel.setEnabled(False)
+            self.__cal.setEnabled(True)
         
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
