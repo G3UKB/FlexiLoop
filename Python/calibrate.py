@@ -230,7 +230,6 @@ class Calibrate(threading.Thread):
             return False, None, None
         self.__event.clear()
         # Get res freq approx as its a full sweep takes a while
-        #r, [(fmax, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_MAX)
         r, [(fmax, swrmax)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_MAX)
         if not r:
             self.logger.warning("Failed to get low frequency!")
@@ -247,7 +246,6 @@ class Calibrate(threading.Thread):
             return False, None, None
         self.__event.clear()
         # get res freq
-        #r, [(fhome, swr)] = self.__vna.fres(MIN_FREQ, MAX_FREQ, INC_10K, hint = VNA_HOME)
         r, [(fhome, swrhome)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_HOME)
         if not r:
             self.logger.warning("Failed to get high frequency!")
@@ -265,10 +263,6 @@ class Calibrate(threading.Thread):
         # We move from home to max by interval
         # Interval is a %age of the difference between feedback readings for home and max
         home, maximum = self.__end_points
-        
-        # Frig here for testing with actuator power off
-        #home = 200
-        #maximum = 900
         span = maximum - home
         inc = span/steps
         # Calc approx freq inc for each step
@@ -302,7 +296,6 @@ class Calibrate(threading.Thread):
             fhigh = hzhome - (fhzperstep * counter)
             flow = hzhome - (fhzperstep * (counter+1))
             # Need a little more accuracy so every 1KHz should suffice
-            #r, [(f, swr)] = self.__vna.fres(flow, fhigh, INC_1K, hint = VNA_MID)
             r, [(f, swr)] = self.__get_current(flow, fhigh, INC_1K, VNA_MID)
             if not r:
                 self.logger.inwarningfo("Failed to get resonant frequency!")
@@ -310,7 +303,6 @@ class Calibrate(threading.Thread):
             m[2].append([int(next_inc), f, swr])
             next_inc += inc
             counter += 1
-            #nextf_approx += fhzperstep
             
         # Add the max position
         m[2].append([int(maximum), fmax, swrmax])

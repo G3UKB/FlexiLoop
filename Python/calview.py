@@ -104,7 +104,7 @@ class Calview(QDialog):
         self.__table = QTableWidget()
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.__table.setColumnCount(3)
-        self.__table.setHorizontalHeaderLabels(('Position', 'Freq', 'SWR',))
+        self.__table.setHorizontalHeaderLabels(('Position %', 'Freq', 'SWR',))
         grid.addWidget(self.__table, 1, 0, 1, 3)
         
         # Button area
@@ -156,7 +156,7 @@ class Calview(QDialog):
     
             for item in cps[2]:
                 self.__table.insertRow(row)
-                self.__table.setItem(row, 0, QTableWidgetItem(str(item[0])))
+                self.__table.setItem(row, 0, QTableWidgetItem(self.__pos_to_percent(item[0])))
                 self.__table.setItem(row, 1, QTableWidgetItem(str(item[1])))
                 self.__table.setItem(row, 2, QTableWidgetItem(str(item[2])))
                 row += 1
@@ -175,3 +175,11 @@ class Calview(QDialog):
             self.logger.warn("Invalid loop id %d" % self.__loop)
             item = SP_L1
         return item
+
+    def __pos_to_percent(self, pos):
+        home = self.__model[CONFIG][CAL][HOME]
+        maximum = self.__model[CONFIG][CAL][MAX]
+        span = maximum - home
+        offset = pos - home
+        return str(int((offset/span)*100))
+    
