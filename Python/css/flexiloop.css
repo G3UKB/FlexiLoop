@@ -37,7 +37,7 @@ QFrame::maninner {
 /* List Box */
 QListWidget {
     color: rgb(65,62,56);
-    background-color: rgb(131,124,114);
+    background-color: rgb(147,140,130);
     font: 14px;
     border: 1px solid rgb(97,97,97);
     margin-top: 6px;
@@ -61,7 +61,7 @@ QGroupBox::title {
 QPushButton {
     min-height: 20px;
     min-width: 100px;
-    background-color: rgb(131,124,114);
+    background-color: rgb(147,140,130);
     color: rgb(24,74,101);
     border-style: outset;
     border: 1px solid rgb(24,74,101);
@@ -72,7 +72,7 @@ QPushButton {
 QPushButton#view {
     min-height: 20px;
     min-width: 25px;
-    background-color: rgb(131,124,114);
+    background-color: rgb(147,140,130);
     color: rgb(24,74,101);
     border-style: outset;
     border: 1px solid rgb(24,74,101);
@@ -120,7 +120,7 @@ QPushButton#abort {
 QPushButton::disabled#abort {
     min-height: 20px;
     min-width: 100px;
-    background-color: rgb(131,124,114);
+    background-color: rgb(147,140,130);
     color: rgb(97,97,97);
     border-style: outset;
     border-width: 1px;
@@ -172,7 +172,7 @@ QLabel#minmax {
 
 /* ComboBox */
 QComboBox {
-    background-color: rgb(131,124,114);
+    background-color: rgb(147,140,130);
     color: rgb(24,74,101);
     border-style: outset;
     border-width: 1px;
@@ -192,7 +192,8 @@ QComboBox::disabled {
 /* SpinBox */
 QSpinBox {
     min-height: 20px;
-    background-color: rgb(131,124,114);
+    /*background-color: rgb(131,124,114);*/
+    background-color: rgb(147,140,130);
     color: rgb(24,74,101);
     border-style: outset;
     border-width: 1px;
@@ -233,7 +234,8 @@ QSpinBox::disabled#dialog {
 /* LineEdit */
 QLineEdit {
     min-height: 25px;
-    background-color: rgb(131,124,114);
+    /*background-color: rgb(131,124,114);*/
+    background-color: rgb(147,140,130);
     color: rgb(24,74,101);
     border-style: outset;
     border-width: 1px;

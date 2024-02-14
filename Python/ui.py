@@ -74,7 +74,7 @@ class UI(QMainWindow):
         self.__config_dialog = config.Config(self.__model, self.msg_callback)
         
         # Create the setpoint dialog
-        self.__sp_dialog = setpoints.Setpoint(self.__model, self.msg_callback)
+        self.__sp_dialog = setpoints.Setpoint(self.__model, self.msg_callback, self.__move_callback)
         
         # Create the calibration view dialog
         self.__calview_dialog = calview.Calview(self.__model, self.msg_callback)
@@ -87,6 +87,7 @@ class UI(QMainWindow):
         # Set the back colour
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background,QtGui.QColor(158,152,143))
+        #palette.setColor(QtGui.QPalette.Background,QtGui.QColor(124,118,107))
         self.setPalette(palette)
 
         # Set the tooltip style
@@ -171,6 +172,15 @@ class UI(QMainWindow):
     def msg_callback(self, data, msgtype=MSG_INFO):
         self.__msgq.put((data, msgtype))
     
+    # Called from setpoints dialog to move to a setpoint.
+    # Called on main thread so we can do UI stuff
+    def __move_callback(self, pos):
+        self.__current_activity = MOVETO
+        self.__st_act.setText(MOVETO)
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
+        self.__long_running = True
+        self.__api.move_to_position(pos)
+        
     # This is called when doing a manual calibration to set the hint and get the next data items.
     # This is called on the calibration thread so will not interrupt the UI
     def man_cal_callback(self, hint):
@@ -492,7 +502,7 @@ class UI(QMainWindow):
         freqlabel = QLabel('Freq')
         manualgrid.addWidget(freqlabel, 0, 1)
         self.__manfreqtxt = QLineEdit()
-        self.__manfreqtxt.setInputMask('000.000;0')
+        self.__manfreqtxt.setInputMask('09.90')
         self.__manfreqtxt.setToolTip('Resonant frequency')
         self.__manfreqtxt.setMaximumWidth(80)
         manualgrid.addWidget(self.__manfreqtxt, 0, 2)
@@ -500,7 +510,7 @@ class UI(QMainWindow):
         swrlabel = QLabel('SWR')
         manualgrid.addWidget(swrlabel, 0, 3)
         self.__manswrtxt = QLineEdit()
-        self.__manswrtxt.setInputMask('0.0;0')
+        self.__manswrtxt.setInputMask('D.9')
         self.__manswrtxt.setToolTip('SWR at resonance')
         self.__manswrtxt.setMaximumWidth(80)
         manualgrid.addWidget(self.__manswrtxt, 0, 4)
@@ -542,7 +552,7 @@ class UI(QMainWindow):
         self.__autogrid.addWidget(freqlabel, 0, 0)
         self.__freqtxt = QLineEdit()
         self.__freqtxt.setToolTip('Set tune frequency')
-        self.__freqtxt.setInputMask('000.000;0')
+        self.__freqtxt.setInputMask('09.90')
         self.__freqtxt.setMaximumWidth(80)
         self.__freqtxt.textChanged.connect(self.__auto_text)
         self.__autogrid.addWidget(self.__freqtxt, 0, 1)
@@ -1143,13 +1153,13 @@ class UI(QMainWindow):
             else:
                 self.__w_vna_enable_disable(False)
          
-        # Enable/disable calibrate/delete according the loop state
-        if self.__loop_status[self.__selected_loop-1]:
-            self.__caldel.setEnabled(True)
-            self.__cal.setEnabled(False)
-        else:
-            self.__caldel.setEnabled(False)
-            self.__cal.setEnabled(True)
+            # Enable/disable calibrate/delete according the loop state
+            if self.__loop_status[self.__selected_loop-1]:
+                self.__caldel.setEnabled(True)
+                self.__cal.setEnabled(False)
+            else:
+                self.__caldel.setEnabled(False)
+                self.__cal.setEnabled(True)
         
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
