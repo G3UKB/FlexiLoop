@@ -162,9 +162,39 @@ class Config(QDialog):
         grid.addWidget(self.__serialporttxt, 0, 1)
         grid.setAlignment(QtCore.Qt.AlignLeft)
         
+        slowlabel = QLabel('Slow Speed')
+        grid.addWidget(slowlabel, 1, 0)
+        self.__slowtxt = QSpinBox()
+        self.__slowtxt.setObjectName("dialog")
+        self.__slowtxt.setToolTip('Slow actuator speed')
+        self.__slowtxt.setRange(0,500)
+        self.__slowtxt.setValue(self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW])
+        self.__slowtxt.setMinimumWidth(80)
+        grid.addWidget(self.__slowtxt, 1, 1)
+        
+        slowlabel = QLabel('Medium Speed')
+        grid.addWidget(slowlabel, 2, 0)
+        self.__slowtxt = QSpinBox()
+        self.__slowtxt.setObjectName("dialog")
+        self.__slowtxt.setToolTip('Medium actuator speed')
+        self.__slowtxt.setRange(0,500)
+        self.__slowtxt.setValue(self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED])
+        self.__slowtxt.setMinimumWidth(80)
+        grid.addWidget(self.__slowtxt, 2, 1)
+        
+        slowlabel = QLabel('Fast Speed')
+        grid.addWidget(slowlabel, 3, 0)
+        self.__slowtxt = QSpinBox()
+        self.__slowtxt.setObjectName("dialog")
+        self.__slowtxt.setToolTip('Fast actuator speed')
+        self.__slowtxt.setRange(0,500)
+        self.__slowtxt.setValue(self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_FAST])
+        self.__slowtxt.setMinimumWidth(80)
+        grid.addWidget(self.__slowtxt, 3, 1)
+        
         # Close gaps
-        grid.setRowStretch(1, 1)
-        grid.setColumnStretch(2, 1)
+        grid.setRowStretch(4, 1)
+        grid.setColumnStretch(4, 1)
 
     def __populate_calibration(self, grid):
         # Default number of set points

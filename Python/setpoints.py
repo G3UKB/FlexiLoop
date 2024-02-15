@@ -112,8 +112,6 @@ class Setpoint(QDialog):
         self.__table.setColumnCount(4)
         self.__table.setHorizontalHeaderLabels(('Name','Freq','SWR','Position %'))
         grid.addWidget(self.__table, 1, 0, 1, 3)
-        self.__table.currentItemChanged.connect(self.__row_click)
-        self.__table.doubleClicked.connect(self.__row_double_click)
         
         # Button area
         self.__moveto = QPushButton("Move to")

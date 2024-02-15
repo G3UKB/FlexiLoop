@@ -110,7 +110,7 @@ class UI(QMainWindow):
         self.__last_switch_mode= self.__switch_mode
         self.__saved_mode = self.__switch_mode
         self.__deferred_activity = None
-        self.__current_speed = MEDIUM
+        self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
         
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -834,13 +834,13 @@ class UI(QMainWindow):
     def __speed_change(self):
         tspeed = self.__speed_sel.currentText()
         if tspeed == 'Slow':
-            self.__current_speed = SLOW
+            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW]
         elif tspeed == 'Medium':
-            self.__current_speed = MEDIUM
+            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
         elif tspeed == 'Fast':
-            self.__current_speed = FAST
+            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_FAST]
         else:
-            self.__current_speed = MEDIUM
+            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
         self.__current_activity = SPEED
         self.__st_act.setText(SPEED)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)

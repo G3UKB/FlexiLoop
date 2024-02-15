@@ -36,10 +36,14 @@ MAX_FREQ = 30000000
 #
 # Main section headers
 CONFIG = 'CONFIG'
-STATE = 'STATE'
-# Serial section
-SERIAL = 'SERIAL'
+
+# Arduino section
+ARDUINO = 'ARDUINO'
 PORT = 'PORT'
+ACT_SPEED = 'ACT_SPEED'
+ACT_SLOW = 'ACT_SLOW'
+ACT_MED = 'ACT_MED'
+ACT_FAST = 'ACT_FAST'
 # Timeout section
 TIMEOUTS = 'TIMEOUTS'
 # Calibration section
@@ -59,6 +63,7 @@ VNA_CONF = 'VNA_CONF'
 #======================================
 # State
 #
+STATE = 'STATE'
 # Windows section
 WINDOWS = 'WINDOWS'
 MAIN_WIN = 'MAIN_WIN'
