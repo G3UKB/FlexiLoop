@@ -228,6 +228,9 @@ class Setpoint(QDialog):
             self.__table.setItem(rowPosition, 3, QTableWidgetItem(str(pos)))
             # Manage model
             self.__update_model()
+            self.__nametxt.setText('')
+            self.__freqtxt.setText('')
+            self.__swrtxt.setText('')
         else:
             self.logger.warn("No loop position available for add()")
     
