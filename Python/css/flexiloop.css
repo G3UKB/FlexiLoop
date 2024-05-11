@@ -80,6 +80,39 @@ QPushButton#view {
     font: 14px;
 }
 
+QPushButton::disabled#view {
+    min-height: 20px;
+    min-width: 25px;
+    background-color: rgb(131,124,114);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border: 1px solid rgb(24,74,101);
+    border-radius: 5px;
+    font: 14px;
+}
+
+QPushButton#calchange {
+    min-height: 20px;
+    min-width: 25px;
+    background-color: rgb(147,140,130);
+    color: rgb(24,74,101);
+    border-style: outset;
+    border: 1px solid rgb(24,74,101);
+    border-radius: 5px;
+    font: 14px;
+}
+
+QPushButton::disabled#calchange {
+    min-height: 20px;
+    min-width: 25px;
+    background-color: rgb(131,124,114);
+    color: rgb(97,97,97);
+    border-style: outset;
+    border: 1px solid rgb(24,74,101);
+    border-radius: 5px;
+    font: 14px;
+}
+
 QPushButton#dialog {
     min-height: 20px;
     min-width: 30px;

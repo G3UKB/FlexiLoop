@@ -84,6 +84,9 @@ class UI(QMainWindow):
         self.__loop_status = [False, False, False]
         self.__last_widget_status = None
     
+        # Cal mode
+        self.__calmode = CAL_NORMAL
+        
         # Set the back colour
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background,QtGui.QColor(158,152,143))
@@ -421,21 +424,43 @@ class UI(QMainWindow):
         self.__maxvalue.setObjectName("minmax")
         self.__loopgrid.addWidget(self.__maxvalue, 0, 5)
         
+        potminlabel = QLabel('Low pot pos')
+        self.__loopgrid.addWidget(potminlabel, 0, 6)
+        potminlabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.__potminvalue = QLabel('0.0')
+        self.__potminvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__potminvalue.setObjectName("minmax")
+        self.__loopgrid.addWidget(self.__potminvalue, 0, 7)
+        maxpotlabel = QLabel('High pot pos')
+        self.__loopgrid.addWidget(maxpotlabel, 0, 8)
+        maxpotlabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.__maxpotvalue = QLabel('0.0')
+        self.__maxpotvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__maxpotvalue.setObjectName("minmax")
+        self.__loopgrid.addWidget(self.__maxpotvalue, 0, 9)
+        
         # Calibration
         self.__cal = QPushButton("Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
+        self.__calstep = QPushButton("Steps")
+        self.__calstep.setToolTip('Redo steps')
+        self.__calstep.setObjectName("calchange")
+        self.__loopgrid.addWidget(self.__calstep, 1, 1)
+        self.__calstep.clicked.connect(self.__do_cal_steps)
+        
         self.__caldel = QPushButton("Delete")
         self.__caldel.setToolTip('Delete calibration')
-        self.__loopgrid.addWidget(self.__caldel, 1, 1)
+        self.__caldel.setObjectName("calchange")
+        self.__loopgrid.addWidget(self.__caldel, 1, 2)
         self.__caldel.clicked.connect(self.__do_cal_del)
         
         self.__calview = QPushButton("...")
         self.__calview.setToolTip('View calibrations')
         self.__calview.setObjectName("view")
-        self.__loopgrid.addWidget(self.__calview, 1, 2)
+        self.__loopgrid.addWidget(self.__calview, 1, 3)
         self.__calview.clicked.connect(self.__do_cal_view)
         
         s = QGroupBox('Calibrate Status')
@@ -456,12 +481,12 @@ class UI(QMainWindow):
         self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
-        self.__loopgrid.addWidget(s, 1, 3, 1, 3)
+        self.__loopgrid.addWidget(s, 1, 4, 1, 3)
         
         # Set points
         self.__sp = QPushButton("Setpoints...")
         self.__sp.setToolTip('Manage setpoints for loop...')
-        self.__loopgrid.addWidget(self.__sp, 1, 6)
+        self.__loopgrid.addWidget(self.__sp, 1, 7)
         self.__sp.clicked.connect(self.__do_sp)
         
         sps = QGroupBox('Setpoint Status')
@@ -488,7 +513,7 @@ class UI(QMainWindow):
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
-        self.__loopgrid.addWidget(sps, 1, 7, 1, 3)
+        self.__loopgrid.addWidget(sps, 1, 8, 1, 3)
         
         # If no VNA we can put up the manual calibration box
         self.__manualcal = QGroupBox('Entry')
@@ -750,8 +775,19 @@ class UI(QMainWindow):
         
         # This will kick off when the callback from the relay change arrives
         self.__st_act.setText(CALIBRATE)
+        self.__calmode = CAL_NORMAL
         self.__deferred_activity = self.__do_cal_deferred
+    
+    def __do_cal_steps(self):
+        # Switch to ANALYSER, switch back is done in the callback
+        self.__saved_mode = self.__last_switch_mode
+        self.__switch_mode = ANALYSER
         
+        # This will kick off when the callback from the relay change arrives
+        self.__st_act.setText(CALIBRATE)
+        self.__calmode = CAL_STEPS
+        self.__deferred_activity = self.__do_cal_deferred
+    
     def __do_cal_deferred(self):
         # VNA check
         manual = False
@@ -764,7 +800,7 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         # Dispatches on separate thread
-        self.__api.calibrate(self.__selected_loop, manual, self.man_cal_callback)
+        self.__api.calibrate(self.__selected_loop, manual, self.man_cal_callback, self.__calmode)
     
     def __do_cal_view(self):
         # Invoke the calview dialog
@@ -1153,19 +1189,25 @@ class UI(QMainWindow):
             else:
                 self.__w_vna_enable_disable(False)
          
-            # Enable/disable calibrate/delete according the loop state
+            # Enable/disable calibrate/delete/steps according the loop state
             if self.__loop_status[self.__selected_loop-1]:
                 self.__caldel.setEnabled(True)
+                self.__calstep.setEnabled(True)
                 self.__cal.setEnabled(False)
             else:
                 self.__caldel.setEnabled(False)
+                self.__calstep.setEnabled(False)
                 self.__cal.setEnabled(True)
+        else:
+            self.__caldel.setEnabled(False)
+            self.__calstep.setEnabled(False)
+            self.__cal.setEnabled(False)
         
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
         self.__loop_sel.setEnabled(state)
         self.__cal.setEnabled(state)
-        self.__caldel.setEnabled(state)
+        #self.__caldel.setEnabled(state)
         self.__sp.setEnabled(state)
         self.__freqtxt.setEnabled(state)
         self.__tune.setEnabled(state)

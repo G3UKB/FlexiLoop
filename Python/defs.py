@@ -115,6 +115,10 @@ ABORT = 'Abort'
 STOP = 'Stop'
 NONE = 'None'
 
+#Cal mode
+CAL_NORMAL = 'CalNormal'
+CAL_STEPS = 'CalSteps'
+
 # Timeouts for the long running operations in seconds
 # Adjusted for the idle tick rate to number of idle passes
 CALIBRATE_TIMEOUT = 'CALIBRATE_TIMEOUT'

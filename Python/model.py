@@ -38,7 +38,7 @@ flexi_loop_model = {
             },
         },
         TIMEOUTS: {
-            CALIBRATE_TIMEOUT: 120,
+            CALIBRATE_TIMEOUT: 180,
             TUNE_TIMEOUT: 120,
             RES_TIMEOUT: 60,
             MOVE_TIMEOUT: 30,

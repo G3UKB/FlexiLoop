@@ -117,9 +117,9 @@ class API:
         self.__tune.join()
     
     # Perform a calibration for the given loop    
-    def calibrate(self, loop, manual, man_cb):
+    def calibrate(self, loop, manual, man_cb, mode):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual, man_cb]))
+        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual, man_cb, mode]))
     
     # Change speed
     def speed_change(self, speed):

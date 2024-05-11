@@ -125,7 +125,12 @@ class Calibrate(threading.Thread):
         self.__comms.restore_callback()
         
     def __calibrate(self, args):
-        loop, steps, self.__manual, self.__man_cb = args
+        loop, steps, self.__manual, self.__man_cb, mode = args
+        # If mode is CAL_STEPS then we onlt dedo the steps
+        # Check we have valid end points and min/msx freq then delete step points and redo
+        if mode == CAL_STEPS:
+            return self.__cal_steps_only(loop, steps, self.__manual, self.__man_cb)
+        
         cal_map = []
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
@@ -163,6 +168,26 @@ class Calibrate(threading.Thread):
         self.__msg_cb("Calibration complete", MSG_STATUS)
         return ('Calibrate', (True, "", cal_map))
      
+    def __cal_steps_only(self, loop, steps, manual, man_cb):
+        # Retrieve the end points
+        r, self.__end_points = self.retrieve_end_points()
+        if not r:
+            return (CALIBRATE, (False, "Unable to create new steps as end points are not configured: {}!".format(loop), cal_map))
+    
+        # Get current map
+        r, cal_map = self.retrieve_map(loop)
+        if r:
+            # Check map
+            if len(cal_map) >= 2:
+                # Assume we have max and min
+                home = cal_map[0]
+                max_ext = cal_map[1]
+                # Configure steps
+        else:
+            return (CALIBRATE, (False, "Unable to create new steps as min/max freq are not configured: {}!".format(loop), cal_map))
+        
+        return ('Calibrate', (True, "", cal_map))
+    
     def retrieve_end_points(self):
         
         h = self.__model[CONFIG][CAL][HOME]
