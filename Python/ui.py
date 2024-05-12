@@ -409,35 +409,40 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
+        d = QGroupBox('Params')
+        hbox_d = QHBoxLayout()
         minlabel = QLabel('Low freq')
-        self.__loopgrid.addWidget(minlabel, 0, 2)
+        hbox_d.addWidget(minlabel)
         minlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue = QLabel('0.0')
         self.__minvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue.setObjectName("minmax")
-        self.__loopgrid.addWidget(self.__minvalue, 0, 3)
+        hbox_d.addWidget(self.__minvalue)
         maxlabel = QLabel('High freq')
-        self.__loopgrid.addWidget(maxlabel, 0, 4)
+        hbox_d.addWidget(maxlabel)
         maxlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__maxvalue = QLabel('0.0')
         self.__maxvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__maxvalue.setObjectName("minmax")
-        self.__loopgrid.addWidget(self.__maxvalue, 0, 5)
+        hbox_d.addWidget(self.__maxvalue)
         
-        potminlabel = QLabel('Low pot pos')
-        self.__loopgrid.addWidget(potminlabel, 0, 6)
+        potminlabel = QLabel('Home pot val')
+        hbox_d.addWidget(potminlabel)
         potminlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__potminvalue = QLabel('0.0')
         self.__potminvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__potminvalue.setObjectName("minmax")
-        self.__loopgrid.addWidget(self.__potminvalue, 0, 7)
-        maxpotlabel = QLabel('High pot pos')
-        self.__loopgrid.addWidget(maxpotlabel, 0, 8)
+        hbox_d.addWidget(self.__potminvalue)
+        maxpotlabel = QLabel('Max pot val')
+        hbox_d.addWidget(maxpotlabel)
         maxpotlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__maxpotvalue = QLabel('0.0')
-        self.__maxpotvalue.setAlignment(QtCore.Qt.AlignCenter)
-        self.__maxpotvalue.setObjectName("minmax")
-        self.__loopgrid.addWidget(self.__maxpotvalue, 0, 9)
+        self.__potmaxvalue = QLabel('0.0')
+        self.__potmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__potmaxvalue.setObjectName("minmax")
+        hbox_d.addWidget(self.__potmaxvalue)
+        
+        d.setLayout(hbox_d)
+        self.__loopgrid.addWidget(d, 0,2,1,9)
         
         # Calibration
         self.__cal = QPushButton("Calibrate...")
@@ -1079,11 +1084,13 @@ class UI(QMainWindow):
         count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
         self.__l6label.setText('3 [%d]' % count)
         
-        # Update min/max frequencies
+        # Update min/max frequencies and pot pos
         loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
             self.__minvalue.setText(str(loop[1]))
             self.__maxvalue.setText(str(loop[0]))
+            self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))
+            self.__potmaxvalue.setText(str(self.__model[CONFIG][CAL][MAX]))
         # Update SWR
         self.__auto_swrval.setText(str(self.__auto_swr))
         
