@@ -148,7 +148,10 @@ class Calibrate(threading.Thread):
             if not r:
                 # We have a problem
                 return (CALIBRATE, (False, "Unable to retrieve or create end points!", cal_map))
-        
+            # Check for correct values
+            if self.__end_points[0] > self.__end_points[1]:
+                # pot hot ends are reversed
+                return (CALIBRATE, (False, "Reverse pot hot ends, home > max. Calibrate again: {}!".format(loop), self.__end_points))
         # Create a calibration map for loop
         r, cal_map = self.retrieve_map(loop)
         if r:
@@ -178,15 +181,20 @@ class Calibrate(threading.Thread):
         r, cal_map = self.retrieve_map(loop)
         if r:
             # Check map
+            # map is of form e.g.
+            # [12.0, 3.0, [[500, 12.0, 1.0], [...], ...]]
             if len(cal_map) >= 2:
-                # Assume we have max and min
-                home = cal_map[0]
-                max_ext = cal_map[1]
+                # Assume we have max and min frequencies
+                fhome = cal_map[0] # highest f
+                fmax = cal_map[1] # lowest f
+                # save min/max
+                new_map = [fhome, fmax, []]
                 # Configure steps
+                self.__do_steps(new_map)
+                self.__msg_cb("Calibration complete", MSG_STATUS)
+                return ('Calibrate', (True, "", new_map))
         else:
             return (CALIBRATE, (False, "Unable to create new steps as min/max freq are not configured: {}!".format(loop), cal_map))
-        
-        return ('Calibrate', (True, "", cal_map))
     
     def retrieve_end_points(self):
         
@@ -283,7 +291,9 @@ class Calibrate(threading.Thread):
         
         # Save limits for this loop
         m = [fhome, fmax, []]
+        return __do_steps(m)
         
+    def __do_steps(self, m):
         # Move incrementally and take readings
         # We move from home to max by interval
         # Interval is a %age of the difference between feedback readings for home and max
