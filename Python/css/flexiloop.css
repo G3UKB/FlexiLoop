@@ -161,6 +161,10 @@ QPushButton::disabled#abort {
     font: 14px;
 }
 
+QPushButton::pressed#abort {
+    background-color: rgb(97,97,97);
+}
+
 QPushButton::disabled {
     min-height: 20px;
     min-width: 100px;

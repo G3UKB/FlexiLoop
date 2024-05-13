@@ -359,9 +359,11 @@ class Calibrate(threading.Thread):
             # This is a manual entry so no reason why it should fail unless no entry
             while True:
                 r, (f, swr) = self.__man_cb(hint)
-                if r:
+                if r == CAL_SUCCESS:
                     # This gives a MHz freq
                     return True, [(float(f), float(swr))]
+                elif r == CAL_ABORT:
+                    return (False, [(None, None)])
         else:
             # This gives a Hz freq so conversion necessary
             (r, [(f, swr)]) = self.__vna.fres(flow, fhigh, inc, hint = hint)

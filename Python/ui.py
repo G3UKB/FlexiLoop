@@ -194,7 +194,7 @@ class UI(QMainWindow):
             if self.__aborting:
                 self.__aborting = False
                 # Let calibration do the actual abort
-                return False, (None, None)
+                return CAL_ABORT, (None, None)
             sleep (0.2)
         
         if self.__is_float(self.__man_cal_freq) and self.__is_float(self.__man_cal_swr):
@@ -204,10 +204,10 @@ class UI(QMainWindow):
             while self.__man_cal_state != MANUAL_NEXT:
                 sleep (0.2)
             self.__man_cal_state = MANUAL_IDLE
-            return True, r
+            return CAL_SUCCESS, r
         else:
             self.__man_cal_state = MANUAL_DATA_REQD
-            return False, (None, None)
+            return CAL_RETRY, (None, None)
         
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms

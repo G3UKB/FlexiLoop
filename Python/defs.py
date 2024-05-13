@@ -119,6 +119,11 @@ NONE = 'None'
 CAL_NORMAL = 'CalNormal'
 CAL_STEPS = 'CalSteps'
 
+# Cal manual return values
+CAL_SUCCESS = 'CalSuccess'
+CAL_RETRY = 'CalRetry'
+CAL_ABORT = 'CalAbort'
+
 # Timeouts for the long running operations in seconds
 # Adjusted for the idle tick rate to number of idle passes
 CALIBRATE_TIMEOUT = 'CALIBRATE_TIMEOUT'
