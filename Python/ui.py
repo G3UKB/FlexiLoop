@@ -114,6 +114,7 @@ class UI(QMainWindow):
         self.__saved_mode = self.__switch_mode
         self.__deferred_activity = None
         self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
+        self.__aborting = False
         
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -190,6 +191,10 @@ class UI(QMainWindow):
         # We set the hint and set data required flag and wait for the state to go to data available
         self.__man_cal_state = MANUAL_DATA_REQD
         while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
+            if self.__aborting:
+                self.__aborting = False
+                # Let calibration do the actual abort
+                return False, (None, None)
             sleep (0.2)
         
         if self.__is_float(self.__man_cal_freq) and self.__is_float(self.__man_cal_swr):
@@ -447,6 +452,7 @@ class UI(QMainWindow):
         # Calibration
         self.__cal = QPushButton("Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
+        self.__cal.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
@@ -456,13 +462,13 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__calstep, 1, 1)
         self.__calstep.clicked.connect(self.__do_cal_steps)
         
-        self.__caldel = QPushButton("Delete")
-        self.__caldel.setToolTip('Delete calibration')
+        self.__caldel = QPushButton("Delete all")
+        self.__caldel.setToolTip('Delete all calibration')
         self.__caldel.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__caldel, 1, 2)
         self.__caldel.clicked.connect(self.__do_cal_del)
         
-        self.__calview = QPushButton("...")
+        self.__calview = QPushButton("View...")
         self.__calview.setToolTip('View calibrations')
         self.__calview.setObjectName("view")
         self.__loopgrid.addWidget(self.__calview, 1, 3)
@@ -491,6 +497,7 @@ class UI(QMainWindow):
         # Set points
         self.__sp = QPushButton("Setpoints...")
         self.__sp.setToolTip('Manage setpoints for loop...')
+        self.__sp.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__sp, 1, 7)
         self.__sp.clicked.connect(self.__do_sp)
         
@@ -771,6 +778,7 @@ class UI(QMainWindow):
         self.__qt_app.quit()
         
     def __do_abort(self):
+        self.__aborting = True
         self.__api.abort_activity()
     
     def __do_cal(self):
@@ -817,25 +825,26 @@ class UI(QMainWindow):
         
         # Ask user if they really want to delete the calibration
         qm = QMessageBox
-        ret = qm.question(self,'', "Do you want to delete the calibration data for loop %d?" % loop, qm.Yes | qm.No)
+        ret = qm.question(self,'', "Do you want to delete the calibration data for all loops?", qm.Yes | qm.No)
 
         if ret == qm.Yes:
-            # Delete calibration for this loop
-            if loop == 1:
-                self.__loop_status[0] = False
-                self.__l1label.setObjectName("stred")
-                self.__l1label.setStyleSheet(self.__l1label.styleSheet())
-                self.__model[CONFIG][CAL][CAL_L1].clear()
-            elif loop == 2:
-                self.__loop_status[1] = False
-                self.__l2label.setObjectName("stred")
-                self.__l2label.setStyleSheet(self.__l1label.styleSheet())
-                self.__model[CONFIG][CAL][CAL_L2].clear()
-            elif loop == 3:
-                self.__loop_status[2] = False
-                self.__l3label.setObjectName("stred")
-                self.__l3label.setStyleSheet(self.__l1label.styleSheet())
-                self.__model[CONFIG][CAL][CAL_L3].clear()
+            # Delete calibration for this all loop
+            # Cant do this individually as some is common
+            self.__model[CONFIG][CAL][HOME] = -1
+            self.__model[CONFIG][CAL][MAX] = -1
+            self.__model[STATE][ARDUINO][ACT_POS] = -1
+            self.__loop_status[0] = False
+            self.__l1label.setObjectName("stred")
+            self.__l1label.setStyleSheet(self.__l1label.styleSheet())
+            self.__model[CONFIG][CAL][CAL_L1].clear()
+            self.__loop_status[1] = False
+            self.__l2label.setObjectName("stred")
+            self.__l2label.setStyleSheet(self.__l1label.styleSheet())
+            self.__model[CONFIG][CAL][CAL_L2].clear()
+            self.__loop_status[2] = False
+            self.__l3label.setObjectName("stred")
+            self.__l3label.setStyleSheet(self.__l1label.styleSheet())
+            self.__model[CONFIG][CAL][CAL_L3].clear()
         
     def __do_sp(self):
         # Invoke the setpoint dialog
@@ -1084,15 +1093,17 @@ class UI(QMainWindow):
         count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
         self.__l6label.setText('3 [%d]' % count)
         
-        # Update min/max frequencies and pot pos
+        # Update min/max frequencies
         loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
             self.__minvalue.setText(str(loop[1]))
             self.__maxvalue.setText(str(loop[0]))
-            self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))
-            self.__potmaxvalue.setText(str(self.__model[CONFIG][CAL][MAX]))
+            
         # Update SWR
         self.__auto_swrval.setText(str(self.__auto_swr))
+        # Update min/max pot values
+        self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))
+        self.__potmaxvalue.setText(str(self.__model[CONFIG][CAL][MAX]))
         
         # Update VNA status
         if self.__model[STATE][ARDUINO][ONLINE]:

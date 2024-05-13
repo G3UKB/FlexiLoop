@@ -93,7 +93,7 @@ QPushButton::disabled#view {
 
 QPushButton#calchange {
     min-height: 20px;
-    min-width: 25px;
+    min-width: 60px;
     background-color: rgb(147,140,130);
     color: rgb(24,74,101);
     border-style: outset;
@@ -104,7 +104,7 @@ QPushButton#calchange {
 
 QPushButton::disabled#calchange {
     min-height: 20px;
-    min-width: 25px;
+    min-width: 60px;
     background-color: rgb(131,124,114);
     color: rgb(97,97,97);
     border-style: outset;
