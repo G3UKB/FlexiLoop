@@ -163,7 +163,7 @@ class SerialComms(threading.Thread):
             'free_stop': self.__free_stop,
             'relay_on' : self.__relay_on,
             'relay_off' : self.__relay_off,
-            
+            'abort' : self.__abort,
         }
         # Execute and return response
         self.__cb(disp_tab[name](args))

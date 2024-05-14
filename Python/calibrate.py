@@ -115,6 +115,7 @@ class Calibrate(threading.Thread):
     # Switcher
     def __dispatch(self, name, args):
         disp_tab = {
+            'configure': self.__configure,
             'calibrate': self.__calibrate,
         }
         # Execute and return response
@@ -123,7 +124,30 @@ class Calibrate(threading.Thread):
         self.__cb(disp_tab[name](args))
         # Restore the callback for the comms thread
         self.__comms.restore_callback()
-        
+    
+    def __configure(self, args):
+        # Retrieve the end points
+        r, self.__end_points = self.retrieve_end_points()
+        if not r:
+            # Calibrate end points
+            self.__msg_cb("Configuring potentiometer feedback end points...")
+            r, msg = self.cal_end_points()
+            if not r:
+                if self.__abort:
+                    self.__abort = False
+                    return (ABORT, (False, "Operation aborted by user!", [self.__end_points]))
+                else:
+                    return (CONFIGURE, (False, msg, []))
+            r, self.__end_points = self.retrieve_end_points()
+            if not r:
+                # We have a problem
+                return (CONFIGURE, (False, "Unable to retrieve or create end points!", self.__end_points))
+            # Check for correct values
+            if self.__end_points[0] > self.__end_points[1]:
+                # pot hot ends are reversed
+                return (CONFIGURE, (False, "Reverse pot hot ends, home > max. Configure again: {}!".format(loop), self.__end_points))
+        return (CONFIGURE, (True, '', self.__end_points))
+    
     def __calibrate(self, args):
         loop, steps, self.__manual, self.__man_cb, mode = args
         # If mode is CAL_STEPS then we onlt dedo the steps

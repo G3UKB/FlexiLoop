@@ -247,6 +247,8 @@ class UI(QMainWindow):
                     if name == POS:
                         # Update position
                         self.__current_pos = args[0]
+                    elif name == CONFIGURE:
+                        pass
                     elif name == CALIBRATE:
                         # Update the loop status
                         if self.__selected_loop != -1:
@@ -398,11 +400,57 @@ class UI(QMainWindow):
         self.__central_widget.setLayout(self.__grid)
         
         # -------------------------------------------
+        # Feedback area
+        self.__fbgrid = QGridLayout()
+        gb_fb = QGroupBox('Feedback system')
+        gb_fb.setLayout(self.__fbgrid)
+        self.__grid.addWidget(gb_fb, 0,0)
+        
+        # Configure
+        self.__pot = QPushButton("Configure...")
+        self.__pot.setToolTip('Configure limits...')
+        #self.__cal.setObjectName("calchange")
+        self.__fbgrid.addWidget(self.__pot, 0, 0)
+        self.__pot.clicked.connect(self.__do_pot)
+        
+        # Delete
+        self.__pot_del = QPushButton("Delete")
+        self.__pot_del.setToolTip('Delete limits...')
+        #self.__cal.setObjectName("calchange")
+        self.__fbgrid.addWidget(self.__pot_del, 0, 1)
+        self.__pot_del.clicked.connect(self.__do_pot_del)
+        
+        # Limits
+        gb_lim = QGroupBox('Pot feedback limits')
+        hbox_lim = QHBoxLayout()
+        
+        potminlabel = QLabel('Actuator home analog value')
+        hbox_lim.addWidget(potminlabel)
+        potminlabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.__potminvalue = QLabel('0.0')
+        self.__potminvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__potminvalue.setObjectName("minmax")
+        hbox_lim.addWidget(self.__potminvalue)
+        maxpotlabel = QLabel('Actuator max analog value')
+        hbox_lim.addWidget(maxpotlabel)
+        maxpotlabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.__potmaxvalue = QLabel('0.0')
+        self.__potmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__potmaxvalue.setObjectName("minmax")
+        hbox_lim.addWidget(self.__potmaxvalue)
+        
+        gb_lim.setLayout(hbox_lim)
+        self.__fbgrid.addWidget(gb_lim, 0, 2)
+        
+        # Space out
+        self.__fbgrid.setColumnStretch(2, 1)
+        
+        # -------------------------------------------
         # Loop area
         self.__loopgrid = QGridLayout()
-        w1 = QGroupBox('Loop')
-        w1.setLayout(self.__loopgrid)
-        self.__grid.addWidget(w1, 0,0,1,4)
+        gb_loop = QGroupBox('Loop')
+        gb_loop.setLayout(self.__loopgrid)
+        self.__grid.addWidget(gb_loop, 1,0)
         
         looplabel = QLabel('Select Loop')
         self.__loopgrid.addWidget(looplabel, 0, 0)
@@ -414,16 +462,16 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__loop_sel, 0,1)
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
-        d = QGroupBox('Params')
+        gp_f_limits = QGroupBox('Loop frequency limits')
         hbox_d = QHBoxLayout()
-        minlabel = QLabel('Low freq')
+        minlabel = QLabel('Low freq (actuator max)')
         hbox_d.addWidget(minlabel)
         minlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue = QLabel('0.0')
         self.__minvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__minvalue.setObjectName("minmax")
         hbox_d.addWidget(self.__minvalue)
-        maxlabel = QLabel('High freq')
+        maxlabel = QLabel('High freq (actuator home)')
         hbox_d.addWidget(maxlabel)
         maxlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__maxvalue = QLabel('0.0')
@@ -431,6 +479,7 @@ class UI(QMainWindow):
         self.__maxvalue.setObjectName("minmax")
         hbox_d.addWidget(self.__maxvalue)
         
+        '''
         potminlabel = QLabel('Home pot val')
         hbox_d.addWidget(potminlabel)
         potminlabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -445,9 +494,10 @@ class UI(QMainWindow):
         self.__potmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__potmaxvalue.setObjectName("minmax")
         hbox_d.addWidget(self.__potmaxvalue)
+        '''
         
-        d.setLayout(hbox_d)
-        self.__loopgrid.addWidget(d, 0,2,1,9)
+        gp_f_limits.setLayout(hbox_d)
+        self.__loopgrid.addWidget(gp_f_limits, 0,3,1,8)
         
         # Calibration
         self.__cal = QPushButton("Calibrate...")
@@ -462,7 +512,7 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__calstep, 1, 1)
         self.__calstep.clicked.connect(self.__do_cal_steps)
         
-        self.__caldel = QPushButton("Delete all")
+        self.__caldel = QPushButton("Delete")
         self.__caldel.setToolTip('Delete all calibration')
         self.__caldel.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__caldel, 1, 2)
@@ -535,7 +585,7 @@ class UI(QMainWindow):
         gap = QWidget()
         manualgrid.addWidget(gap, 0, 0)
         
-        # Data entry
+        # Dynamic data entry area for manual calibration
         freqlabel = QLabel('Freq')
         manualgrid.addWidget(freqlabel, 0, 1)
         self.__manfreqtxt = QLineEdit()
@@ -555,7 +605,7 @@ class UI(QMainWindow):
         gap = QWidget()
         manualgrid.addWidget(gap, 0, 5)
         
-        # Button area
+        # Dynamic data entry buttons for manual calibration
         self.__save = QPushButton("Save")
         self.__save.setToolTip('Use the current values for this calibration point')
         self.__save.clicked.connect(self.__do_man_save)
@@ -574,15 +624,15 @@ class UI(QMainWindow):
         manualgrid.setColumnStretch(0, 1)
         manualgrid.setColumnStretch(5, 2)
         
-        # Unhide for testing
+        # Normally hidden
         self.__manualcal.hide()
         
         # -------------------------------------------
         # Auto area
         self.__autogrid = QGridLayout()
-        w2 = QGroupBox('Auto')
-        w2.setLayout(self.__autogrid)
-        self.__grid.addWidget(w2, 1,0,1,4)
+        gb_auto = QGroupBox('Auto')
+        gb_auto.setLayout(self.__autogrid)
+        self.__grid.addWidget(gb_auto, 2,0)
         self.__autogrid.setColumnMinimumWidth(5,300)
         
         freqlabel = QLabel('Freq')
@@ -609,9 +659,9 @@ class UI(QMainWindow):
         # -------------------------------------------
         # Manual area
         self.__mangrid = QGridLayout()
-        w3 = QGroupBox('Manual')
-        w3.setLayout(self.__mangrid)
-        self.__grid.addWidget(w3, 2,0,1,4)
+        gb_man = QGroupBox('Manual')
+        gb_man.setLayout(self.__mangrid)
+        self.__grid.addWidget(gb_man, 3,0)
         
         # Sub grid
         self.__subgrid = QGridLayout()
@@ -619,7 +669,6 @@ class UI(QMainWindow):
         w4.setLayout(self.__subgrid)
         self.__mangrid.addWidget(w4, 0,0,1,6)
         
-        #----------------------------------
         # Target select
         relaylabel = QLabel('Target')
         self.__subgrid.addWidget(relaylabel, 0, 0)
@@ -669,7 +718,6 @@ class UI(QMainWindow):
         self.__subgrid.addWidget(self.__runfwd, 0,7)
         self.__runfwd.clicked.connect(self.__do_run_fwd)    
         
-        #----------------------------------
         # Get current
         res1label = QLabel('SWR')
         self.__mangrid.addWidget(res1label, 1, 0)
@@ -690,7 +738,6 @@ class UI(QMainWindow):
         self.__mangrid.addWidget(self.__getres, 1,4)
         self.__getres.clicked.connect(self.__do_res)
         
-        #----------------------------------
         # Move position
         movelabel = QLabel('Move to (%)')
         self.__mangrid.addWidget(movelabel, 2, 0)
@@ -713,7 +760,6 @@ class UI(QMainWindow):
         self.__currpos.setMaximumWidth(100)
         self.__mangrid.addWidget(self.__currpos, 2, 4)
         
-        #----------------------------------
         # Increment
         inclabel = QLabel('Inc (ms)')
         self.__mangrid.addWidget(inclabel, 3, 0)
@@ -744,9 +790,10 @@ class UI(QMainWindow):
         self.__mangrid.addWidget(self.__nudgerev, 3,5)
         self.__nudgerev.clicked.connect(self.__do_nudge_rev)
         
+        # -------------------------------------------
         # Message area
         self.__msglist = QListWidget()
-        self.__grid.addWidget(self.__msglist, 3, 0, 1, 4)
+        self.__grid.addWidget(self.__msglist, 4, 0)
         
     #=======================================================
     # Window events
@@ -780,6 +827,24 @@ class UI(QMainWindow):
     def __do_abort(self):
         self.__aborting = True
         self.__api.abort_activity()
+    
+    def __do_pot(self):
+        # Do the configure sequence
+        self.__current_activity = CONFIGURE
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
+        self.__long_running = True
+        # Dispatches on separate thread
+        self.__api.configure()
+    
+    def __do_pot_del(self):
+        # Ask user if they really want to delete the calibration
+        qm = QMessageBox
+        ret = qm.question(self,'', "Do you want to delete the feedback positions?", qm.Yes | qm.No)
+
+        if ret == qm.Yes:
+            self.__model[CONFIG][CAL][HOME] = -1
+            self.__model[CONFIG][CAL][MAX] = -1
+            self.__model[STATE][ARDUINO][ACT_POS] = -1
     
     def __do_cal(self):
         # Switch to ANALYSER, switch back is done in the callback
@@ -1135,7 +1200,7 @@ class UI(QMainWindow):
             if self.__msglist.count() > 100:
                 # Keep history between 50 and 100
                 for n in range(0, 50):
-                    self.__msglist.takeitem(n)
+                    self.__msglist.takeItem(n)
         
         # Manage manual data entry state
         if self.__man_cal_state == MANUAL_IDLE:

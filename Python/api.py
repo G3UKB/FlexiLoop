@@ -116,6 +116,11 @@ class API:
         self.__tune.terminate()
         self.__tune.join()
     
+    # Perform a configure for the feedback system    
+    def configure(self):
+        self.logger.info("Configuring potentiometer limits. This may take a while...")
+        self.__c_q.put(('configure', []))
+        
     # Perform a calibration for the given loop    
     def calibrate(self, loop, manual, man_cb, mode):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))

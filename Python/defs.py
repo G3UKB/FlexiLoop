@@ -93,6 +93,7 @@ LOOP_3 = 3
 # Current activities
 NONE = 'None'
 CALIBRATE = 'Calibrate'
+CONFIGURE = 'Configure'
 SPEED = 'Speed'
 HOME = 'Home'
 MAX = 'Max'
