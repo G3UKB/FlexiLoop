@@ -414,11 +414,11 @@ class UI(QMainWindow):
         self.__pot.clicked.connect(self.__do_pot)
         
         # Delete
-        self.__pot_del = QPushButton("Delete")
-        self.__pot_del.setToolTip('Delete limits...')
+        self.__potdel = QPushButton("Delete")
+        self.__potdel.setToolTip('Delete limits...')
         #self.__cal.setObjectName("calchange")
-        self.__fbgrid.addWidget(self.__pot_del, 0, 1)
-        self.__pot_del.clicked.connect(self.__do_pot_del)
+        self.__fbgrid.addWidget(self.__potdel, 0, 1)
+        self.__potdel.clicked.connect(self.__do_pot_del)
         
         # Limits
         gb_lim = QGroupBox('Pot feedback limits')
@@ -448,7 +448,7 @@ class UI(QMainWindow):
         # -------------------------------------------
         # Loop area
         self.__loopgrid = QGridLayout()
-        gb_loop = QGroupBox('Loop')
+        gb_loop = QGroupBox('Mag loops')
         gb_loop.setLayout(self.__loopgrid)
         self.__grid.addWidget(gb_loop, 1,0)
         
@@ -479,48 +479,31 @@ class UI(QMainWindow):
         self.__maxvalue.setObjectName("minmax")
         hbox_d.addWidget(self.__maxvalue)
         
-        '''
-        potminlabel = QLabel('Home pot val')
-        hbox_d.addWidget(potminlabel)
-        potminlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__potminvalue = QLabel('0.0')
-        self.__potminvalue.setAlignment(QtCore.Qt.AlignCenter)
-        self.__potminvalue.setObjectName("minmax")
-        hbox_d.addWidget(self.__potminvalue)
-        maxpotlabel = QLabel('Max pot val')
-        hbox_d.addWidget(maxpotlabel)
-        maxpotlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__potmaxvalue = QLabel('0.0')
-        self.__potmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
-        self.__potmaxvalue.setObjectName("minmax")
-        hbox_d.addWidget(self.__potmaxvalue)
-        '''
-        
         gp_f_limits.setLayout(hbox_d)
-        self.__loopgrid.addWidget(gp_f_limits, 0,3,1,8)
+        self.__loopgrid.addWidget(gp_f_limits, 0,2,1,5)
         
         # Calibration
         self.__cal = QPushButton("Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
-        self.__cal.setObjectName("calchange")
+        #self.__cal.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
         self.__calstep = QPushButton("Steps")
         self.__calstep.setToolTip('Redo steps')
-        self.__calstep.setObjectName("calchange")
+        #self.__calstep.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__calstep, 1, 1)
         self.__calstep.clicked.connect(self.__do_cal_steps)
         
         self.__caldel = QPushButton("Delete")
         self.__caldel.setToolTip('Delete all calibration')
-        self.__caldel.setObjectName("calchange")
+        #self.__caldel.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__caldel, 1, 2)
         self.__caldel.clicked.connect(self.__do_cal_del)
         
         self.__calview = QPushButton("View...")
         self.__calview.setToolTip('View calibrations')
-        self.__calview.setObjectName("view")
+        #self.__calview.setObjectName("view")
         self.__loopgrid.addWidget(self.__calview, 1, 3)
         self.__calview.clicked.connect(self.__do_cal_view)
         
@@ -544,11 +527,19 @@ class UI(QMainWindow):
         s.setLayout(hbox)
         self.__loopgrid.addWidget(s, 1, 4, 1, 3)
         
+        # Space out
+        self.__loopgrid.setColumnStretch(0, 4)
+        self.__loopgrid.setColumnStretch(0, 5)
+        self.__loopgrid.setColumnStretch(0, 6)
+        self.__loopgrid.setColumnStretch(1, 4)
+        self.__loopgrid.setColumnStretch(1, 5)
+        self.__loopgrid.setColumnStretch(1, 6)
+
         # Set points
         self.__sp = QPushButton("Setpoints...")
         self.__sp.setToolTip('Manage setpoints for loop...')
         self.__sp.setObjectName("calchange")
-        self.__loopgrid.addWidget(self.__sp, 1, 7)
+        self.__loopgrid.addWidget(self.__sp, 2, 0)
         self.__sp.clicked.connect(self.__do_sp)
         
         sps = QGroupBox('Setpoint Status')
@@ -575,8 +566,9 @@ class UI(QMainWindow):
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
-        self.__loopgrid.addWidget(sps, 1, 8, 1, 3)
+        self.__loopgrid.addWidget(sps, 2, 1, 1, 3)
         
+
         # If no VNA we can put up the manual calibration box
         self.__manualcal = QGroupBox('Entry')
         manualgrid = QGridLayout()
@@ -1281,16 +1273,28 @@ class UI(QMainWindow):
                 self.__caldel.setEnabled(False)
                 self.__calstep.setEnabled(False)
                 self.__cal.setEnabled(True)
+                
+            # Enable/disable configure/ delete according to settings
+            if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
+                self.__pot.setEnabled(True)
+                self.__potdel.setEnabled(False)
+            else:
+                self.__pot.setEnabled(False)
+                self.__potdel.setEnabled(True)
         else:
             self.__caldel.setEnabled(False)
             self.__calstep.setEnabled(False)
             self.__cal.setEnabled(False)
+            self.__pot.setEnabled(False)
+            self.__potdel.setEnabled(False)
         
     # All enabled (True) or disabled (False)
     def __w_enable_disable(self, state):
         self.__loop_sel.setEnabled(state)
+        self.__pot.setEnabled(state)
+        self.__potdel.setEnabled(state)
         self.__cal.setEnabled(state)
-        #self.__caldel.setEnabled(state)
+        self.__caldel.setEnabled(state)
         self.__sp.setEnabled(state)
         self.__freqtxt.setEnabled(state)
         self.__tune.setEnabled(state)
