@@ -145,7 +145,7 @@ class Calibrate(threading.Thread):
             # Check for correct values
             if self.__end_points[0] > self.__end_points[1]:
                 # pot hot ends are reversed
-                return (CONFIGURE, (False, "Reverse pot hot ends, home > max. Configure again: {}!".format(loop), self.__end_points))
+                return (CONFIGURE, (False, "Reverse pot hot ends, home > max. Configure again: {}!".format(self.__end_points), self.__end_points))
         return (CONFIGURE, (True, '', self.__end_points))
     
     def __calibrate(self, args):

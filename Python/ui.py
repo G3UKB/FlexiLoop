@@ -610,11 +610,11 @@ class UI(QMainWindow):
         self.__next.setMinimumHeight(20)
         manualgrid.addWidget(self.__next, 0, 7)
         
-        self.__loopgrid.addWidget(self.__manualcal, 2, 0, 1, 8)
+        self.__loopgrid.addWidget(self.__manualcal, 3, 0, 1, 8)
         
         # Space out
-        manualgrid.setColumnStretch(0, 1)
-        manualgrid.setColumnStretch(5, 2)
+        #manualgrid.setColumnStretch(0, 1)
+        #manualgrid.setColumnStretch(5, 2)
         
         # Normally hidden
         self.__manualcal.hide()
@@ -837,6 +837,7 @@ class UI(QMainWindow):
             self.__model[CONFIG][CAL][HOME] = -1
             self.__model[CONFIG][CAL][MAX] = -1
             self.__model[STATE][ARDUINO][ACT_POS] = -1
+            self.__current_pos = -1
     
     def __do_cal(self):
         # Switch to ANALYSER, switch back is done in the callback
@@ -882,26 +883,26 @@ class UI(QMainWindow):
         
         # Ask user if they really want to delete the calibration
         qm = QMessageBox
-        ret = qm.question(self,'', "Do you want to delete the calibration data for all loops?", qm.Yes | qm.No)
+        ret = qm.question(self,'', "Do you want to delete the calibration data for loop %d?" % loop, qm.Yes | qm.No)
 
         if ret == qm.Yes:
-            # Delete calibration for this all loop
-            # Cant do this individually as some is common
-            self.__model[CONFIG][CAL][HOME] = -1
-            self.__model[CONFIG][CAL][MAX] = -1
-            self.__model[STATE][ARDUINO][ACT_POS] = -1
-            self.__loop_status[0] = False
-            self.__l1label.setObjectName("stred")
-            self.__l1label.setStyleSheet(self.__l1label.styleSheet())
-            self.__model[CONFIG][CAL][CAL_L1].clear()
-            self.__loop_status[1] = False
-            self.__l2label.setObjectName("stred")
-            self.__l2label.setStyleSheet(self.__l1label.styleSheet())
-            self.__model[CONFIG][CAL][CAL_L2].clear()
-            self.__loop_status[2] = False
-            self.__l3label.setObjectName("stred")
-            self.__l3label.setStyleSheet(self.__l1label.styleSheet())
-            self.__model[CONFIG][CAL][CAL_L3].clear()
+            # Delete calibration for this loop
+            
+            if loop == 1:
+                self.__loop_status[0] = False
+                self.__l1label.setObjectName("stred")
+                self.__l1label.setStyleSheet(self.__l1label.styleSheet())
+                self.__model[CONFIG][CAL][CAL_L1].clear()
+            elif loop == 2:
+                self.__loop_status[1] = False
+                self.__l2label.setObjectName("stred")
+                self.__l2label.setStyleSheet(self.__l1label.styleSheet())
+                self.__model[CONFIG][CAL][CAL_L2].clear()
+            elif loop == 3:
+                self.__loop_status[2] = False
+                self.__l3label.setObjectName("stred")
+                self.__l3label.setStyleSheet(self.__l1label.styleSheet())
+                self.__model[CONFIG][CAL][CAL_L3].clear()
         
     def __do_sp(self):
         # Invoke the setpoint dialog
@@ -1082,7 +1083,10 @@ class UI(QMainWindow):
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
             
             # Update current position
-            self.__currpos.setText(str(self.__current_pos) + '%')
+            if self.__current_pos == -1:
+                self.__currpos.setText('-')
+            else:
+                self.__currpos.setText(str(self.__current_pos) + '%')
             widget_state = None  
             # Check activity state
             if self.__current_activity != NONE:
@@ -1278,6 +1282,10 @@ class UI(QMainWindow):
             if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
                 self.__pot.setEnabled(True)
                 self.__potdel.setEnabled(False)
+                # We can't calibrate if not configured
+                self.__caldel.setEnabled(False)
+                self.__calstep.setEnabled(False)
+                self.__cal.setEnabled(True)
             else:
                 self.__pot.setEnabled(False)
                 self.__potdel.setEnabled(True)
