@@ -1288,7 +1288,11 @@ class UI(QMainWindow):
                 self.__cal.setEnabled(True)
             else:
                 self.__pot.setEnabled(False)
-                self.__potdel.setEnabled(True)
+                # Only allow delete if no calibration
+                if self.__loop_status == [False, False, False]:
+                    self.__potdel.setEnabled(True)
+                else:
+                    self.__potdel.setEnabled(False)
         else:
             self.__caldel.setEnabled(False)
             self.__calstep.setEnabled(False)
