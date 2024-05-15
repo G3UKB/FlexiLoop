@@ -207,7 +207,7 @@ class Calibrate(threading.Thread):
             # Check map
             # map is of form e.g.
             # [12.0, 3.0, [[500, 12.0, 1.0], [...], ...]]
-            if len(cal_map) == 3 and len(cal_map[2] > 0:
+            if len(cal_map) == 3 and len(cal_map[2]) > 0:
                 # We should have enough data to redo the steps
                 fhome = cal_map[0] # highest f
                 fmax = cal_map[1] # lowest f
