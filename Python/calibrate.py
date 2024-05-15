@@ -207,14 +207,17 @@ class Calibrate(threading.Thread):
             # Check map
             # map is of form e.g.
             # [12.0, 3.0, [[500, 12.0, 1.0], [...], ...]]
-            if len(cal_map) >= 2:
-                # Assume we have max and min frequencies
+            if len(cal_map) == 3 and len(cal_map[2] > 0:
+                # We should have enough data to redo the steps
                 fhome = cal_map[0] # highest f
                 fmax = cal_map[1] # lowest f
+                # Pick up SWR for min/max rom the list
+                swr_home = cal_map[2][0][2]
+                swr_max = cal_map[2][-1][2]
                 # save min/max
                 new_map = [fhome, fmax, []]
                 # Configure steps
-                self.__do_steps(new_map)
+                self.__do_steps(loop, steps, fhome, fmax, swrhome, swrmax, new_map)
                 self.__msg_cb("Calibration complete", MSG_STATUS)
                 return ('Calibrate', (True, "", new_map))
         else:
@@ -315,9 +318,9 @@ class Calibrate(threading.Thread):
         
         # Save limits for this loop
         m = [fhome, fmax, []]
-        return __do_steps(m)
+        return self.__do_steps(loop, steps, fhome, fmax, swrhome, swrmax, m)
         
-    def __do_steps(self, m):
+    def __do_steps(self, loop, steps, fhome, fmax, swrhome, swrmax, m):
         # Move incrementally and take readings
         # We move from home to max by interval
         # Interval is a %age of the difference between feedback readings for home and max

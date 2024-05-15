@@ -409,14 +409,12 @@ class UI(QMainWindow):
         # Configure
         self.__pot = QPushButton("Configure...")
         self.__pot.setToolTip('Configure limits...')
-        #self.__cal.setObjectName("calchange")
         self.__fbgrid.addWidget(self.__pot, 0, 0)
         self.__pot.clicked.connect(self.__do_pot)
         
         # Delete
         self.__potdel = QPushButton("Delete")
         self.__potdel.setToolTip('Delete limits...')
-        #self.__cal.setObjectName("calchange")
         self.__fbgrid.addWidget(self.__potdel, 0, 1)
         self.__potdel.clicked.connect(self.__do_pot_del)
         
@@ -485,25 +483,21 @@ class UI(QMainWindow):
         # Calibration
         self.__cal = QPushButton("Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
-        #self.__cal.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
-        self.__calstep = QPushButton("Steps")
-        self.__calstep.setToolTip('Redo steps')
-        #self.__calstep.setObjectName("calchange")
+        self.__calstep = QPushButton("Redo steps...")
+        self.__calstep.setToolTip('Delete and redo steps')
         self.__loopgrid.addWidget(self.__calstep, 1, 1)
         self.__calstep.clicked.connect(self.__do_cal_steps)
         
         self.__caldel = QPushButton("Delete")
         self.__caldel.setToolTip('Delete all calibration')
-        #self.__caldel.setObjectName("calchange")
         self.__loopgrid.addWidget(self.__caldel, 1, 2)
         self.__caldel.clicked.connect(self.__do_cal_del)
         
         self.__calview = QPushButton("View...")
         self.__calview.setToolTip('View calibrations')
-        #self.__calview.setObjectName("view")
         self.__loopgrid.addWidget(self.__calview, 1, 3)
         self.__calview.clicked.connect(self.__do_cal_view)
         
@@ -566,9 +560,8 @@ class UI(QMainWindow):
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
-        self.__loopgrid.addWidget(sps, 2, 1, 1, 3)
+        self.__loopgrid.addWidget(sps, 2, 1, 1, 2)
         
-
         # If no VNA we can put up the manual calibration box
         self.__manualcal = QGroupBox('Entry')
         manualgrid = QGridLayout()
@@ -611,10 +604,6 @@ class UI(QMainWindow):
         manualgrid.addWidget(self.__next, 0, 7)
         
         self.__loopgrid.addWidget(self.__manualcal, 3, 0, 1, 8)
-        
-        # Space out
-        #manualgrid.setColumnStretch(0, 1)
-        #manualgrid.setColumnStretch(5, 2)
         
         # Normally hidden
         self.__manualcal.hide()
@@ -1251,10 +1240,19 @@ class UI(QMainWindow):
                 self.__abort.setEnabled(False)
                 
             elif state == W_NORMAL:
-                # All enable except abort and stop
-                self.__w_enable_disable(True)
-                self.__stopact.setEnabled(False)
-                self.__abort.setEnabled(False)
+                if self.__loop_status[self.__selected_loop-1]:
+                    # Current loop configured
+                    # All enable except abort and stop
+                    self.__w_enable_disable(True)
+                    self.__stopact.setEnabled(False)
+                    self.__abort.setEnabled(False)
+                else:
+                    # All disable except close
+                    self.__w_enable_disable(False)
+                    self.__stopact.setEnabled(False)
+                    self.__abort.setEnabled(False)
+                    # and allow loop change
+                    self.__loop_sel.setEnabled(True)
             else:
                 # All disable except close
                 self.__w_enable_disable(False)
@@ -1285,7 +1283,8 @@ class UI(QMainWindow):
                 # We can't calibrate if not configured
                 self.__caldel.setEnabled(False)
                 self.__calstep.setEnabled(False)
-                self.__cal.setEnabled(True)
+                self.__cal.setEnabled(False)
+                self.__sp.setEnabled(False)
             else:
                 self.__pot.setEnabled(False)
                 # Only allow delete if no calibration
