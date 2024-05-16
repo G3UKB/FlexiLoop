@@ -48,7 +48,7 @@ void setup() {
   md.init();
   pinMode(POTENTIOMETER_PIN, INPUT);
   pinMode(RLY_PIN, OUTPUT);
-  digitalWrite(RLY_PIN, LOW);
+  digitalWrite(RLY_PIN, HIGH);
 }
 
 // Execution loop runs continuously
@@ -117,12 +117,12 @@ void process(String data) {
       break;
 
     case 'a':
-      digitalWrite(RLY_PIN, HIGH);
+      digitalWrite(RLY_PIN, LOW);
       Serial.print("RlyOn;");
       break;
 
     case 'b':
-      digitalWrite(RLY_PIN, LOW);
+      digitalWrite(RLY_PIN, HIGH);
       Serial.print("RlyOff;");
       break;
 

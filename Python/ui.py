@@ -54,7 +54,7 @@ class VLine(QFrame):
 # Main window        
 class UI(QMainWindow):
     
-    def __init__(self, model, qt_app, port):
+    def __init__(self, model, qt_app):
         super(UI, self).__init__()
 
         # Get root logger
@@ -67,7 +67,7 @@ class UI(QMainWindow):
         self.__qt_app = qt_app
         
         # Create the API instance
-        self.__api = api.API(model, port, self.callback, self.msg_callback)
+        self.__api = api.API(model, self.callback, self.msg_callback)
         self.__api.init_comms()
         
         # Create the config dialog
@@ -892,6 +892,8 @@ class UI(QMainWindow):
                 self.__l3label.setObjectName("stred")
                 self.__l3label.setStyleSheet(self.__l1label.styleSheet())
                 self.__model[CONFIG][CAL][CAL_L3].clear()
+            self.__minvalue.setText('0.0')
+            self.__maxvalue.setText('0.0')
         
     def __do_sp(self):
         # Invoke the setpoint dialog
@@ -1286,6 +1288,9 @@ class UI(QMainWindow):
                 self.__cal.setEnabled(False)
                 self.__sp.setEnabled(False)
             else:
+                # We have feedback configured
+                # Allow most manual controls
+                self.__w_enable_disable_man(True)
                 self.__pot.setEnabled(False)
                 # Only allow delete if no calibration
                 if self.__loop_status == [False, False, False]:
@@ -1322,6 +1327,19 @@ class UI(QMainWindow):
         self.__nudgefwd.setEnabled(state)
         self.__nudgerev.setEnabled(state)
     
+    def __w_enable_disable_man(self, state):
+        self.__relay_sel.setEnabled(state)
+        self.__speed_sel.setEnabled(state)
+        self.__mvrev.setEnabled(state)
+        self.__mvfwd.setEnabled(state)
+        self.__movetxt.setEnabled(state)
+        self.__runfwd.setEnabled(state)
+        self.__runrev.setEnabled(state)
+        self.__inctxt.setEnabled(state)
+        self.__movepos.setEnabled(state)
+        self.__nudgefwd.setEnabled(state)
+        self.__nudgerev.setEnabled(state)
+        
     # Additive state for VNA    
     def __w_vna_enable_disable(self, state):
         self.__getres.setEnabled(state)

@@ -50,20 +50,19 @@ VERB = False
 class API:
     
     # Initialisation
-    def __init__(self, model, port, callback, msgs):
+    def __init__(self, model, callback, msgs):
         
         # Get root logger
         self.logger = logging.getLogger('root')
         
         # Params
         self.__model = model
-        self.__port = port
         self.__cb = callback
         self.__msgs = msgs
         
         # Create a SerialComms instance
         self.__s_q = queue.Queue(10)
-        self.__serial_comms = serialcomms.SerialComms(self.__model, self.__port, self.__s_q, self.serial_callback)
+        self.__serial_comms = serialcomms.SerialComms(self.__model, self.__s_q, self.serial_callback)
         
         # Create a VNA instance
         self.__vna = vna.VNA(model)
@@ -92,7 +91,7 @@ class API:
             # We were running but there has been a disconnection
             # We need to start again as a thread cannot be restarted
             self.__serial_comms = None
-            self.__serial_comms = serialcomms.SerialComms(self.__model, self.__port, self.__s_q, self.serial_callback)
+            self.__serial_comms = serialcomms.SerialComms(self.__model, self.__s_q, self.serial_callback)
             if self.__serial_comms.connect():
                 self.__serial_comms.start()
                 self.__serial_running = True
@@ -228,7 +227,7 @@ class API:
             maximum = self.__model[CONFIG][CAL][MAX]
             if home == -1 or maximum == -1:
                 if VERB: self.logger.warning("Failed to get position as limits are not set!")
-                self.__cb((name, (False, "Failed to get position as limits are not set!", [])))
+                # We might get position status while configuring limits. Ignore these as they are invalid.
             else:
                 # We need to save the absolute pos not the %age pos
                 self.__absolute_pos = args[0]

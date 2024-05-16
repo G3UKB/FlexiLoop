@@ -49,7 +49,7 @@ class SerialComms(threading.Thread):
 
     # =============================================================== 
     # Initialise class
-    def __init__(self, model, port, q, main_callback):
+    def __init__(self, model, q, main_callback):
         """
         Constructor
         
@@ -65,17 +65,18 @@ class SerialComms(threading.Thread):
         self.logger = logging.getLogger('root')
 
         self.__model = model
-        self.__port = port
         self.__q = q
         self.__cb = main_callback
         self.__originalcb = main_callback
         self.term = False
         
+        self.__port = None
         self.__ser = None
         self.__ticks = (HEARTBEAT_TIMER/1000)/SLEEP_TIMER
         self.__heartbeat = self.__ticks
 
     def connect(self):
+        if MODEL: self.__port = self.__model[CONFIG][ARDUINO][PORT]
         try:
             self.__ser = serial.Serial(self.__port, 9600, timeout=1)
         except Exception as e:
