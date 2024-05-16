@@ -212,8 +212,8 @@ class Calibrate(threading.Thread):
                 fhome = cal_map[0] # highest f
                 fmax = cal_map[1] # lowest f
                 # Pick up SWR for min/max rom the list
-                swr_home = cal_map[2][0][2]
-                swr_max = cal_map[2][-1][2]
+                swrhome = cal_map[2][0][2]
+                swrmax = cal_map[2][-1][2]
                 # save min/max
                 new_map = [fhome, fmax, []]
                 # Configure steps
