@@ -162,13 +162,21 @@ ACTUATOR_STEPS = 'ACTUATOR_STEPS'
 FWD = 'FWD'
 REV = 'REV'
 
-# Widget enable/disable states
+# Widget states
 W_DISABLE_ALL = 'WDisableAll'
 W_NO_CONFIG = 'WNoConfig'
 W_LONG_RUNNING = 'WLongRunning'
 W_FREE_RUNNING = 'WFreeRunning'
 W_NORMAL = 'WNormal'
-   
+
+W_OFF_LINE = 'WOffLine'
+W_LONG_RUNNING = 'WLongRunning'
+W_FREE_RUNNING = 'WFreeRunning'
+W_TRANSIENT = 'Transient'
+W_NO_LIMITS = 'WNoLimits'
+W_LIMITS_DELETE = 'WLimitsDelete'
+W_CALIBRATED = 'WCalibrated'
+
 # Manual calibration data states
 MANUAL_IDLE = 0
 MANUAL_DATA_REQD = 1

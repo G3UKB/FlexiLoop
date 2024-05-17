@@ -1168,7 +1168,8 @@ class UI(QMainWindow):
             self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
         
         # Set widgets
-        self.__set_widget_state(widget_state)
+        self.__set_widgets(self.__set_widget_state())
+        #self.__set_widgets_old(widget_state)
         
         # Output any messages
         if self.__msgq.qsize() > 0:
@@ -1210,8 +1211,10 @@ class UI(QMainWindow):
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
  
+    
+        
     # Enable/disable according to state
-    def __set_widget_state(self, state):
+    def __set_widgets_old(self, state):
         if not self.__last_widget_status == state:
             self.__last_widget_status = state
             if state == W_DISABLE_ALL:
@@ -1343,4 +1346,156 @@ class UI(QMainWindow):
     # Additive state for VNA    
     def __w_vna_enable_disable(self, state):
         self.__getres.setEnabled(state)
-        
+     
+    #========================================================================================
+    # New code
+    # Set the widget state according to current context
+    def __set_widget_state(self):
+        widget_state = W_OFF_LINE    # Fall-back to disable everything except close
+        # Check activity state
+        if self.__current_activity != NONE:
+            # Activity in progress, so we must be operational
+            if self.__long_running:
+                # Long running such as calibration etc
+                widget_state = W_LONG_RUNNING
+            elif self.__free_running:
+                # Free running such as manual forward/reverse
+                widget_state = W_FREE_RUNNING
+            else:
+                # Almost instant such as nudge, relay change etc
+                widget_state = W_TRANSIENT
+        else:
+            # No activity
+            # widget_state depends on application state
+            if self.__model[STATE][ARDUINO][ONLINE]:
+                # Arduino on-line
+                if self.__model[CONFIG][CAL][HOME] > 0 and self.__model[CONFIG][CAL][MAX] > 0:
+                    # We have feedback limits set
+                    if self.__loop_status == [False, False, False]:
+                        # There are no loops configured so allow delete for limita
+                        widget_state = W_LIMITS_DELETE
+                    elif self.__loop_status[self.__selected_loop-1]:
+                        # The selected loop is calibrated
+                        widget_state = W_CALIBRATED        
+                else:
+                    # The feedback limits are not set so can only configure these
+                    widget_state = W_NO_LIMITS
+            else:
+                # Arduino off-line
+                widget_state = W_OFF_LINE
+        return widget_state
+    
+    # Enable/disable according to state
+    def __set_widgets(self, state):
+        if not self.__last_widget_status == state:
+            # We have a state change
+            self.__last_widget_status = state
+            # Always allow exit and abort usually off
+            self.__exit.setEnabled(True)
+            self.__abort.setEnabled(False)
+            # Set according to state
+            if state == W_OFF_LINE:
+                # Everything off except exit
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(False)
+                self.__enable_disable_loop(False)
+                self.__enable_disable_auto(False)
+                self.__enable_disable_manual(False)
+            elif state == W_NO_LIMITS:
+                # Everything off except exit and configure
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(True)
+                self.__potdel.setEnabled(False)
+                self.__enable_disable_loop(False)
+                self.__enable_disable_auto(False)
+                self.__enable_disable_manual(False)
+            elif state == W_LIMITS_DELETE:
+                # We have limits but no calibration for any loop
+                # We allow delete for limits and all manual controls except get current.
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(True)
+                self.__pot.setEnabled(False)
+                self.__enable_disable_loop(False)
+                self.__enable_disable_auto(False)
+                self.__enable_disable_manual(True)
+                self.__getres.setEnabled(False)
+            elif state == W_CALIBRATED:
+                # We have calibration for the selected loop
+                # Allow all except configure or delete limits
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(False)
+                self.__enable_disable_loop(True)
+                self.__enable_disable_auto(True)
+                self.__enable_disable_manual(True)
+            elif state == W_LONG_RUNNING:
+                # All off for long running except abort
+                self.__exit.setEnabled(False)
+                self.__abort.setEnabled(True)
+                self.__enable_disable_feedback(False)
+                self.__enable_disable_loop(False)
+                self.__enable_disable_auto(False)
+                self.__enable_disable_manual(False)
+            elif state == W_FREE_RUNNING:
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(False)
+                self.__enable_disable_loop(False)
+                self.__enable_disable_auto(False)
+                self.__enable_disable_manual(False)
+                self.__stopact.setEnabled(True)
+            elif state == W_TRANSIENT:
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(False)
+                self.__enable_disable_loop(True)
+                self.__enable_disable_auto(True)
+                self.__enable_disable_manual(True)
+            else:
+                # Default all disable
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(False)
+                self.__enable_disable_loop(False)
+                self.__enable_disable_auto(False)
+                self.__enable_disable_manual(False)
+            
+    # All enabled (True) or disabled (False)
+    def __enable_disable_feedback(self, state):
+        # Feedback sectiom
+        self.__pot.setEnabled(state)
+        self.__potdel.setEnabled(state)
+    
+    def __enable_disable_loop(self, state):    
+        # Loop section
+        self.__loop_sel.setEnabled(state)
+        self.__cal.setEnabled(state)
+        self.__calstep.setEnabled(state)
+        self.__caldel.setEnabled(state)
+        self.__calview.setEnabled(state)
+        self.__sp.setEnabled(state)
+        # Miss out manual entry as hidden when not required
+    
+    def __enable_disable_auto(self, state):    
+        # Auto section
+        self.__freqtxt.setEnabled(state)
+        self.__tune.setEnabled(state)
+    
+    def __enable_disable_manual(self, state):    
+        # Manual section
+        self.__relay_sel.setEnabled(state)
+        self.__speed_sel.setEnabled(state)
+        self.__runfwd.setEnabled(state)
+        self.__stopact.setEnabled(state)
+        self.__runrev.setEnabled(state)
+        self.__getres.setEnabled(state)
+        self.__movetxt.setEnabled(state)
+        self.__movepos.setEnabled(state)
+        self.__inctxt.setEnabled(state)
+        self.__mvfwd.setEnabled(state)
+        self.__mvrev.setEnabled(state)
+        self.__nudgefwd.setEnabled(state)
+        self.__nudgerev.setEnabled(state)
