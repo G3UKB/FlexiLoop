@@ -1376,13 +1376,17 @@ class UI(QMainWindow):
                         widget_state = W_LIMITS_DELETE
                     elif self.__loop_status[self.__selected_loop-1]:
                         # The selected loop is calibrated
-                        widget_state = W_CALIBRATED        
+                        widget_state = W_CALIBRATED
+                    else:
+                        # A loop is calibrated but not the selected one
+                        widget_state = W_OTHER_CALIBRATED
                 else:
                     # The feedback limits are not set so can only configure these
                     widget_state = W_NO_LIMITS
             else:
                 # Arduino off-line
                 widget_state = W_OFF_LINE
+        #print(widget_state)
         return widget_state
     
     # Enable/disable according to state
@@ -1413,15 +1417,17 @@ class UI(QMainWindow):
                 self.__enable_disable_manual(False)
             elif state == W_LIMITS_DELETE:
                 # We have limits but no calibration for any loop
-                # We allow delete for limits and all manual controls except get current.
+                # We allow delete for limits and all manual controls except get current and stop.
                 self.__exit.setEnabled(True)
                 self.__abort.setEnabled(False)
                 self.__enable_disable_feedback(True)
                 self.__pot.setEnabled(False)
                 self.__enable_disable_loop(False)
+                self.__loop_sel.setEnabled(True)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(True)
                 self.__getres.setEnabled(False)
+                self.__stopact.setEnabled(False)
             elif state == W_CALIBRATED:
                 # We have calibration for the selected loop
                 # Allow all except configure or delete limits
@@ -1429,8 +1435,21 @@ class UI(QMainWindow):
                 self.__abort.setEnabled(False)
                 self.__enable_disable_feedback(False)
                 self.__enable_disable_loop(True)
+                self.__cal.setEnabled(False)
                 self.__enable_disable_auto(True)
                 self.__enable_disable_manual(True)
+                self.__stopact.setEnabled(False)
+            elif state == W_OTHER_CALIBRATED:
+                # We have calibration for not the selected loop
+                # Allow all except configure or delete limits
+                self.__exit.setEnabled(True)
+                self.__abort.setEnabled(False)
+                self.__enable_disable_feedback(False)
+                self.__enable_disable_loop(True)
+                self.__calstep.setEnabled(False)
+                self.__enable_disable_auto(True)
+                self.__enable_disable_manual(True)
+                self.__stopact.setEnabled(False)
             elif state == W_LONG_RUNNING:
                 # All off for long running except abort
                 self.__exit.setEnabled(False)
@@ -1439,6 +1458,7 @@ class UI(QMainWindow):
                 self.__enable_disable_loop(False)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(False)
+                self.__stopact.setEnabled(False)
             elif state == W_FREE_RUNNING:
                 self.__exit.setEnabled(True)
                 self.__abort.setEnabled(False)
@@ -1454,6 +1474,7 @@ class UI(QMainWindow):
                 self.__enable_disable_loop(True)
                 self.__enable_disable_auto(True)
                 self.__enable_disable_manual(True)
+                self.__stopact.setEnabled(False)
             else:
                 # Default all disable
                 self.__exit.setEnabled(True)
@@ -1481,6 +1502,10 @@ class UI(QMainWindow):
     
     def __enable_disable_auto(self, state):    
         # Auto section
+        # We cant enable if there is no VNA
+        if state == True:
+            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
+                state = False
         self.__freqtxt.setEnabled(state)
         self.__tune.setEnabled(state)
     

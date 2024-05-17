@@ -176,6 +176,7 @@ W_TRANSIENT = 'Transient'
 W_NO_LIMITS = 'WNoLimits'
 W_LIMITS_DELETE = 'WLimitsDelete'
 W_CALIBRATED = 'WCalibrated'
+W_OTHER_CALIBRATED = 'WOtherCalibrated'
 
 # Manual calibration data states
 MANUAL_IDLE = 0
