@@ -1196,146 +1196,8 @@ class UI(QMainWindow):
         # =======================================================
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
- 
-    
-    '''    
-    # Enable/disable according to state
-    def __set_widgets_old(self, state):
-        if not self.__last_widget_status == state:
-            self.__last_widget_status = state
-            if state == W_DISABLE_ALL:
-                # All disable except close
-                self.__w_enable_disable(False)
-                self.__stopact.setEnabled(False)
-                self.__abort.setEnabled(False)
-            
-            elif state == W_NO_CONFIG:
-                # All disable except close and config
-                self.__w_enable_disable(False)
-                self.__stopact.setEnabled(False)
-                self.__abort.setEnabled(False)
-                self.__loop_sel.setEnabled(True)
-                self.__cal.setEnabled(True)
-                self.__sp.setEnabled(True)
-                
-            elif state == W_LONG_RUNNING:
-                # All disable except close and abort
-                self.__w_enable_disable(False)
-                self.__stopact.setEnabled(False)
-                self.__abort.setEnabled(True)
-                
-            elif state == W_FREE_RUNNING:
-                # All disable except close and stop
-                self.__w_enable_disable(False)
-                self.__stopact.setEnabled(True)
-                self.__abort.setEnabled(False)
-                
-            elif state == W_NORMAL:
-                if self.__loop_status[self.__selected_loop-1]:
-                    # Current loop configured
-                    # All enable except abort and stop
-                    self.__w_enable_disable(True)
-                    self.__stopact.setEnabled(False)
-                    self.__abort.setEnabled(False)
-                else:
-                    # All disable except close
-                    self.__w_enable_disable(False)
-                    self.__stopact.setEnabled(False)
-                    self.__abort.setEnabled(False)
-                    # and allow loop change
-                    self.__loop_sel.setEnabled(True)
-            else:
-                # All disable except close
-                self.__w_enable_disable(False)
-                self.__stopact.setEnabled(False)
-                self.__abort.setEnabled(False)
-    
-        # Do additive states
-        if self.__model[STATE][ARDUINO][ONLINE]:
-            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
-                self.__w_vna_enable_disable(True)
-            else:
-                self.__w_vna_enable_disable(False)
-         
-            # Enable/disable calibrate/delete/steps according the loop state
-            if self.__loop_status[self.__selected_loop-1]:
-                self.__caldel.setEnabled(True)
-                self.__calstep.setEnabled(True)
-                self.__cal.setEnabled(False)
-            else:
-                self.__caldel.setEnabled(False)
-                self.__calstep.setEnabled(False)
-                self.__cal.setEnabled(True)
-                
-            # Enable/disable configure/ delete according to settings
-            if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
-                self.__pot.setEnabled(True)
-                self.__potdel.setEnabled(False)
-                # We can't calibrate if not configured
-                self.__caldel.setEnabled(False)
-                self.__calstep.setEnabled(False)
-                self.__cal.setEnabled(False)
-                self.__sp.setEnabled(False)
-            else:
-                # We have feedback configured
-                # Allow most manual controls
-                self.__w_enable_disable_man(True)
-                self.__pot.setEnabled(False)
-                # Only allow delete if no calibration
-                if self.__loop_status == [False, False, False]:
-                    self.__potdel.setEnabled(True)
-                else:
-                    self.__potdel.setEnabled(False)
-        else:
-            self.__caldel.setEnabled(False)
-            self.__calstep.setEnabled(False)
-            self.__cal.setEnabled(False)
-            self.__pot.setEnabled(False)
-            self.__potdel.setEnabled(False)
-        
-    # All enabled (True) or disabled (False)
-    def __w_enable_disable(self, state):
-        self.__loop_sel.setEnabled(state)
-        self.__pot.setEnabled(state)
-        self.__potdel.setEnabled(state)
-        self.__cal.setEnabled(state)
-        self.__caldel.setEnabled(state)
-        self.__sp.setEnabled(state)
-        self.__freqtxt.setEnabled(state)
-        self.__tune.setEnabled(state)
-        self.__relay_sel.setEnabled(state)
-        self.__speed_sel.setEnabled(state)
-        self.__mvrev.setEnabled(state)
-        self.__mvfwd.setEnabled(state)
-        self.__getres.setEnabled(state)
-        self.__movetxt.setEnabled(state)
-        self.__runfwd.setEnabled(state)
-        self.__runrev.setEnabled(state)
-        self.__inctxt.setEnabled(state)
-        self.__movepos.setEnabled(state)
-        self.__nudgefwd.setEnabled(state)
-        self.__nudgerev.setEnabled(state)
-    
-    def __w_enable_disable_man(self, state):
-        self.__relay_sel.setEnabled(state)
-        self.__speed_sel.setEnabled(state)
-        self.__mvrev.setEnabled(state)
-        self.__mvfwd.setEnabled(state)
-        self.__movetxt.setEnabled(state)
-        self.__runfwd.setEnabled(state)
-        self.__runrev.setEnabled(state)
-        self.__inctxt.setEnabled(state)
-        self.__movepos.setEnabled(state)
-        self.__nudgefwd.setEnabled(state)
-        self.__nudgerev.setEnabled(state)
-        
-    # Additive state for VNA    
-    def __w_vna_enable_disable(self, state):
-        self.__getres.setEnabled(state)
-    '''
     
     #========================================================================================
-    # New code
     # Set the widget state according to current context
     def __set_widget_state(self):
         widget_state = W_OFF_LINE    # Fall-back to disable everything except close
@@ -1373,7 +1235,7 @@ class UI(QMainWindow):
             else:
                 # Arduino off-line
                 widget_state = W_OFF_LINE
-        #print(widget_state)
+        
         return widget_state
     
     # Enable/disable according to state
