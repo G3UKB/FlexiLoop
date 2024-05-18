@@ -1266,6 +1266,8 @@ class UI(QMainWindow):
                 self.__enable_disable_loop(False)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(False)
+                self.__runfwd.setEnabled(True)
+                self.__runrev.setEnabled(True)
             elif state == W_LIMITS_DELETE:
                 # We have limits but no calibration for any loop
                 # We allow delete for limits and all manual controls except get current and stop.
