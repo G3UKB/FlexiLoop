@@ -1063,53 +1063,52 @@ class UI(QMainWindow):
         except:
             return False
 
-    #=======================================================
+    # =======================================================
     # Background activities
     def __idleProcessing(self):
-        # Here we update the UI according to current activity and the status set by the callback
+        
+        # =======================================================
+        # Here we update the UI according to current activity and the status set by the callbacks
         if self.__model[STATE][ARDUINO][ONLINE]:
-            # on-line indicator
+            # Update the on-line indicators
             self.__st_ard.setText('on-line')
             self.__st_ard.setObjectName("stgreen")
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
             
-            # Update current position
+            # Update current actuatorposition
             if self.__current_pos == -1:
                 self.__currpos.setText('-')
             else:
                 self.__currpos.setText(str(self.__current_pos) + '%')
-            widget_state = None  
+                 
             # Check activity state
-            if self.__current_activity != NONE:
-                # Activity current
-                if self.__long_running:
-                    widget_state = W_LONG_RUNNING
-                elif self.__free_running:
-                    widget_state = W_FREE_RUNNING
-                else:
-                    widget_state = W_DISABLE_ALL
-            else:
-                # No activity
-                widget_state = W_NORMAL
-                # Check relay status
+            if self.__current_activity == NONE:
+                # No current activity so do some housekeeping
+                
+                # Do we need to change relay state
                 if self.__switch_mode != self.__last_switch_mode:
+                    # Yes
                     self.__last_switch_mode = self.__switch_mode
                     if self.__switch_mode == ANALYSER:
                         self.__set_analyser_mode()
                     else:
                         self.__set_radio_mode()
-                self.__long_running = False
-                self.__free_running = False
+                # Set target indicators
                 if self.__relay_state == RADIO:
                     self.__tg_ard.setText(RADIO)
                     self.__relay_sel.setCurrentText(RADIO)
                 elif self.__relay_state == ANALYSER:
                     self.__tg_ard.setText(ANALYSER)
                     self.__relay_sel.setCurrentText(ANALYSER)
-                
+                    
+                # Clear running indicators
+                self.__long_running = False
+                self.__free_running = False
+            
+            # Update activity indicator    
             self.__st_act.setText(self.__current_activity)
             
-            # Show manual entry if required
+            # Show manual entry if calibration required and no VNA
             if self.__current_activity == CALIBRATE:
                 if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
                     # No VNA present so we do a manual config
@@ -1117,16 +1116,16 @@ class UI(QMainWindow):
             else:
                 self.__manualcal.hide()
         else:
-            # Try to bring on-line
-            self.__api.init_comms()
-            # Not online yet so we can't do anything except exit
-            widget_state = W_DISABLE_ALL
             # off-line indicator
             self.__st_ard.setText('off-line')
             self.__st_ard.setObjectName("stred")
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
+            # Arduino is off-line so try and bring on-line
+            self.__api.init_comms()
         
-        # Update loop status for configured loops
+        # =======================================================
+        # Update other fields that do not depend on Arduino state
+        # Loop status for configured loops
         if self.__loop_status[0]:
             self.__l1label.setObjectName("stgreen")
             self.__l1label.setStyleSheet(self.__l1label.styleSheet())
@@ -1137,7 +1136,7 @@ class UI(QMainWindow):
             self.__l3label.setObjectName("stgreen")
             self.__l3label.setStyleSheet(self.__l3label.styleSheet())
             
-        # Update setpoint counts
+        # Setpoint counts
         count = len(self.__model[CONFIG][SETPOINTS][SP_L1])
         self.__l4label.setText('1 [%d]' % count)
         count = len(self.__model[CONFIG][SETPOINTS][SP_L2])
@@ -1145,19 +1144,20 @@ class UI(QMainWindow):
         count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
         self.__l6label.setText('3 [%d]' % count)
         
-        # Update min/max frequencies
+        # Min/max frequencies
         loop = model_for_loop(self.__model, self.__selected_loop)
         if len(loop) > 0:
             self.__minvalue.setText(str(loop[1]))
             self.__maxvalue.setText(str(loop[0]))
             
-        # Update SWR
+        # SWR
         self.__auto_swrval.setText(str(self.__auto_swr))
+        
         # Update min/max pot values
         self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))
         self.__potmaxvalue.setText(str(self.__model[CONFIG][CAL][MAX]))
         
-        # Update VNA status
+        # VNA status
         if self.__model[STATE][ARDUINO][ONLINE]:
             if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
                 self.__st_vna.setText('present')
@@ -1167,11 +1167,8 @@ class UI(QMainWindow):
                 self.__st_vna.setObjectName("stred")
             self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
         
-        # Set widgets
-        self.__set_widgets(self.__set_widget_state())
-        #self.__set_widgets_old(widget_state)
-        
-        # Output any messages
+        # =======================================================
+        # Output any queued messages
         if self.__msgq.qsize() > 0:
             while self.__msgq.qsize() > 0:
                 msg, msgtype = self.__msgq.get()
@@ -1190,29 +1187,18 @@ class UI(QMainWindow):
                 for n in range(0, 50):
                     self.__msglist.takeItem(n)
         
+        # =======================================================
+        # Set general widget state
+        self.__set_widgets(self.__set_widget_state())
         # Manage manual data entry state
-        if self.__man_cal_state == MANUAL_IDLE:
-            self.__manfreqtxt.setEnabled(False)
-            self.__manswrtxt.setEnabled(False)
-            self.__save.setEnabled(False)
-            self.__next.setEnabled(False)
-        elif self.__man_cal_state == MANUAL_DATA_REQD:
-            self.__manfreqtxt.setEnabled(True)
-            self.__manswrtxt.setEnabled(True)
-            if len(self.__manfreqtxt.text()) > 0 and len(self.__manswrtxt.text()) > 0: 
-                self.__save.setEnabled(True)
-            self.__next.setEnabled(False)
-        elif self.__man_cal_state == MANUAL_DATA_AVAILABLE:
-            self.__manfreqtxt.setEnabled(False)
-            self.__manswrtxt.setEnabled(False)
-            self.__save.setEnabled(False)
-            self.__next.setEnabled(True)
+        self.__manage_manual_widgets()
         
+        # =======================================================
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
  
     
-        
+    '''    
     # Enable/disable according to state
     def __set_widgets_old(self, state):
         if not self.__last_widget_status == state:
@@ -1346,7 +1332,8 @@ class UI(QMainWindow):
     # Additive state for VNA    
     def __w_vna_enable_disable(self, state):
         self.__getres.setEnabled(state)
-     
+    '''
+    
     #========================================================================================
     # New code
     # Set the widget state according to current context
@@ -1404,6 +1391,8 @@ class UI(QMainWindow):
                 self.__abort.setEnabled(False)
                 self.__enable_disable_feedback(False)
                 self.__enable_disable_loop(False)
+                self.__loop_sel.setEnabled(True)
+                self.__calview.setEnabled(True)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(False)
             elif state == W_NO_LIMITS:
@@ -1524,3 +1513,24 @@ class UI(QMainWindow):
         self.__mvrev.setEnabled(state)
         self.__nudgefwd.setEnabled(state)
         self.__nudgerev.setEnabled(state)
+    
+    # Manage manual data entry state   
+    def __manage_manual_widgets(self):
+        
+        if self.__man_cal_state == MANUAL_IDLE:
+            self.__manfreqtxt.setEnabled(False)
+            self.__manswrtxt.setEnabled(False)
+            self.__save.setEnabled(False)
+            self.__next.setEnabled(False)
+        elif self.__man_cal_state == MANUAL_DATA_REQD:
+            self.__manfreqtxt.setEnabled(True)
+            self.__manswrtxt.setEnabled(True)
+            if len(self.__manfreqtxt.text()) > 0 and len(self.__manswrtxt.text()) > 0: 
+                self.__save.setEnabled(True)
+            self.__next.setEnabled(False)
+        elif self.__man_cal_state == MANUAL_DATA_AVAILABLE:
+            self.__manfreqtxt.setEnabled(False)
+            self.__manswrtxt.setEnabled(False)
+            self.__save.setEnabled(False)
+            self.__next.setEnabled(True)
+    

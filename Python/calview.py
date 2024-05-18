@@ -147,13 +147,14 @@ class Calview(QDialog):
     #=======================================================
     # Helpers
     def __populate_table(self):
+        # Clear table
+        row = 0
+        while self.__table.rowCount() > 0:
+            self.__table.removeRow(0);
+        # Populate
         key = self.__get_loop_item()
         cps = self.__model[CONFIG][CAL][key]
         if len(cps) > 0:
-            row = 0
-            while self.__table.rowCount() > 0:
-                self.__table.removeRow(0);
-    
             for item in cps[2]:
                 self.__table.insertRow(row)
                 self.__table.setItem(row, 0, QTableWidgetItem(self.__pos_to_percent(item[0])))
