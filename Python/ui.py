@@ -1412,6 +1412,7 @@ class UI(QMainWindow):
                 self.__enable_disable_feedback(True)
                 self.__pot.setEnabled(False)
                 self.__enable_disable_loop(False)
+                self.__cal.setEnabled(True)
                 self.__loop_sel.setEnabled(True)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(True)
@@ -1516,7 +1517,6 @@ class UI(QMainWindow):
     
     # Manage manual data entry state   
     def __manage_manual_widgets(self):
-        
         if self.__man_cal_state == MANUAL_IDLE:
             self.__manfreqtxt.setEnabled(False)
             self.__manswrtxt.setEnabled(False)
