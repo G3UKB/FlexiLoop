@@ -54,7 +54,7 @@ class VNA:
             # These are just test values
             self.__low_f = 3.0          # Lowest frequency which is at max extension
             self.__high_f = 12.0        # Highest frequency which is at home position
-            self.__inc_f = (self.__high_f - self.__low_f)/self.__model[CONFIG][CAL][ACTUATOR_STEPS] # Freq increment on each step
+            self.__inc_f = 10 #(self.__high_f - self.__low_f)/self.__model[CONFIG][CAL][ACTUATOR_STEPS] # Freq increment on each step
             self.__current_step = 1
             self.__swr = 1.0            # Always return 1.0
         

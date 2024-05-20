@@ -174,7 +174,7 @@ class Calview(QDialog):
         else:
             # Should not happen
             self.logger.warn("Invalid loop id %d" % self.__loop)
-            item = SP_L1
+            item = CAL_L1
         return item
 
     def __pos_to_percent(self, pos):

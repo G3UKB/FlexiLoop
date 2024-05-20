@@ -46,7 +46,11 @@ flexi_loop_model = {
         },
         CAL: {
             # Number of steps for set points
-            ACTUATOR_STEPS: 10,
+            SETS: {
+                CAL_S1: {},
+                CAL_S2: {},
+                CAL_S3: {},
+            },
             # Feedback values for min and max
             HOME: -1,
             MAX: -1,

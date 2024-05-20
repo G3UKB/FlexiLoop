@@ -27,6 +27,7 @@
 import sys
 import traceback
 import logging
+import copy
 
 # PyQt5 imports
 from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip, QAbstractItemView
@@ -51,6 +52,15 @@ class Config(QDialog):
         self.__model = model
         self.__msgs = msgs
         
+        # Local sets synced back to model on save
+        # Sets are [[name, low_freq, high_freq, steps], [...], ...]
+        self.__sets = {
+            CAL_S1: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S1]),
+            CAL_S2: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S2]),
+            CAL_S3: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S3]),
+        }
+        self.__selected_loop = 1
+        
     # Set the back colour
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))
@@ -68,7 +78,8 @@ class Config(QDialog):
         self.__initUI()
         
         # Populate
-        self.__populate()
+        self.__populate_ui()
+        self.__populate_table()
         
     #=======================================================
     # PRIVATE
@@ -84,7 +95,7 @@ class Config(QDialog):
         
     #=======================================================
     # Create all widgets
-    def __populate(self):
+    def __populate_ui(self):
         #=======================================================
         
         # Set up the tabs
@@ -119,13 +130,6 @@ class Config(QDialog):
         timeoutgrid = QGridLayout()
         timeouttab.setLayout(timeoutgrid)
         self.__populate_timeouts(timeoutgrid)
-    
-        # VNA tab
-        vnatab = QWidget()
-        self.top_tab_widget.addTab(vnatab, "VNA")
-        vnagrid = QGridLayout()
-        vnatab.setLayout(vnagrid)
-        self.__populate_vna(vnagrid)
         
         # Action buttons
         self.__save = QPushButton("Save")
@@ -207,7 +211,7 @@ class Config(QDialog):
         self.__loop_sel.addItem("3")
         self.__loop_sel.setMinimumHeight(20)
         grid.addWidget(self.__loop_sel, 0,1)
-        #self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
+        self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
         # Table area
         self.__table = QTableWidget()
@@ -254,8 +258,8 @@ class Config(QDialog):
         self.__steptxt.setObjectName("dialog")
         self.__steptxt.setToolTip('Set number of calibration steps')
         self.__steptxt.setRange(0,50)
-        self.__steptxt.setValue(self.__model[CONFIG][CAL][ACTUATOR_STEPS])
         self.__steptxt.setMinimumWidth(80)
+        self.__steptxt.setValue(10)
         subgrid.addWidget(self.__steptxt, 0, 7)
         
         # Button area
@@ -267,19 +271,19 @@ class Config(QDialog):
 
         self.__moveto = QPushButton("New")
         self.__moveto.setToolTip('Clear data')
-        #self.__moveto.clicked.connect(self.__do_clear)
+        self.__moveto.clicked.connect(self.__do_new)
         self.__moveto.setMinimumHeight(20)
         subgrid1.addWidget(self.__moveto, 0, 0)
         
         self.__moveto = QPushButton("Add")
         self.__moveto.setToolTip('Add a new calibration item')
-        #self.__moveto.clicked.connect(self.__do_add)
+        self.__moveto.clicked.connect(self.__do_add)
         self.__moveto.setMinimumHeight(20)
         subgrid1.addWidget(self.__moveto, 0, 1)
 
         self.__remove = QPushButton("Remove")
         self.__remove.setToolTip('Remove calibration item')
-        #self.__remove.clicked.connect(self.__do_remove)
+        self.__remove.clicked.connect(self.__do_remove)
         self.__remove.setMinimumHeight(20)
         subgrid1.addWidget(self.__remove, 0, 2)
         
@@ -354,124 +358,6 @@ class Config(QDialog):
         grid.setRowStretch(6, 1)
         grid.setColumnStretch(2, 1)
         
-    def __populate_vna(self, grid):
-        # VNA present?
-        # Defaults
-        # DRIVER_ID = 20  # MiniVNA Tiny
-        # DRIVER_PORT = 'COM4'
-        # CAL_FILE = '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal'
-        # SCAN_MODE = 'REFL' Fixed
-        # EXPORTS = 'csv' Fixed
-        # EXPORT_FILENAME = 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}'
-        # VNA_JAR = '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar'
-        # Decoder defs
-        # EXPORT_PATH = '../VNAJ/vnaJ.3.3/export'
-        
-        vnaavaillabel = QLabel('VNA Present?')
-        grid.addWidget(vnaavaillabel, 0, 0)
-        self.__vnaavailtog = QCheckBox('')
-        self.__vnaavailtog.setToolTip('Uncheck if there is no VNA connected')
-        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
-            self.__vnaavailtog.setChecked(True)
-        else:
-            self.__vnaavailtog.setChecked(False)
-        self.__vnaavailtog.stateChanged.connect(self.__vnastate)
-        grid.addWidget(self.__vnaavailtog, 0, 1)
-        
-        vnadriverlabel = QLabel('VNA Driver')
-        grid.addWidget(vnadriverlabel, 1, 0)    
-        self.__vnadrivertxt = QSpinBox()
-        self.__vnadrivertxt.setObjectName("dialog")
-        self.__vnadrivertxt.setToolTip('Driver ID, default mini-VNA Tiny = 20')
-        self.__vnadrivertxt.setRange(0,100)
-        self.__vnadrivertxt.setValue(self.__model[CONFIG][VNA_CONF][DRIVER_ID])
-        self.__vnadrivertxt.setMaximumWidth(80)
-        grid.addWidget(self.__vnadrivertxt, 1, 1)
-        
-        vnaportlabel = QLabel('VNA Port')
-        grid.addWidget(vnaportlabel, 2, 0)
-        self.__vnaporttxt = QLineEdit()
-        self.__vnaporttxt.setObjectName("dialog")
-        self.__vnaporttxt.setText(self.__model[CONFIG][VNA_CONF][DRIVER_PORT])
-        self.__vnaporttxt.setToolTip('Set VNA Port')
-        self.__vnaporttxt.setMaximumWidth(80)
-        grid.addWidget(self.__vnaporttxt, 2, 1)
-        
-        vnamodelabel = QLabel('Scan Mode')
-        grid.addWidget(vnamodelabel, 4, 0)
-        self.__vnamodetxt = QLabel(SCAN_MODE)
-        self.__vnamodetxt.setToolTip('Fixed Scan Mode')
-        self.__vnamodetxt.setMaximumWidth(80)
-        grid.addWidget(self.__vnamodetxt, 4, 1)
-        
-        vnatypelabel = QLabel('Export File Type')
-        grid.addWidget(vnatypelabel, 5, 0)
-        self.__vnatypetxt = QLabel(EXPORTS)
-        self.__vnatypetxt.setToolTip('Fixed export type')
-        self.__vnatypetxt.setMaximumWidth(80)
-        grid.addWidget(self.__vnatypetxt, 5, 1)
-        
-        vnanamelabel = QLabel('Export Filename')
-        grid.addWidget(vnanamelabel, 6, 0)
-        self.__vnanametxt = QLineEdit()
-        self.__vnanametxt.setObjectName("dialog")
-        self.__vnanametxt.setText(self.__model[CONFIG][VNA_CONF][EXPORT_FILENAME])
-        self.__vnanametxt.setToolTip('Set export type')
-        self.__vnanametxt.setMinimumWidth(300)
-        grid.addWidget(self.__vnanametxt, 6, 1)
-        
-        vnacalpathlabel = QLabel('Calibration File Path')
-        grid.addWidget(vnacalpathlabel, 7, 0)
-        self.__vnacalpathtxt = QLineEdit()
-        self.__vnacalpathtxt.setObjectName("dialog")
-        self.__vnacalpathtxt.setText(self.__model[CONFIG][VNA_CONF][CAL_FILE])
-        self.__vnacalpathtxt.setToolTip('Set calibration file path')
-        self.__vnacalpathtxt.setMinimumWidth(300)
-        grid.addWidget(self.__vnacalpathtxt, 7, 1)
-        # Now we need a way to select a file
-        self.__caldialog = QPushButton("...")
-        self.__caldialog.setObjectName("dialog")
-        #self.__caldialog.setMaximumWidth(10)
-        self.__caldialog.setToolTip('Choose file...')
-        grid.addWidget(self.__caldialog, 7, 2)
-        self.__caldialog.clicked.connect(self.__do_cal_path)
-        
-        vnajarlabel = QLabel('VNA Jar Path')
-        grid.addWidget(vnajarlabel, 8, 0)
-        self.__vnajarpathtxt = QLineEdit()
-        self.__vnajarpathtxt.setObjectName("dialog")
-        self.__vnajarpathtxt.setText(self.__model[CONFIG][VNA_CONF][VNA_JAR])
-        self.__vnajarpathtxt.setToolTip('Set JAR path')
-        self.__vnajarpathtxt.setMinimumWidth(300)
-        grid.addWidget(self.__vnajarpathtxt, 8, 1)
-        # Now we need a way to select a file
-        self.__jardialog = QPushButton("...")
-        self.__jardialog.setObjectName("dialog")
-        #self.__jardialog.setMaximumWidth(10)
-        self.__jardialog.setToolTip('Choose file...')
-        grid.addWidget(self.__jardialog, 8, 2)
-        self.__jardialog.clicked.connect(self.__do_jar_path)
-        
-        vnaexportlabel = QLabel('Export Path')
-        grid.addWidget(vnaexportlabel, 9, 0)
-        self.__vnaexportpathtxt = QLineEdit()
-        self.__vnaexportpathtxt.setObjectName("dialog")
-        self.__vnaexportpathtxt.setText(self.__model[CONFIG][VNA_CONF][EXPORT_PATH])
-        self.__vnaexportpathtxt.setToolTip('Set export file path')
-        self.__vnaexportpathtxt.setMinimumWidth(300)
-        grid.addWidget(self.__vnaexportpathtxt, 9, 1)
-        # Now we need a way to select a file
-        self.__exportdialog = QPushButton("...")
-        self.__exportdialog.setObjectName("dialog")
-        #self.__exportdialog.setMaximumWidth(10)
-        self.__exportdialog.setToolTip('Choose file...')
-        grid.addWidget(self.__exportdialog, 9, 2)
-        self.__exportdialog.clicked.connect(self.__do_export_path)
-        
-        # Close gaps
-        grid.setRowStretch(10, 1)
-        grid.setColumnStretch(3, 1)
-        
     #=======================================================
     # Window events
     def closeEvent(self, event):
@@ -488,29 +374,80 @@ class Config(QDialog):
         self.__model[STATE][WINDOWS][CONFIG_WIN] = [event.pos().x(),event.pos().y(),w,h]
         
     #=======================================================
-    # User events
-    def __vnastate(self):
-        if self.__vnaavailtog.isChecked():
-            self.__vnadrivertxt.setEnabled(True)
-            self.__vnaporttxt.setEnabled(True)
-            self.__vnanametxt.setEnabled(True)
-            self.__vnacalpathtxt.setEnabled(True)
-            self.__vnajarpathtxt.setEnabled(True)
-            self.__vnaexportpathtxt.setEnabled(True)
-            self.__caldialog.setEnabled(True)
-            self.__jardialog.setEnabled(True)
-            self.__exportdialog.setEnabled(True)
-        else:
-            self.__vnadrivertxt.setEnabled(False)
-            self.__vnaporttxt.setEnabled(False)
-            self.__vnanametxt.setEnabled(False)
-            self.__vnacalpathtxt.setEnabled(False)
-            self.__vnajarpathtxt.setEnabled(False)
-            self.__vnaexportpathtxt.setEnabled(False)
-            self.__caldialog.setEnabled(False)
-            self.__jardialog.setEnabled(False)
-            self.__exportdialog.setEnabled(False)
+    # Calibration events
+
+    #========================
+    # Combo box events
+    def __loop_change(self, index):
+        # Set loop selection needed by the callback as it cant access widgets
+        # Index is zero based, loops are 1 based
+        self.__selected_loop = index + 1
+        self.__populate_table()
+    
+    #========================
+    # Button events
+
+    def __do_new(self):
+        # Just clear the fields
+        self.__nametxt.setText('')
+        self.__lowfreqtxt.setText('')
+        self.__highfreqtxt.setText('')
+        self.__steptxt.setValue(10)
+    
+    def __do_add(self):
+        # Add current set to local sets
+        key = self.__get_loop_item()
+        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), self.__highfreqtxt.text(), str(self.__steptxt.value())]
+        self.__populate_table()
         
+    def __do_remove(self):
+        # Remove selected set from the local sets
+        r = self.__table.currentRow()
+        if r != -1:
+            name = self.__table.item(r, 0).text()
+            sets = self.__sets[self.__get_loop_item()]
+            del sets[name]
+            self.__table.removeRow(r);
+            self.__populate_table()
+            
+    #=======================================================
+    # Other events
+
+    #=======================================================
+    # Helpers
+    def __populate_table(self):
+        # Clear table
+        row = 0
+        while self.__table.rowCount() > 0:
+            self.__table.removeRow(0);
+        # Populate
+        # Sets are [[name, low_freq, high_freq, steps], [...], ...]
+        key = self.__get_loop_item()
+        sets = self.__sets[key]
+        if len(sets) > 0:
+            for key, values in sets.items():
+                self.__table.insertRow(row)
+                self.__table.setItem(row, 0, QTableWidgetItem(str(key)))
+                self.__table.setItem(row, 1, QTableWidgetItem(str(values[0])))
+                self.__table.setItem(row, 2, QTableWidgetItem(str(values[1])))
+                self.__table.setItem(row, 3, QTableWidgetItem(str(values[2])))
+                row += 1
+            if self.__table.rowCount() > 0:
+                self.__table.selectRow(0)
+        
+    def __get_loop_item(self):
+        if self.__selected_loop == 1:
+           item = CAL_S1
+        elif self.__selected_loop == 2:
+           item = CAL_S2
+        elif self.__selected_loop == 3:
+           item = CAL_S3
+        else:
+            # Should not happen
+            self.logger.warn("Invalid loop id %d" % self.__loop)
+            item = CAL_S1
+        return item
+    
     def __do_save(self):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
@@ -519,22 +456,14 @@ class Config(QDialog):
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW] = self.__slowtxt.value()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED] = self.__medtxt.value()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_FAST] = self.__fasttxt.value()
-        self.__model[CONFIG][CAL][ACTUATOR_STEPS] = self.__steptxt.value()
+        self.__model[CONFIG][CAL][SETS][CAL_S1] = self.__steps[CAL_S1]
+        self.__model[CONFIG][CAL][SETS][CAL_S2] = self.__steps[CAL_S2]
+        self.__model[CONFIG][CAL][SETS][CAL_S3] = self.__steps[CAL_S3]
         self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT] = self.__caltotxt.value()
         self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT] = self.__tunetotxt.value()
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
-        if self.__vnaavailtog.isChecked():
-            self.__model[CONFIG][VNA_CONF][VNA_PRESENT] = VNA_YES
-        else:
-            self.__model[CONFIG][VNA_CONF][VNA_PRESENT] = VNA_NO
-        self.__model[CONFIG][VNA_CONF][DRIVER_ID] = self.__vnadrivertxt.value()
-        self.__model[CONFIG][VNA_CONF][DRIVER_PORT] = self.__vnaporttxt.text()
-        self.__model[CONFIG][VNA_CONF][EXPORT_FILENAME] = self.__vnanametxt.text()
-        self.__model[CONFIG][VNA_CONF][CAL_FILE] = self.__vnacalpathtxt.text()
-        self.__model[CONFIG][VNA_CONF][VNA_JAR] = self.__vnajarpathtxt.text()
-        self.__model[CONFIG][VNA_CONF][EXPORT_PATH] = self.__vnaexportpathtxt.text()
         
     def __do_cancel(self):
         self.close()
@@ -542,18 +471,5 @@ class Config(QDialog):
     def __do_close(self):
         self.close()
     
-    def __do_cal_path(self):
-        file = QFileDialog.getOpenFileName(self, 'Open file')[0]
-        if len(file) > 0:
-            self.__vnacalpathtxt.setText(file)
-        
-    def __do_jar_path(self):
-        file = QFileDialog.getOpenFileName(self, 'Open file')[0]
-        if len(file) > 0:
-            self.__vnajarpathtxt.setText(file)
-        
-    def __do_export_path(self):
-        file = QFileDialog.getOpenFileName(self, 'Open file')[0]
-        if len(file) > 0:
-            self.__vnaexportpathtxt.setText(file)
+    
     
