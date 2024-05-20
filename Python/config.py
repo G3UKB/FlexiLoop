@@ -29,7 +29,7 @@ import traceback
 import logging
 
 # PyQt5 imports
-from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip
+from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip, QAbstractItemView
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QStatusBar, QTabWidget, QTableWidget, QInputDialog, QFileDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QTableWidgetItem
@@ -209,41 +209,79 @@ class Config(QDialog):
         grid.addWidget(self.__loop_sel, 0,1)
         #self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
+        # Table area
+        self.__table = QTableWidget()
+        self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.__table.setColumnCount(4)
+        self.__table.setHorizontalHeaderLabels(('Name','LowFreq','HighFreq','Steps'))
+        grid.addWidget(self.__table, 1, 0, 1, 2)
+        
+        # Sub grid
+        subgrid = QGridLayout()
+        gb = QGroupBox()
+        gb.setLayout(subgrid)
+        grid.addWidget(gb, 2,0,1,2)
+
         # Name for band
         namelabel = QLabel('Name')
-        grid.addWidget(namelabel, 1, 0)
+        subgrid.addWidget(namelabel, 0, 0)
         self.__nametxt = QLineEdit()
         self.__nametxt.setToolTip('Band bame')
         self.__nametxt.setMaximumWidth(80)
-        grid.addWidget(self.__nametxt, 1, 1)
+        subgrid.addWidget(self.__nametxt, 0, 1)
         
         # Lower/upper freq limit
         lowfreqlabel = QLabel('Low Freq')
-        grid.addWidget(lowfreqlabel, 2, 0)
+        subgrid.addWidget(lowfreqlabel, 0, 2)
         self.__lowfreqtxt = QLineEdit()
         self.__lowfreqtxt.setInputMask('09.90')
         self.__lowfreqtxt.setToolTip('Low band frequency')
         self.__lowfreqtxt.setMaximumWidth(80)
-        grid.addWidget(self.__lowfreqtxt, 2, 1)
+        subgrid.addWidget(self.__lowfreqtxt, 0, 3)
         
         highfreqlabel = QLabel('High Freq')
-        grid.addWidget(highfreqlabel, 2, 2)
+        subgrid.addWidget(highfreqlabel, 0, 4)
         self.__highfreqtxt = QLineEdit()
         self.__highfreqtxt.setInputMask('09.90')
         self.__highfreqtxt.setToolTip('High band frequency')
         self.__highfreqtxt.setMaximumWidth(80)
-        grid.addWidget(self.__highfreqtxt, 2, 3)
+        subgrid.addWidget(self.__highfreqtxt, 0, 5)
         
         # Number of steps
-        steplabel = QLabel('Calibration Steps')
-        grid.addWidget(steplabel, 3, 0)
+        steplabel = QLabel('Steps')
+        subgrid.addWidget(steplabel, 0, 6)
         self.__steptxt = QSpinBox()
         self.__steptxt.setObjectName("dialog")
         self.__steptxt.setToolTip('Set number of calibration steps')
         self.__steptxt.setRange(0,50)
         self.__steptxt.setValue(self.__model[CONFIG][CAL][ACTUATOR_STEPS])
         self.__steptxt.setMinimumWidth(80)
-        grid.addWidget(self.__steptxt, 3, 1)
+        subgrid.addWidget(self.__steptxt, 0, 7)
+        
+        # Button area
+        # Sub grid
+        subgrid1 = QGridLayout()
+        gb1 = QGroupBox()
+        gb1.setLayout(subgrid1)
+        grid.addWidget(gb1, 3,0,1,2)
+
+        self.__moveto = QPushButton("New")
+        self.__moveto.setToolTip('Clear data')
+        #self.__moveto.clicked.connect(self.__do_clear)
+        self.__moveto.setMinimumHeight(20)
+        subgrid1.addWidget(self.__moveto, 0, 0)
+        
+        self.__moveto = QPushButton("Add")
+        self.__moveto.setToolTip('Add a new calibration item')
+        #self.__moveto.clicked.connect(self.__do_add)
+        self.__moveto.setMinimumHeight(20)
+        subgrid1.addWidget(self.__moveto, 0, 1)
+
+        self.__remove = QPushButton("Remove")
+        self.__remove.setToolTip('Remove calibration item')
+        #self.__remove.clicked.connect(self.__do_remove)
+        self.__remove.setMinimumHeight(20)
+        subgrid1.addWidget(self.__remove, 0, 2)
         
         # Close gaps
         grid.setRowStretch(1, 1)
