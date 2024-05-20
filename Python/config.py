@@ -197,17 +197,53 @@ class Config(QDialog):
         grid.setColumnStretch(4, 1)
 
     def __populate_calibration(self, grid):
-        # Default number of set points
-        # ACTUATOR_STEPS = 10
+        # Calibration data for each band covered by 
+        # Loop select
+        looplabel = QLabel('Select Loop')
+        grid.addWidget(looplabel, 0, 0)
+        self.__loop_sel = QComboBox()
+        self.__loop_sel.addItem("1")
+        self.__loop_sel.addItem("2")
+        self.__loop_sel.addItem("3")
+        self.__loop_sel.setMinimumHeight(20)
+        grid.addWidget(self.__loop_sel, 0,1)
+        #self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
+        
+        # Name for band
+        namelabel = QLabel('Name')
+        grid.addWidget(namelabel, 1, 0)
+        self.__nametxt = QLineEdit()
+        self.__nametxt.setToolTip('Band bame')
+        self.__nametxt.setMaximumWidth(80)
+        grid.addWidget(self.__nametxt, 1, 1)
+        
+        # Lower/upper freq limit
+        lowfreqlabel = QLabel('Low Freq')
+        grid.addWidget(lowfreqlabel, 2, 0)
+        self.__lowfreqtxt = QLineEdit()
+        self.__lowfreqtxt.setInputMask('09.90')
+        self.__lowfreqtxt.setToolTip('Low band frequency')
+        self.__lowfreqtxt.setMaximumWidth(80)
+        grid.addWidget(self.__lowfreqtxt, 2, 1)
+        
+        highfreqlabel = QLabel('High Freq')
+        grid.addWidget(highfreqlabel, 2, 2)
+        self.__highfreqtxt = QLineEdit()
+        self.__highfreqtxt.setInputMask('09.90')
+        self.__highfreqtxt.setToolTip('High band frequency')
+        self.__highfreqtxt.setMaximumWidth(80)
+        grid.addWidget(self.__highfreqtxt, 2, 3)
+        
+        # Number of steps
         steplabel = QLabel('Calibration Steps')
-        grid.addWidget(steplabel, 0, 0)
+        grid.addWidget(steplabel, 3, 0)
         self.__steptxt = QSpinBox()
         self.__steptxt.setObjectName("dialog")
         self.__steptxt.setToolTip('Set number of calibration steps')
         self.__steptxt.setRange(0,50)
         self.__steptxt.setValue(self.__model[CONFIG][CAL][ACTUATOR_STEPS])
         self.__steptxt.setMinimumWidth(80)
-        grid.addWidget(self.__steptxt, 0, 1)
+        grid.addWidget(self.__steptxt, 3, 1)
         
         # Close gaps
         grid.setRowStretch(1, 1)

@@ -189,7 +189,7 @@ class Calibrate(threading.Thread):
                         # We have a problem
                         return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
-            self.logger.warning ("Error in calibration map: " % msg)
+            self.logger.warning ("Error in calibration map: %s" % str(msg))
             return (CALIBRATE, (False, msg, cal_map))
         
         self.__msg_cb("Calibration complete", MSG_STATUS)
@@ -360,7 +360,7 @@ class Calibrate(threading.Thread):
             # Need a little more accuracy so every 1KHz should suffice
             r, [(f, swr)] = self.__get_current(flow, fhigh, INC_1K, VNA_MID)
             if not r:
-                self.logger.inwarningfo("Failed to get resonant frequency!")
+                self.logger.warning("Failed to get resonant frequency!")
                 return False, "Failed to get resonant frequency!", m
             m[2].append([int(next_inc), f, swr])
             next_inc += inc
@@ -401,7 +401,7 @@ class Calibrate(threading.Thread):
     # Note this is called on the comms thread and stolen from api.py
     def callback(self, data):
         
-        if VERB: self.logger.info("Calibrate: got event: ", data)
+        if VERB: self.logger.info("Calibrate: got event: %s" % str(data))
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
