@@ -456,9 +456,9 @@ class Config(QDialog):
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW] = self.__slowtxt.value()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED] = self.__medtxt.value()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_FAST] = self.__fasttxt.value()
-        self.__model[CONFIG][CAL][SETS][CAL_S1] = self.__steps[CAL_S1]
-        self.__model[CONFIG][CAL][SETS][CAL_S2] = self.__steps[CAL_S2]
-        self.__model[CONFIG][CAL][SETS][CAL_S3] = self.__steps[CAL_S3]
+        self.__model[CONFIG][CAL][SETS][CAL_S1] = self.__sets[CAL_S1]
+        self.__model[CONFIG][CAL][SETS][CAL_S2] = self.__sets[CAL_S2]
+        self.__model[CONFIG][CAL][SETS][CAL_S3] = self.__sets[CAL_S3]
         self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT] = self.__caltotxt.value()
         self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT] = self.__tunetotxt.value()
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
