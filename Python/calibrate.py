@@ -35,7 +35,6 @@ import logging
 from defs import *
 import model
 import serialcomms
-import vna
 
 VERB = False
 
@@ -59,7 +58,7 @@ VERB = False
 #===================================================== 
 class Calibrate(threading.Thread):
 
-    def __init__(self, comms, comms_q, cal_q, vna, model, callback, msgs):
+    def __init__(self, comms, comms_q, cal_q, model, callback, msgs):
         super(Calibrate, self).__init__()
         
         # Get root logger
@@ -68,7 +67,6 @@ class Calibrate(threading.Thread):
         self.__comms = comms
         self.__comms_q = comms_q
         self.__cal_q = cal_q
-        self.__vna = vna
         self.__model = model
         self.__cb = callback
         self.__msg_cb = msgs
@@ -76,7 +74,6 @@ class Calibrate(threading.Thread):
         self.__end_points = [-1,-1]
         self.term = False
         self.__abort = False
-        self.__manual = False
         self.__man_cb = None
         
         self.__event = threading.Event()
@@ -149,11 +146,11 @@ class Calibrate(threading.Thread):
         return (CONFIGURE, (True, '', self.__end_points))
     
     def __calibrate(self, args):
-        loop, steps, self.__manual, self.__man_cb, mode = args
+        loop, steps, self.__man_cb, mode = args
         # If mode is CAL_STEPS then we onlt dedo the steps
         # Check we have valid end points and min/msx freq then delete step points and redo
         if mode == CAL_STEPS:
-            return self.__cal_steps_only(loop, steps, self.__manual, self.__man_cb)
+            return self.__cal_steps_only(loop, steps, self.__man_cb)
         
         cal_map = []
         # Retrieve the end points
@@ -380,21 +377,16 @@ class Calibrate(threading.Thread):
         return True, "", m
     
     def __get_current(self, flow, fhigh, inc, hint):
-        if self.__manual:
-            # We must interact with the UI to get user input for the readings
-            self.__msg_cb("Please enter frequency and swr for this calibration point [%s]" % hint, MSG_ALERT)
-            # This is a manual entry so no reason why it should fail unless no entry
-            while True:
-                r, (f, swr) = self.__man_cb(hint)
-                if r == CAL_SUCCESS:
-                    # This gives a MHz freq
-                    return True, [(float(f), float(swr))]
-                elif r == CAL_ABORT:
-                    return (False, [(None, None)])
-        else:
-            # This gives a Hz freq so conversion necessary
-            (r, [(f, swr)]) = self.__vna.fres(flow, fhigh, inc, hint = hint)
-            return (r, [(float(f)/1000000.0, swr)])
+        # We must interact with the UI to get user input for the readings
+        self.__msg_cb("Please enter frequency and swr for this calibration point [%s]" % hint, MSG_ALERT)
+        # This is a manual entry so no reason why it should fail unless no entry
+        while True:
+            r, (f, swr) = self.__man_cb(hint)
+            if r == CAL_SUCCESS:
+                # This gives a MHz freq
+                return True, [(float(f), float(swr))]
+            elif r == CAL_ABORT:
+                return (False, [(None, None)])
         
     # =========================================================================
     # Callback from comms module

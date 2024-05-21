@@ -38,7 +38,6 @@ import model
 import persist
 import serialcomms
 import calibrate
-import vna
 import tune
 
 # Verbose flag
@@ -64,17 +63,14 @@ class API:
         self.__s_q = queue.Queue(10)
         self.__serial_comms = serialcomms.SerialComms(self.__model, self.__s_q, self.serial_callback)
         
-        # Create a VNA instance
-        self.__vna = vna.VNA(model)
-        
         # Create a Calibration instance
         self.__c_q = queue.Queue(10)
-        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, self.__vna, model, self.cal_callback, msgs)
+        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, model, self.cal_callback, msgs)
         # and start the thread
         self.__cal.start()
         
         # Create a tune inetance
-        self.__tune = tune.Tune(self.__model, self.__serial_comms, self.__vna, self.__s_q, self.__cb)
+        self.__tune = tune.Tune(self.__model, self.__serial_comms, self.__s_q, self.__cb)
         # and start the thread
         self.__tune.start()
         
@@ -121,9 +117,9 @@ class API:
         self.__c_q.put(('configure', []))
         
     # Perform a calibration for the given loop    
-    def calibrate(self, loop, manual, man_cb, mode):
+    def calibrate(self, loop, man_cb, mode):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], manual, man_cb, mode]))
+        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], man_cb, mode]))
     
     # Change speed
     def speed_change(self, speed):

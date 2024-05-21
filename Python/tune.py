@@ -38,12 +38,11 @@ import model
 import persist
 import serialcomms
 import calibrate
-import vna
 
 # Make this a separate module with q etc.
 class Tune(threading.Thread):
     
-    def __init__(self, model, serial, vna, s_q, cb):
+    def __init__(self, model, serial, s_q, cb):
         super(Tune, self).__init__()
         
         # Get root logger
@@ -51,7 +50,6 @@ class Tune(threading.Thread):
         
         self.__model = model
         self.__serial_comms = serial
-        self.__vna = vna
         self.__loop = None
         self.__freq = None
         self.__s_q = s_q
@@ -133,44 +131,10 @@ class Tune(threading.Thread):
             self.__event.wait()
             self.__event.clear()
             
-            # Stage 2 tweak SWR if we have a VNA
-            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
-                r, [(f, swr)] = self.__vna.fswr(self.__freq)
-                last_swr = swr
-                try_for = 10
-                dir = FWD
-                if r:
-                    # Tweek if necessary
-                    while swr > 1.5:
-                        if try_for <= 0:
-                            self.logger.info("Unable to reduce SWR to less than 1.5 {}".format(swr))
-                            self.__cb(("Tune", (True, "Unable to reduce SWR to less than 1.5 {}".format(swr), [])))
-                            break
-                        if dir == FWD:
-                            #self.__serial_comms.nudge_fwd()
-                            self.__s_q.put(('nudge_fwd', []))
-                            sleep(1)
-                        else:
-                            #self.__serial_comms.nudge_rev()
-                            self.__s_q.put(('nudge_rev', []))
-                            sleep(1)
-                        r, swr = self.__vna.fswr(self.__freq)
-                        if swr < last_swr:
-                            last_swr = swr
-                            try_for -= 1
-                            continue
-                        else:
-                            dir = REV
-                            last_swr = swr
-                            try_for -= 1
-                            continue
-                    self.__cb((TUNE, (True, "", [swr])))
-                else:
-                    self.logger.inwarningfo("Failed to obtain a SWR reading for freq {}".format(self.__freq))
-                    self.__cb((TUNE, (False, "Failed to obtain a SWR reading for freq {}".format(self.__freq), [])))
-            else:
-                # No VNA so cant return an SWR
-                self.__cb((TUNE, (True, "", ["?.?"])))
+            # Stage 2 tweak SWR
+            # Its a manual tweak
+            # TBD what can we do here?
+            self.__cb((TUNE, (True, "", ["?.?"])))
             # Give back callback
             self.__serial_comms.restore_callback()
             

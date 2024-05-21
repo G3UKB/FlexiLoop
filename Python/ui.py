@@ -472,13 +472,8 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__cal, 1, 0)
         self.__cal.clicked.connect(self.__do_cal)
         
-        self.__calstep = QPushButton("Redo steps...")
-        self.__calstep.setToolTip('Delete and redo steps')
-        self.__loopgrid.addWidget(self.__calstep, 1, 1)
-        self.__calstep.clicked.connect(self.__do_cal_steps)
-        
         self.__caldel = QPushButton("Delete")
-        self.__caldel.setToolTip('Delete all calibration')
+        self.__caldel.setToolTip('Delete calibration for loop')
         self.__loopgrid.addWidget(self.__caldel, 1, 2)
         self.__caldel.clicked.connect(self.__do_cal_del)
         
@@ -807,18 +802,12 @@ class UI(QMainWindow):
         self.__deferred_activity = self.__do_cal_deferred
     
     def __do_cal_deferred(self):
-        # VNA check
-        manual = False
-        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
-            # No VNA present so we do a manual config
-            manual = True
-            
         # Do the calibrate sequence
         self.__current_activity = CALIBRATE
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         # Dispatches on separate thread
-        self.__api.calibrate(self.__selected_loop, manual, self.man_cal_callback, self.__calmode)
+        self.__api.calibrate(self.__selected_loop, self.man_cal_callback, self.__calmode)
     
     def __do_cal_view(self):
         # Invoke the calview dialog
@@ -1246,7 +1235,6 @@ class UI(QMainWindow):
                 self.__abort.setEnabled(False)
                 self.__enable_disable_feedback(False)
                 self.__enable_disable_loop(True)
-                self.__calstep.setEnabled(False)
                 self.__enable_disable_auto(True)
                 self.__enable_disable_manual(True)
                 self.__stopact.setEnabled(False)
@@ -1294,7 +1282,6 @@ class UI(QMainWindow):
         # Loop section
         self.__loop_sel.setEnabled(state)
         self.__cal.setEnabled(state)
-        self.__calstep.setEnabled(state)
         self.__caldel.setEnabled(state)
         self.__calview.setEnabled(state)
         self.__sp.setEnabled(state)
