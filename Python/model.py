@@ -64,15 +64,6 @@ flexi_loop_model = {
             SP_L2: {},
             SP_L3: {},
         },
-        VNA_CONF: {
-            VNA_PRESENT: VNA_YES,
-            DRIVER_ID: 20,
-            DRIVER_PORT: 'COM4',
-            CAL_FILE: '../VNAJ/vnaJ.3.3/calibration/REFL_miniVNA Tiny.cal',
-            EXPORT_FILENAME: 'VNA_{0,date,yyMMdd}_{0,time,HHmmss}',
-            VNA_JAR: '../VNAJ/vnaJ.3.3/vnaJ-hl.3.3.3.jar',
-            EXPORT_PATH: '../VNAJ/vnaJ.3.3/export',
-        },
     },
     STATE: {
         WINDOWS: {

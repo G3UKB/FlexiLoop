@@ -320,22 +320,6 @@ class UI(QMainWindow):
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         
-        # VNA status
-        self.st_lb0 = QLabel()
-        self.st_lb0.setText('VNA: ')
-        self.statusBar.addPermanentWidget(self.st_lb0)
-        self.__st_vna = QLabel()
-        if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
-            self.__st_vna.setText('present')
-            self.__st_vna.setObjectName("stgreen")
-        else:
-            self.__st_vna.setText('absent')
-            self.__st_vna.setObjectName("stred")
-        self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
-        self.statusBar.addPermanentWidget(self.__st_vna)
-        
-        self.statusBar.addPermanentWidget(VLine())
-        
         # Arduino status
         self.st_lbl = QLabel()
         self.st_lbl.setText('Arduino: ')
@@ -422,14 +406,14 @@ class UI(QMainWindow):
         gb_lim = QGroupBox('Pot feedback limits')
         hbox_lim = QHBoxLayout()
         
-        potminlabel = QLabel('Actuator home analog value')
+        potminlabel = QLabel('Home')
         hbox_lim.addWidget(potminlabel)
         potminlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__potminvalue = QLabel('0.0')
         self.__potminvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__potminvalue.setObjectName("minmax")
         hbox_lim.addWidget(self.__potminvalue)
-        maxpotlabel = QLabel('Actuator max analog value')
+        maxpotlabel = QLabel('Max')
         hbox_lim.addWidget(maxpotlabel)
         maxpotlabel.setAlignment(QtCore.Qt.AlignCenter)
         self.__potmaxvalue = QLabel('0.0')
@@ -441,7 +425,8 @@ class UI(QMainWindow):
         self.__fbgrid.addWidget(gb_lim, 0, 2)
         
         # Space out
-        self.__fbgrid.setColumnStretch(2, 1)
+        self.__fbgrid.setColumnStretch(2, 2)
+        self.__fbgrid.setColumnStretch(3, 1)
         
         # -------------------------------------------
         # Loop area
@@ -450,35 +435,36 @@ class UI(QMainWindow):
         gb_loop.setLayout(self.__loopgrid)
         self.__grid.addWidget(gb_loop, 1,0)
         
+        s = QGroupBox('Calibrate Status')
+        hbox = QHBoxLayout()
+        
         looplabel = QLabel('Select Loop')
-        self.__loopgrid.addWidget(looplabel, 0, 0)
+        hbox.addWidget(looplabel)
         self.__loop_sel = QComboBox()
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
         self.__loop_sel.setMinimumHeight(20)
-        self.__loopgrid.addWidget(self.__loop_sel, 0,1)
+        hbox.addWidget(self.__loop_sel)
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
-        gp_f_limits = QGroupBox('Loop frequency limits')
-        hbox_d = QHBoxLayout()
-        minlabel = QLabel('Low freq (actuator max)')
-        hbox_d.addWidget(minlabel)
-        minlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__minvalue = QLabel('0.0')
-        self.__minvalue.setAlignment(QtCore.Qt.AlignCenter)
-        self.__minvalue.setObjectName("minmax")
-        hbox_d.addWidget(self.__minvalue)
-        maxlabel = QLabel('High freq (actuator home)')
-        hbox_d.addWidget(maxlabel)
-        maxlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__maxvalue = QLabel('0.0')
-        self.__maxvalue.setAlignment(QtCore.Qt.AlignCenter)
-        self.__maxvalue.setObjectName("minmax")
-        hbox_d.addWidget(self.__maxvalue)
-        
-        gp_f_limits.setLayout(hbox_d)
-        self.__loopgrid.addWidget(gp_f_limits, 0,2,1,5)
+        self.__l1label = QLabel('1')
+        hbox.addWidget(self.__l1label)
+        self.__l1label.setObjectName("stred")
+        self.__l1label.setStyleSheet(self.__l1label.styleSheet())
+        self.__l1label.setAlignment(QtCore.Qt.AlignCenter)
+        self.__l2label = QLabel('2')
+        hbox.addWidget(self.__l2label)
+        self.__l2label.setObjectName("stred")
+        self.__l2label.setStyleSheet(self.__l2label.styleSheet())
+        self.__l2label.setAlignment(QtCore.Qt.AlignCenter)
+        self.__l3label = QLabel('3')
+        hbox.addWidget(self.__l3label)
+        self.__l3label.setObjectName("stred")
+        self.__l3label.setStyleSheet(self.__l3label.styleSheet())
+        self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
+        s.setLayout(hbox)
+        self.__loopgrid.addWidget(s, 0, 0, 1, 4)
         
         # Calibration
         self.__cal = QPushButton("Calibrate...")
@@ -500,34 +486,6 @@ class UI(QMainWindow):
         self.__calview.setToolTip('View calibrations')
         self.__loopgrid.addWidget(self.__calview, 1, 3)
         self.__calview.clicked.connect(self.__do_cal_view)
-        
-        s = QGroupBox('Calibrate Status')
-        hbox = QHBoxLayout()
-        self.__l1label = QLabel('1')
-        hbox.addWidget(self.__l1label)
-        self.__l1label.setObjectName("stred")
-        self.__l1label.setStyleSheet(self.__l1label.styleSheet())
-        self.__l1label.setAlignment(QtCore.Qt.AlignCenter)
-        self.__l2label = QLabel('2')
-        hbox.addWidget(self.__l2label)
-        self.__l2label.setObjectName("stred")
-        self.__l2label.setStyleSheet(self.__l2label.styleSheet())
-        self.__l2label.setAlignment(QtCore.Qt.AlignCenter)
-        self.__l3label = QLabel('3')
-        hbox.addWidget(self.__l3label)
-        self.__l3label.setObjectName("stred")
-        self.__l3label.setStyleSheet(self.__l3label.styleSheet())
-        self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
-        s.setLayout(hbox)
-        self.__loopgrid.addWidget(s, 1, 4, 1, 3)
-        
-        # Space out
-        self.__loopgrid.setColumnStretch(0, 4)
-        self.__loopgrid.setColumnStretch(0, 5)
-        self.__loopgrid.setColumnStretch(0, 6)
-        self.__loopgrid.setColumnStretch(1, 4)
-        self.__loopgrid.setColumnStretch(1, 5)
-        self.__loopgrid.setColumnStretch(1, 6)
 
         # Set points
         self.__sp = QPushButton("Setpoints...")
@@ -560,9 +518,9 @@ class UI(QMainWindow):
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
-        self.__loopgrid.addWidget(sps, 2, 1, 1, 2)
+        self.__loopgrid.addWidget(sps, 2, 1, 1, 3)
         
-        # If no VNA we can put up the manual calibration box
+        # Manual layout
         self.__manualcal = QGroupBox('Entry')
         manualgrid = QGridLayout()
         self.__manualcal.setLayout(manualgrid)
@@ -1110,9 +1068,7 @@ class UI(QMainWindow):
             
             # Show manual entry if calibration required and no VNA
             if self.__current_activity == CALIBRATE:
-                if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
-                    # No VNA present so we do a manual config
-                    self.__manualcal.show()
+                self.__manualcal.show()
             else:
                 self.__manualcal.hide()
         else:
@@ -1156,16 +1112,6 @@ class UI(QMainWindow):
         # Update min/max pot values
         self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))
         self.__potmaxvalue.setText(str(self.__model[CONFIG][CAL][MAX]))
-        
-        # VNA status
-        if self.__model[STATE][ARDUINO][ONLINE]:
-            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_YES:
-                self.__st_vna.setText('present')
-                self.__st_vna.setObjectName("stgreen")
-            else:
-                self.__st_vna.setText('absent')
-                self.__st_vna.setObjectName("stred")
-            self.__st_vna.setStyleSheet(self.__st_vna.styleSheet())
         
         # =======================================================
         # Output any queued messages
@@ -1356,10 +1302,6 @@ class UI(QMainWindow):
     
     def __enable_disable_auto(self, state):    
         # Auto section
-        # We cant enable if there is no VNA
-        if state == True:
-            if self.__model[CONFIG][VNA_CONF][VNA_PRESENT] == VNA_NO:
-                state = False
         self.__freqtxt.setEnabled(state)
         self.__tune.setEnabled(state)
     
