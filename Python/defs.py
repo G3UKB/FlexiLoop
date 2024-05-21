@@ -143,6 +143,10 @@ RADIO = 'Radio'
 ANALYSER = 'Analyser'
 
 # Hints for manual calibration mode
+MAN_NONE = 'MAN_NONE'
+MAN_HOME = 'MAN_HOME'
+MAN_MAX = 'MAN_MAX'
+MAN_STEP = 'MAN_STEP'
 HINT_MOVETO = 'MOVETO'
 HINT_STEP = 'STEP'
 

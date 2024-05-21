@@ -174,7 +174,7 @@ class Calibrate(threading.Thread):
             return (CALIBRATE, (False, "Error in retrieving calibration map!", cal_map))
         
         self.__msg_cb("Calibration complete", MSG_STATUS)
-        self.save_context(self, loop, cal_map):
+        self.save_context(self, loop, cal_map)
         return ('Calibrate', (True, "", cal_map))
      
     def retrieve_end_points(self):
@@ -261,7 +261,7 @@ class Calibrate(threading.Thread):
             # Ask the user to move to the high frequency
             r, [(f_high, swr_high, pos_high)] = self.__get_current(values[1], HINT_MOVETO, 'Move to %f' % values[1])
             if not r:
-                self.logger.warning("Failed to move to High frequency for set %s [%f]!" % (key, values[1])
+                self.logger.warning("Failed to move to High frequency for set %s [%f]!" % (key, values[1]))
                 return False, "Failed to move to high frequency for set %s [%f]!" % (key, values[1]), []
             
             # Stash these values
@@ -318,9 +318,9 @@ class Calibrate(threading.Thread):
     
     def __get_current(self, f, hint, msg):
         # We must interact with the UI to get user input for the readings
-        if hint = HINT_MOVETO:
+        if hint == HINT_MOVETO:
             self.__msg_cb("Please move to given freq {} [{}]".format(str(f), msg))
-        elif hint = HINT_STEP:
+        elif hint == HINT_STEP:
             self.__msg_cb("Please enter frequency and swr for this step [{}]".format(msg))
         # This is a manual entry so no reason why it should fail unless no entry
         while True:
@@ -329,7 +329,7 @@ class Calibrate(threading.Thread):
                 # This gives a MHz freq
                 return True, [(float(f), float(swr), pos)]
             elif r == CAL_ABORT:
-                return (False, [(None, None. None)])
+                return (False, [(None, None, None)])
         
     # =========================================================================
     # Callback from comms module
