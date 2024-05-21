@@ -120,10 +120,6 @@ ABORT = 'Abort'
 STOP = 'Stop'
 NONE = 'None'
 
-#Cal mode
-CAL_NORMAL = 'CalNormal'
-CAL_STEPS = 'CalSteps'
-
 # Cal manual return values
 CAL_SUCCESS = 'CalSuccess'
 CAL_RETRY = 'CalRetry'
@@ -146,21 +142,9 @@ FAST = 300
 RADIO = 'Radio'
 ANALYSER = 'Analyser'
 
-# Hints to vna.py for simulation mode
-VNA_HOME = 'HOME'
-VNA_MAX = 'MAX'
-VNA_MID = 'MID'
-VNA_RANDOM = 'RANDOM'
-
 # Hints for manual calibration mode
-MAN_NONE = 'MAN_NONE'
-MAN_HOME = 'MAN_HOME'
-MAN_MAX = 'MAN_MAX'
-MAN_STEP = 'MAN_STEP'
-
-# Number of steps for calibration
-# Resonant frequency and feedback value at each step forms part of calibration
-ACTUATOR_STEPS = 'ACTUATOR_STEPS'
+HINT_MOVETO = 'MOVETO'
+HINT_STEP = 'STEP'
 
 # Direction of actuator motion
 FWD = 'FWD'

@@ -30,6 +30,7 @@ import queue
 import threading
 import traceback
 import logging
+import copy
 
 # Application imports
 from defs import *
@@ -146,38 +147,21 @@ class Calibrate(threading.Thread):
         return (CONFIGURE, (True, '', self.__end_points))
     
     def __calibrate(self, args):
-        loop, steps, self.__man_cb, mode = args
-        # If mode is CAL_STEPS then we onlt dedo the steps
-        # Check we have valid end points and min/msx freq then delete step points and redo
-        if mode == CAL_STEPS:
-            return self.__cal_steps_only(loop, steps, self.__man_cb)
-        
+        # Get args
+        loop, self.__man_cb = args
         cal_map = []
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
         if not r:
-            # Calibrate end points
-            self.__msg_cb("Calibrating potentiometer feedback end points...")
-            r, msg = self.cal_end_points()
-            if not r:
-                if self.__abort:
-                    self.__abort = False
-                    return (ABORT, (False, "Operation aborted by user!", cal_map))
-                else:
-                    return (CALIBRATE, (False, msg, cal_map))
-            r, self.__end_points = self.retrieve_end_points()
-            if not r:
-                # We have a problem
-                return (CALIBRATE, (False, "Unable to retrieve or create end points!", cal_map))
-            # Check for correct values
-            if self.__end_points[0] > self.__end_points[1]:
-                # pot hot ends are reversed
-                return (CALIBRATE, (False, "Reverse pot hot ends, home > max. Calibrate again: {}!".format(loop), self.__end_points))
+            # We have a problem
+            return (CALIBRATE, (False, "Unable to retrieve end points!", cal_map))
+        
         # Create a calibration map for loop
-        r, cal_map = self.retrieve_map(loop)
+        # Get descriptor and map for the loop
+        r, sets, cal_map = self.retrieve_context(loop)
         if r:
             if len(cal_map) == 0:
-                r, msg, cal_map = self.create_map(loop, steps)
+                r, msg, cal_map = self.create_map(loop, sets, cal_map)
                 if not r:
                     if self.__abort:
                         self.__abort = False
@@ -186,40 +170,13 @@ class Calibrate(threading.Thread):
                         # We have a problem
                         return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
-            self.logger.warning ("Error in calibration map: %s" % str(msg))
-            return (CALIBRATE, (False, msg, cal_map))
+            self.logger.warning ("Error in retrieving calibration map!: {}".format(cal_map))
+            return (CALIBRATE, (False, "Error in retrieving calibration map!", cal_map))
         
         self.__msg_cb("Calibration complete", MSG_STATUS)
+        self.save_context(self, loop, cal_map):
         return ('Calibrate', (True, "", cal_map))
      
-    def __cal_steps_only(self, loop, steps, manual, man_cb):
-        # Retrieve the end points
-        r, self.__end_points = self.retrieve_end_points()
-        if not r:
-            return (CALIBRATE, (False, "Unable to create new steps as end points are not configured: {}!".format(loop), cal_map))
-    
-        # Get current map
-        r, cal_map = self.retrieve_map(loop)
-        if r:
-            # Check map
-            # map is of form e.g.
-            # [12.0, 3.0, [[500, 12.0, 1.0], [...], ...]]
-            if len(cal_map) == 3 and len(cal_map[2]) > 0:
-                # We should have enough data to redo the steps
-                fhome = cal_map[0] # highest f
-                fmax = cal_map[1] # lowest f
-                # Pick up SWR for min/max rom the list
-                swrhome = cal_map[2][0][2]
-                swrmax = cal_map[2][-1][2]
-                # save min/max
-                new_map = [fhome, fmax, []]
-                # Configure steps
-                self.__do_steps(loop, steps, fhome, fmax, swrhome, swrmax, new_map)
-                self.__msg_cb("Calibration complete", MSG_STATUS)
-                return ('Calibrate', (True, "", new_map))
-        else:
-            return (CALIBRATE, (False, "Unable to create new steps as min/max freq are not configured: {}!".format(loop), cal_map))
-    
     def retrieve_end_points(self):
         
         h = self.__model[CONFIG][CAL][HOME]
@@ -257,88 +214,84 @@ class Calibrate(threading.Thread):
             
         return True, ""
     
-    def retrieve_map(self, loop):
+    def retrieve_context(self, loop):
         if loop == 1:
-            return True, self.__model[CONFIG][CAL][CAL_L1]
+            return True, self.__model[CONFIG][CAL][SETS][CAL_S1], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L1])
         elif loop == 2:
-            return True, self.__model[CONFIG][CAL][CAL_L2]
+            return True, self.__model[CONFIG][CAL][SETS][CAL_S2], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L2])
         elif loop == 3:
-            return True, self.__model[CONFIG][CAL][CAL_L3]
+            return True, self.__model[CONFIG][CAL][SETS][CAL_S2], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L3])
         else:
             return False, []
 
-    def create_map(self, loop, steps):
+    def save_context(self, loop, cal_map):
+        if loop == 1:
+            self.__model[CONFIG][CAL][CAL_L1] = cal_map
+        elif loop == 2:
+            self.__model[CONFIG][CAL][CAL_L2] = cal_map
+        elif loop == 3:
+            self.__model[CONFIG][CAL][CAL_L3] = cal_map
         
-        # Get map for model
-        r, m = self.retrieve_map(loop)
-        if not r:
-            self.logger.warning("Invalid loop id: %d" % loop)
-            return False, "Invalid loop id: %d" % loop, []
-        m.clear()
+    def create_map(self, loop, sets, cal_map):
         
-        # Move max and take a reading
-        self.__msg_cb("Calibrating low frequency...")
-        self.__comms_q.put(('max', []))
-        # Wait response
-        self.__wait_for = 'Max'
-        self.__event.wait()
-        if self.__abort:
-            self.__event.clear()
-            return False, None, None
-        self.__event.clear()
-        # Get res freq approx as its a full sweep takes a while
-        r, [(fmax, swrmax)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_MAX)
-        if not r:
-            self.logger.warning("Failed to get low frequency!")
-            return False, "Failed to get low frequency!", []
+        # Just in case
+        cal_map.clear()
         
-        # Move home and take a reading
-        self.__msg_cb("Calibrating high frequency...")
-        self.__comms_q.put(('home', []))
-        # Wait response
-        self.__wait_for = 'Home'
-        self.__event.wait()
-        if self.__abort:
-            self.__event.clear()
-            return False, None, None
-        self.__event.clear()
-        # get res freq
-        r, [(fhome, swrhome)] = self.__get_current(MIN_FREQ, MAX_FREQ, INC_10K, VNA_HOME)
-        if not r:
-            self.logger.warning("Failed to get high frequency!")
-            return False, "Failed to get high frequency!", []
+        # Sets are {name: [low_freq, high_freq, steps], name:[...], ...}
+        # Each set is treated as a calibration but combined in cal_map
+        # For each set we must ask the user to move to the low and then high freq
+        # such that we can get the feedback values and then we can work out the steps
+        # and do those in sequence asking the user to enter freq and SWR at each step.
         
-        if abs(fhome - fmax) < 2:
-            # Looks like the actuator didn't move
-            self.logger.warning("Actuator did not move, calibration abandoned!")
-            return False, "Actuator did not move!", []
+        # Current low/high pos
+        current = None
         
-        # Save limits for this loop
-        m = [fhome, fmax, []]
-        return self.__do_steps(loop, steps, fhome, fmax, swrhome, swrmax, m)
+        # Iterate the sets dictionary
+        for key, values in sets.items():
+            
+            # Calibrating set n of sets
+            self.__msg_cb("Calibrating set %s..." % key)
+            
+            # Ask the user to move to the low frequency
+            r, [(f_low, swr_low, pos_low)] = self.__get_current(values[0], HINT_MOVETO, 'Move to %f' % values[0])
+            if not r:
+                self.logger.warning("Failed to move to low frequency for set %s!" % key)
+                return False, "Failed to move to low frequency for set %s [%f]!" % (key, values[0])
+            
+            # Ask the user to move to the high frequency
+            r, [(f_high, swr_high, pos_high)] = self.__get_current(values[1], HINT_MOVETO, 'Move to %f' % values[1])
+            if not r:
+                self.logger.warning("Failed to move to High frequency for set %s [%f]!" % (key, values[1])
+                return False, "Failed to move to high frequency for set %s [%f]!" % (key, values[1]), []
+            
+            # Stash these values
+            current = [values[2], [f_low, swr_low, pos_low], [f_high, swr_high, pos_high]]
+            
+            # Now do the intermediate steps and build the cal-map
+            r, msg, cal_map = self.__do_steps(self, loop, cal_map, current)
+            if not r:
+                return False, "Failed to generate calibration map for %s [%f]!" % (key, values[1]), []
         
-    def __do_steps(self, loop, steps, fhome, fmax, swrhome, swrmax, m):
+        return True, '', cal_map       
+        
+    def __do_steps(self, loop, cal_map, current):
         # Move incrementally and take readings
-        # We move from home to max by interval
-        # Interval is a %age of the difference between feedback readings for home and max
-        home, maximum = self.__end_points
-        span = maximum - home
-        inc = span/steps
-        # Calc approx freq inc for each step
-        fspanhz = int((fhome-fmax) * 1000000)
-        fhzperstep = int(fspanhz/steps)
-        # Centre next approx freq
-        nextf_approx = int(fhome * 1000000)
-        hzhome = int(fhome * 1000000)
+        # We move from high to low for the given number of steps
+        # Interval is a %age of the difference between feedback readings for low and high
         
-        # Add the home position
-        m[2].append([int(home), fhome, swrhome])
+        [steps, [f_low, swr_low, pos_low], [f_high, swr_high, pos_high]] = current
+        
+        span = pos_high - pos_low
+        feedback_inc = span/steps
+        
+        # Add the high position
+        cal_map.append([pos_low, f_low, swr_low])
         
         # Add intermediate positions
         self.__msg_cb("Calibrating step frequencies...")
-        next_inc = home + inc
+        next_inc = pos_high + feedback_inc
         counter = 0
-        while next_inc < maximum:
+        while next_inc < pos_low:
             # Comment out if motor not running
             self.__comms_q.put(('move', [next_inc]))
             # Wait response
@@ -348,45 +301,35 @@ class Calibrate(threading.Thread):
                 self.__event.clear()
                 return False, None, None
             self.__event.clear()
-        
-            # We don't want to do a full frequency scan for this loop on every point as it would take for ever.
-            # We need to split the scan into chunks
-            # The chunk should encompass each resonant frequency at the offset.
-            fhigh = hzhome - (fhzperstep * counter)
-            flow = hzhome - (fhzperstep * (counter+1))
-            # Need a little more accuracy so every 1KHz should suffice
-            r, [(f, swr)] = self.__get_current(flow, fhigh, INC_1K, VNA_MID)
+
+            r, [(f, swr, pos)] = self.__get_current(values[0], HINT_STEP, 'Enter frequency and SWR at this step.')
             if not r:
-                self.logger.warning("Failed to get resonant frequency!")
-                return False, "Failed to get resonant frequency!", m
-            m[2].append([int(next_inc), f, swr])
+                self.logger.warning("Failed to get values at current step!")
+                return False, "Failed to get resonant frequency!", cal_map
+            cal_map.append([pos, f, swr])
             next_inc += inc
             counter += 1
             
-        # Add the max position
-        m[2].append([int(maximum), fmax, swrmax])
-        
-        if loop == 1:
-            self.__model[CONFIG][CAL][CAL_L1] = m
-        elif loop == 2:
-            self.__model[CONFIG][CAL][CAL_L2] = m
-        elif loop == 3:
-            self.__model[CONFIG][CAL][CAL_L3] = m
+        # Add the low position
+        cal_map.append([pos_low, f_low, swr_low])
             
         # Return the map
-        return True, "", m
+        return True, "", cal_map
     
-    def __get_current(self, flow, fhigh, inc, hint):
+    def __get_current(self, f, hint, msg):
         # We must interact with the UI to get user input for the readings
-        self.__msg_cb("Please enter frequency and swr for this calibration point [%s]" % hint, MSG_ALERT)
+        if hint = HINT_MOVETO:
+            self.__msg_cb("Please move to given freq {} [{}]".format(str(f), msg))
+        elif hint = HINT_STEP:
+            self.__msg_cb("Please enter frequency and swr for this step [{}]".format(msg))
         # This is a manual entry so no reason why it should fail unless no entry
         while True:
-            r, (f, swr) = self.__man_cb(hint)
+            r, (f, swr, pos) = self.__man_cb(hint)
             if r == CAL_SUCCESS:
                 # This gives a MHz freq
-                return True, [(float(f), float(swr))]
+                return True, [(float(f), float(swr), pos)]
             elif r == CAL_ABORT:
-                return (False, [(None, None)])
+                return (False, [(None, None. None)])
         
     # =========================================================================
     # Callback from comms module

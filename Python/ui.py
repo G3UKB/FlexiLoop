@@ -84,9 +84,6 @@ class UI(QMainWindow):
         self.__loop_status = [False, False, False]
         self.__last_widget_status = None
     
-        # Cal mode
-        self.__calmode = CAL_NORMAL
-        
         # Set the back colour
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background,QtGui.QColor(158,152,143))
@@ -187,27 +184,27 @@ class UI(QMainWindow):
         
     # This is called when doing a manual calibration to set the hint and get the next data items.
     # This is called on the calibration thread so will not interrupt the UI
-    def man_cal_callback(self, hint):
-        # We set the hint and set data required flag and wait for the state to go to data available
+    def man_cal_callback(self):
+        # We set the data required flag and wait for the state to go to data available
         self.__man_cal_state = MANUAL_DATA_REQD
         while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
             if self.__aborting:
                 self.__aborting = False
                 # Let calibration do the actual abort
-                return CAL_ABORT, (None, None)
+                return CAL_ABORT, (None, None, None)
             sleep (0.2)
         
         if self.__is_float(self.__man_cal_freq) and self.__is_float(self.__man_cal_swr):
-            r = (self.__man_cal_freq, self.__man_cal_swr)
+            result = (self.__man_cal_freq, self.__man_cal_swr, self.__current_pos)
             self.__man_cal_freq = 0.0
             self.__man_cal_swr = 1.0
             while self.__man_cal_state != MANUAL_NEXT:
                 sleep (0.2)
             self.__man_cal_state = MANUAL_IDLE
-            return CAL_SUCCESS, r
+            return CAL_SUCCESS, result
         else:
             self.__man_cal_state = MANUAL_DATA_REQD
-            return CAL_RETRY, (None, None)
+            return CAL_RETRY, (None, None, None)
         
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
@@ -788,17 +785,6 @@ class UI(QMainWindow):
         
         # This will kick off when the callback from the relay change arrives
         self.__st_act.setText(CALIBRATE)
-        self.__calmode = CAL_NORMAL
-        self.__deferred_activity = self.__do_cal_deferred
-    
-    def __do_cal_steps(self):
-        # Switch to ANALYSER, switch back is done in the callback
-        self.__saved_mode = self.__last_switch_mode
-        self.__switch_mode = ANALYSER
-        
-        # This will kick off when the callback from the relay change arrives
-        self.__st_act.setText(CALIBRATE)
-        self.__calmode = CAL_STEPS
         self.__deferred_activity = self.__do_cal_deferred
     
     def __do_cal_deferred(self):
@@ -807,7 +793,7 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         # Dispatches on separate thread
-        self.__api.calibrate(self.__selected_loop, self.man_cal_callback, self.__calmode)
+        self.__api.calibrate(self.__selected_loop, self.man_cal_callback)
     
     def __do_cal_view(self):
         # Invoke the calview dialog

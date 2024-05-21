@@ -421,7 +421,7 @@ class Config(QDialog):
         while self.__table.rowCount() > 0:
             self.__table.removeRow(0);
         # Populate
-        # Sets are [[name, low_freq, high_freq, steps], [...], ...]
+        # Sets are {name: [low_freq, high_freq, steps], name:[...], ...}
         key = self.__get_loop_item()
         sets = self.__sets[key]
         if len(sets) > 0:

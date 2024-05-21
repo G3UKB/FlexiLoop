@@ -117,9 +117,9 @@ class API:
         self.__c_q.put(('configure', []))
         
     # Perform a calibration for the given loop    
-    def calibrate(self, loop, man_cb, mode):
+    def calibrate(self, loop, man_cb):
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
-        self.__c_q.put(('calibrate', [loop, self.__model[CONFIG][CAL][ACTUATOR_STEPS], man_cb, mode]))
+        self.__c_q.put(('calibrate', [loop, man_cb]))
     
     # Change speed
     def speed_change(self, speed):
