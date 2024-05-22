@@ -46,7 +46,7 @@ QListWidget {
 /* Group Box */
 QGroupBox {
     color: rgb(65,62,56);
-    font: 16px;
+    font: 14px;
     border: 1px solid rgb(97,97,97);
     margin-top: 6px;
 }

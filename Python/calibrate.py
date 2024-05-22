@@ -155,7 +155,6 @@ class Calibrate(threading.Thread):
         if not r:
             # We have a problem
             return (CALIBRATE, (False, "Unable to retrieve end points!", cal_map))
-        
         # Create a calibration map for loop
         # Get descriptor and map for the loop
         r, sets, cal_map = self.retrieve_context(loop)
@@ -248,30 +247,25 @@ class Calibrate(threading.Thread):
         
         # Iterate the sets dictionary
         for key, values in sets.items():
-            
             # Calibrating set n of sets
             self.__msg_cb("Calibrating set %s..." % key)
-            
             # Ask the user to move to the low frequency
-            r, [(f_low, swr_low, pos_low)] = self.__get_current(values[0], HINT_MOVETO, 'Move to %f' % values[0])
+            r, [(f_low, swr_low, pos_low)] = self.__get_current(values[0], HINT_MOVETO, 'Move to %f' % float(values[0]))
             if not r:
                 self.logger.warning("Failed to move to low frequency for set %s!" % key)
-                return False, "Failed to move to low frequency for set %s [%f]!" % (key, values[0])
-            
+                return False, "Failed to move to low frequency for set %s [%f]!" % (key, float(values[0]))
             # Ask the user to move to the high frequency
-            r, [(f_high, swr_high, pos_high)] = self.__get_current(values[1], HINT_MOVETO, 'Move to %f' % values[1])
+            r, [(f_high, swr_high, pos_high)] = self.__get_current(float(values[1]), HINT_MOVETO, 'Move to %f' % float(values[1]))
             if not r:
-                self.logger.warning("Failed to move to High frequency for set %s [%f]!" % (key, values[1]))
-                return False, "Failed to move to high frequency for set %s [%f]!" % (key, values[1]), []
-            
+                self.logger.warning("Failed to move to High frequency for set %s [%f]!" % (key, float(values[1])))
+                return False, "Failed to move to high frequency for set %s [%f]!" % (key, float(values[1])), []
             # Stash these values
             current = [values[2], [f_low, swr_low, pos_low], [f_high, swr_high, pos_high]]
             
             # Now do the intermediate steps and build the cal-map
             r, msg, cal_map = self.__do_steps(self, loop, cal_map, current)
             if not r:
-                return False, "Failed to generate calibration map for %s [%f]!" % (key, values[1]), []
-        
+                return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
         return True, '', cal_map       
         
     def __do_steps(self, loop, cal_map, current):
@@ -319,9 +313,9 @@ class Calibrate(threading.Thread):
     def __get_current(self, f, hint, msg):
         # We must interact with the UI to get user input for the readings
         if hint == HINT_MOVETO:
-            self.__msg_cb("Please move to given freq {} [{}]".format(str(f), msg))
+            self.__msg_cb("Please move to given freq {} [{}]".format(str(f), msg), MSG_ALERT)
         elif hint == HINT_STEP:
-            self.__msg_cb("Please enter frequency and swr for this step [{}]".format(msg))
+            self.__msg_cb("Please enter frequency and swr for this step [{}]".format(msg), MSG_ALERT)
         # This is a manual entry so no reason why it should fail unless no entry
         while True:
             r, (f, swr, pos) = self.__man_cb(hint)

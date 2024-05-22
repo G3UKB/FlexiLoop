@@ -184,7 +184,7 @@ class UI(QMainWindow):
         
     # This is called when doing a manual calibration to set the hint and get the next data items.
     # This is called on the calibration thread so will not interrupt the UI
-    def man_cal_callback(self):
+    def man_cal_callback(self, hint):
         # We set the data required flag and wait for the state to go to data available
         self.__man_cal_state = MANUAL_DATA_REQD
         while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
@@ -432,18 +432,18 @@ class UI(QMainWindow):
         gb_loop.setLayout(self.__loopgrid)
         self.__grid.addWidget(gb_loop, 1,0)
         
-        s = QGroupBox('Calibrate Status')
-        hbox = QHBoxLayout()
-        
         looplabel = QLabel('Select Loop')
-        hbox.addWidget(looplabel)
+        self.__loopgrid.addWidget(looplabel, 0, 0)
         self.__loop_sel = QComboBox()
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
         self.__loop_sel.setMinimumHeight(20)
-        hbox.addWidget(self.__loop_sel)
+        self.__loopgrid.addWidget(self.__loop_sel, 0, 1)
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
+        
+        s = QGroupBox('Calibrate Status')
+        hbox = QHBoxLayout()
         
         self.__l1label = QLabel('1')
         hbox.addWidget(self.__l1label)
@@ -461,7 +461,7 @@ class UI(QMainWindow):
         self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
-        self.__loopgrid.addWidget(s, 0, 0, 1, 4)
+        self.__loopgrid.addWidget(s, 0, 2, 1, 2)
         
         # Calibration
         self.__cal = QPushButton("Calibrate...")
@@ -1156,7 +1156,7 @@ class UI(QMainWindow):
             else:
                 # Arduino off-line
                 widget_state = W_OFF_LINE
-        
+        #print(widget_state)
         return widget_state
     
     # Enable/disable according to state
@@ -1225,7 +1225,7 @@ class UI(QMainWindow):
                 self.__enable_disable_manual(True)
                 self.__stopact.setEnabled(False)
             elif state == W_LONG_RUNNING:
-                # All off for long running except abort
+                # All off for long running except abort and special case
                 self.__exit.setEnabled(False)
                 self.__abort.setEnabled(True)
                 self.__enable_disable_feedback(False)
@@ -1307,6 +1307,7 @@ class UI(QMainWindow):
             if len(self.__manfreqtxt.text()) > 0 and len(self.__manswrtxt.text()) > 0: 
                 self.__save.setEnabled(True)
             self.__next.setEnabled(False)
+            self.__enable_disable_manual(True)
         elif self.__man_cal_state == MANUAL_DATA_AVAILABLE:
             self.__manfreqtxt.setEnabled(False)
             self.__manswrtxt.setEnabled(False)
