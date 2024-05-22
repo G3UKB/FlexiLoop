@@ -53,7 +53,7 @@ class Config(QDialog):
         self.__msgs = msgs
         
         # Local sets synced back to model on save
-        # Sets are [[name, low_freq, high_freq, steps], [...], ...]
+        # Sets are [[name, low_freq, high_freq, steps, position], [...], ...]
         self.__sets = {
             CAL_S1: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S1]),
             CAL_S2: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S2]),
@@ -216,8 +216,8 @@ class Config(QDialog):
         # Table area
         self.__table = QTableWidget()
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.__table.setColumnCount(4)
-        self.__table.setHorizontalHeaderLabels(('Name','LowFreq','HighFreq','Steps'))
+        self.__table.setColumnCount(5)
+        self.__table.setHorizontalHeaderLabels(('Name','LowFreq','HighFreq','Steps', 'Position'))
         grid.addWidget(self.__table, 1, 0, 1, 2)
         
         # Sub grid
@@ -253,14 +253,25 @@ class Config(QDialog):
         
         # Number of steps
         steplabel = QLabel('Steps')
-        subgrid.addWidget(steplabel, 0, 6)
+        subgrid.addWidget(steplabel, 1, 0)
         self.__steptxt = QSpinBox()
         self.__steptxt.setObjectName("dialog")
         self.__steptxt.setToolTip('Set number of calibration steps')
         self.__steptxt.setRange(0,50)
         self.__steptxt.setMinimumWidth(80)
         self.__steptxt.setValue(10)
-        subgrid.addWidget(self.__steptxt, 0, 7)
+        subgrid.addWidget(self.__steptxt, 1, 1)
+        
+        # Position
+        poslabel = QLabel('Position%')
+        subgrid.addWidget(poslabel, 1, 2)
+        self.__postxt = QSpinBox()
+        self.__postxt.setObjectName("dialog")
+        self.__postxt.setToolTip('Set actuator position for frequency')
+        self.__postxt.setRange(0,100)
+        self.__postxt.setMinimumWidth(80)
+        self.__postxt.setValue(50)
+        subgrid.addWidget(self.__postxt, 1, 3)
         
         # Button area
         # Sub grid
@@ -269,17 +280,17 @@ class Config(QDialog):
         gb1.setLayout(subgrid1)
         grid.addWidget(gb1, 3,0,1,2)
 
-        self.__moveto = QPushButton("New")
-        self.__moveto.setToolTip('Clear data')
-        self.__moveto.clicked.connect(self.__do_new)
-        self.__moveto.setMinimumHeight(20)
-        subgrid1.addWidget(self.__moveto, 0, 0)
+        self.__new = QPushButton("New")
+        self.__new.setToolTip('Clear data')
+        self.__new.clicked.connect(self.__do_new)
+        self.__new.setMinimumHeight(20)
+        subgrid1.addWidget(self.__new, 0, 0)
         
-        self.__moveto = QPushButton("Add")
-        self.__moveto.setToolTip('Add a new calibration item')
-        self.__moveto.clicked.connect(self.__do_add)
-        self.__moveto.setMinimumHeight(20)
-        subgrid1.addWidget(self.__moveto, 0, 1)
+        self.__add = QPushButton("Add")
+        self.__add.setToolTip('Add a new calibration item')
+        self.__add.clicked.connect(self.__do_add)
+        self.__add.setMinimumHeight(20)
+        subgrid1.addWidget(self.__add, 0, 1)
 
         self.__remove = QPushButton("Remove")
         self.__remove.setToolTip('Remove calibration item')
@@ -290,6 +301,10 @@ class Config(QDialog):
         # Close gaps
         grid.setRowStretch(1, 1)
         grid.setColumnStretch(2, 1)
+        
+        if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
+            self.__add.setEnabled(False)
+            self.__new.setEnabled(False)
     
     def __populate_timeouts(self, grid):
         # Defaults for timeouts
@@ -393,11 +408,12 @@ class Config(QDialog):
         self.__lowfreqtxt.setText('')
         self.__highfreqtxt.setText('')
         self.__steptxt.setValue(10)
+        self.__postxt.setValue(50)
     
     def __do_add(self):
         # Add current set to local sets
         key = self.__get_loop_item()
-        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), self.__highfreqtxt.text(), str(self.__steptxt.value())]
+        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), self.__highfreqtxt.text(), str(self.__steptxt.value()), str(self.__postxt.value())]
         self.__populate_table()
         
     def __do_remove(self):
@@ -421,7 +437,7 @@ class Config(QDialog):
         while self.__table.rowCount() > 0:
             self.__table.removeRow(0);
         # Populate
-        # Sets are {name: [low_freq, high_freq, steps], name:[...], ...}
+        # Sets are {name: [low_freq, high_freq, steps, position], name:[...], ...}
         key = self.__get_loop_item()
         sets = self.__sets[key]
         if len(sets) > 0:
@@ -431,6 +447,7 @@ class Config(QDialog):
                 self.__table.setItem(row, 1, QTableWidgetItem(str(values[0])))
                 self.__table.setItem(row, 2, QTableWidgetItem(str(values[1])))
                 self.__table.setItem(row, 3, QTableWidgetItem(str(values[2])))
+                self.__table.setItem(row, 4, QTableWidgetItem(str(values[3])))
                 row += 1
             if self.__table.rowCount() > 0:
                 self.__table.selectRow(0)

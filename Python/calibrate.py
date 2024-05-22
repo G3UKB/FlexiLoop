@@ -253,7 +253,7 @@ class Calibrate(threading.Thread):
             r, [(f_low, swr_low, pos_low)] = self.__get_current(values[0], HINT_MOVETO, 'Move to %f' % float(values[0]))
             if not r:
                 self.logger.warning("Failed to move to low frequency for set %s!" % key)
-                return False, "Failed to move to low frequency for set %s [%f]!" % (key, float(values[0]))
+                return False, "Failed to move to low frequency for set %s [%f]!" % (key, float(values[0])), []
             # Ask the user to move to the high frequency
             r, [(f_high, swr_high, pos_high)] = self.__get_current(float(values[1]), HINT_MOVETO, 'Move to %f' % float(values[1]))
             if not r:

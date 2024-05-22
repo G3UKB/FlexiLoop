@@ -1307,7 +1307,6 @@ class UI(QMainWindow):
             if len(self.__manfreqtxt.text()) > 0 and len(self.__manswrtxt.text()) > 0: 
                 self.__save.setEnabled(True)
             self.__next.setEnabled(False)
-            self.__enable_disable_manual(True)
         elif self.__man_cal_state == MANUAL_DATA_AVAILABLE:
             self.__manfreqtxt.setEnabled(False)
             self.__manswrtxt.setEnabled(False)
