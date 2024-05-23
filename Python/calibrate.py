@@ -236,11 +236,9 @@ class Calibrate(threading.Thread):
         # Just in case
         cal_map.clear()
         
-        # Sets are {name: [low_freq, high_freq, steps], name:[...], ...}
+        # Sets are {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
         # Each set is treated as a calibration but combined in cal_map
-        # For each set we must ask the user to move to the low and then high freq
-        # such that we can get the feedback values and then we can work out the steps
-        # and do those in sequence asking the user to enter freq and SWR at each step.
+        # For each set we step between low and high positions.
         
         # Current low/high pos
         current = None
@@ -249,76 +247,87 @@ class Calibrate(threading.Thread):
         for key, values in sets.items():
             # Calibrating set n of sets
             self.__msg_cb("Calibrating set %s..." % key)
-            # Ask the user to move to the low frequency
-            r, [(f_low, swr_low, pos_low)] = self.__get_current(values[0], HINT_MOVETO, 'Move to %f' % float(values[0]))
-            if not r:
-                self.logger.warning("Failed to move to low frequency for set %s!" % key)
-                return False, "Failed to move to low frequency for set %s [%f]!" % (key, float(values[0])), []
-            # Ask the user to move to the high frequency
-            r, [(f_high, swr_high, pos_high)] = self.__get_current(float(values[1]), HINT_MOVETO, 'Move to %f' % float(values[1]))
-            if not r:
-                self.logger.warning("Failed to move to High frequency for set %s [%f]!" % (key, float(values[1])))
-                return False, "Failed to move to high frequency for set %s [%f]!" % (key, float(values[1])), []
-            # Stash these values
-            current = [values[2], [f_low, swr_low, pos_low], [f_high, swr_high, pos_high]]
             
-            # Now do the intermediate steps and build the cal-map
-            r, msg, cal_map = self.__do_steps(self, loop, cal_map, current)
+            # Run steps and build the cal-map
+            r, msg, cal_map = self.__do_steps(self, loop, cal_map, values)
             if not r:
                 return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
         return True, '', cal_map       
         
-    def __do_steps(self, loop, cal_map, current):
+    def __do_steps(self, loop, cal_map, cal_set):
         # Move incrementally and take readings
         # We move from high to low for the given number of steps
         # Interval is a %age of the difference between feedback readings for low and high
         
-        [steps, [f_low, swr_low, pos_low], [f_high, swr_high, pos_high]] = current
+        [low_freq, low_pos, high_freq, high_pos, steps] = cal_set
+        span = high_freq - low_pos
+        fb_inc = span/steps
         
-        span = pos_high - pos_low
-        feedback_inc = span/steps
-        
+        # Do high pos
+        if not self.__move_wait(high_pos):
+            self.logger.warning("Failed to move to high position!")
+            return False, "Failed to move to high position!", cal_map
+        self.__msg_cb("Please enter frequency and SWR for high limit", MSG_ALERT)
+        r, (f, swr, pos) = self.__get_current()
+        if not r:
+            self.logger.warning("Failed to get params for high position!")
+            return False, "Failed to get params for high position!", cal_map 
         # Add the high position
-        cal_map.append([pos_low, f_low, swr_low])
+        cal_map.append([pos, f, swr])
         
-        # Add intermediate positions
-        self.__msg_cb("Calibrating step frequencies...")
-        next_inc = pos_high + feedback_inc
+        # Do intermediate steps
+        self.__msg_cb("Calibrating intermediate frequencies...")
+        next_inc = pos_high + fb_inc
         counter = 0
         while next_inc < pos_low:
-            # Comment out if motor not running
-            self.__comms_q.put(('move', [next_inc]))
-            # Wait response
-            self.__wait_for = 'MoveTo'
-            self.__event.wait()
-            if self.__abort:
-                self.__event.clear()
-                return False, None, None
-            self.__event.clear()
-
-            r, [(f, swr, pos)] = self.__get_current(values[0], HINT_STEP, 'Enter frequency and SWR at this step.')
-            if not r:
-                self.logger.warning("Failed to get values at current step!")
-                return False, "Failed to get resonant frequency!", cal_map
+            if not self.__move_wait(next_inc):
+                self.logger.warning("Failed to move to intermediate position!")
+                return False, "Failed to move to intermediate position!", cal_map
+            self.__msg_cb("Please enter frequency and SWR for step", MSG_ALERT)
+            r, (f, swr, pos) = self.__get_current()
             cal_map.append([pos, f, swr])
             next_inc += inc
             counter += 1
-            
+        # Add the intermediate position
+        cal_map.append([pos, f, swr])
+        
+        # Do low pos
+        if not self.__move_wait(low_pos):
+            self.logger.warning("Failed to move to low position!")
+            return False, "Failed to move to low position!", cal_map
+        self.__msg_cb("Please enter frequency and SWR for low limit", MSG_ALERT)
+        r, (f, swr, pos) = self.__get_current()
+        if not r:
+            self.logger.warning("Failed to get params for low position!")
+            return False, "Failed to get params for low position!", cal_map
         # Add the low position
-        cal_map.append([pos_low, f_low, swr_low])
-            
+        cal_map.append([pos, f, swr])
+        
         # Return the map
         return True, "", cal_map
     
-    def __get_current(self, f, hint, msg):
+    def __move_wait(self, move_to):
+        self.__comms_q.put(('move', [move_to]))
+        # Wait response
+        self.__wait_for = 'MoveTo'
+        self.__event.wait()
+        if self.__abort:
+            self.__event.clear()
+            return False
+        self.__event.clear()
+        return True
+    
+    def __get_current(self):
+        r, [vals] = self.__get_vals()
+        if not r:
+            self.logger.warning("Failed to get values at current step!")
+            return False, [(None, None, None)]
+        return True, vals
+        
+    def __get_vals(self):
         # We must interact with the UI to get user input for the readings
-        if hint == HINT_MOVETO:
-            self.__msg_cb("Please move to given freq {} [{}]".format(str(f), msg), MSG_ALERT)
-        elif hint == HINT_STEP:
-            self.__msg_cb("Please enter frequency and swr for this step [{}]".format(msg), MSG_ALERT)
-        # This is a manual entry so no reason why it should fail unless no entry
         while True:
-            r, (f, swr, pos) = self.__man_cb(hint)
+            r, (f, swr, pos) = self.__man_cb()
             if r == CAL_SUCCESS:
                 # This gives a MHz freq
                 return True, [(float(f), float(swr), pos)]

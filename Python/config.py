@@ -216,8 +216,8 @@ class Config(QDialog):
         # Table area
         self.__table = QTableWidget()
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.__table.setColumnCount(5)
-        self.__table.setHorizontalHeaderLabels(('Name','LowFreq','HighFreq','Steps', 'Position'))
+        self.__table.setColumnCount(6)
+        self.__table.setHorizontalHeaderLabels(('Name', 'LowFreq', 'PosLow', 'HighFreq', 'PosHigh', 'Steps'))
         grid.addWidget(self.__table, 1, 0, 1, 2)
         
         # Sub grid
@@ -263,15 +263,25 @@ class Config(QDialog):
         subgrid.addWidget(self.__steptxt, 1, 1)
         
         # Position
-        poslabel = QLabel('Position%')
-        subgrid.addWidget(poslabel, 1, 2)
-        self.__postxt = QSpinBox()
-        self.__postxt.setObjectName("dialog")
-        self.__postxt.setToolTip('Set actuator position for frequency')
-        self.__postxt.setRange(0,100)
-        self.__postxt.setMinimumWidth(80)
-        self.__postxt.setValue(50)
-        subgrid.addWidget(self.__postxt, 1, 3)
+        poslowlabel = QLabel('PosLow%')
+        subgrid.addWidget(poslowlabel, 1, 2)
+        self.__poslowtxt = QSpinBox()
+        self.__poslowtxt.setObjectName("dialog")
+        self.__poslowtxt.setToolTip('Set actuator position for low frequency')
+        self.__poslowtxt.setRange(0,100)
+        self.__poslowtxt.setMinimumWidth(80)
+        self.__poslowtxt.setValue(50)
+        subgrid.addWidget(self.__poslowtxt, 1, 3)
+        
+        poshilabel = QLabel('PosHigh%')
+        subgrid.addWidget(poshilabel, 1, 4)
+        self.__poshitxt = QSpinBox()
+        self.__poshitxt.setObjectName("dialog")
+        self.__poshitxt.setToolTip('Set actuator position for high frequency')
+        self.__poshitxt.setRange(0,100)
+        self.__poshitxt.setMinimumWidth(80)
+        self.__poshitxt.setValue(50)
+        subgrid.addWidget(self.__poshitxt, 1, 5)
         
         # Button area
         # Sub grid
@@ -408,12 +418,13 @@ class Config(QDialog):
         self.__lowfreqtxt.setText('')
         self.__highfreqtxt.setText('')
         self.__steptxt.setValue(10)
-        self.__postxt.setValue(50)
+        self.__poslowtxt.setValue(50)
+        self.__poshitxt.setValue(50)
     
     def __do_add(self):
         # Add current set to local sets
         key = self.__get_loop_item()
-        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), self.__highfreqtxt.text(), str(self.__steptxt.value()), str(self.__postxt.value())]
+        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), str(self.__poslowtxt.value()), str(self.__highfreqtxt.text()), str(self.__poshitxt.value()), str(self.__steptxt.value())]
         self.__populate_table()
         
     def __do_remove(self):
@@ -437,7 +448,7 @@ class Config(QDialog):
         while self.__table.rowCount() > 0:
             self.__table.removeRow(0);
         # Populate
-        # Sets are {name: [low_freq, high_freq, steps, position], name:[...], ...}
+        # Sets are {name: [low_freq, pos_low, high_freq, pos_high, steps], name:[...], ...}
         key = self.__get_loop_item()
         sets = self.__sets[key]
         if len(sets) > 0:
@@ -448,6 +459,7 @@ class Config(QDialog):
                 self.__table.setItem(row, 2, QTableWidgetItem(str(values[1])))
                 self.__table.setItem(row, 3, QTableWidgetItem(str(values[2])))
                 self.__table.setItem(row, 4, QTableWidgetItem(str(values[3])))
+                self.__table.setItem(row, 5, QTableWidgetItem(str(values[4])))
                 row += 1
             if self.__table.rowCount() > 0:
                 self.__table.selectRow(0)
