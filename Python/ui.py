@@ -184,7 +184,7 @@ class UI(QMainWindow):
         
     # This is called when doing a manual calibration to set the hint and get the next data items.
     # This is called on the calibration thread so will not interrupt the UI
-    def man_cal_callback(self, hint):
+    def man_cal_callback(self):
         # We set the data required flag and wait for the state to go to data available
         self.__man_cal_state = MANUAL_DATA_REQD
         while self.__man_cal_state != MANUAL_DATA_AVAILABLE:
