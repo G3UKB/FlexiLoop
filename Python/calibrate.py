@@ -174,7 +174,7 @@ class Calibrate(threading.Thread):
             return (CALIBRATE, (False, "Error in retrieving calibration map!", cal_map))
         
         self.__msg_cb("Calibration complete", MSG_STATUS)
-        self.save_context(self, loop, cal_map)
+        self.save_context(loop, cal_map)
         return ('Calibrate', (True, "", cal_map))
      
     def retrieve_end_points(self):
