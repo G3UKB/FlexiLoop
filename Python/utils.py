@@ -48,9 +48,10 @@ def absolute_pos_to_relative(model, pos):
     # convert this into the corresponding analog value
     home = model[CONFIG][CAL][HOME]
     maximum = model[CONFIG][CAL][MAX]
-    if home == -1 or max == -1:
+    if home == -1 or maximum == -1:
         print("Failed to move as limits are not set!")
         return 0
     span = maximum - home
-    return (int(pos)/100)*span
-    
+    return ((int(pos)/100)*span) + home
+ 
+        

@@ -61,6 +61,9 @@ class Config(QDialog):
         }
         self.__selected_loop = 1
         
+        # Start idle processing
+        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
+        
     # Set the back colour
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))
@@ -218,6 +221,7 @@ class Config(QDialog):
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.__table.setColumnCount(6)
         self.__table.setHorizontalHeaderLabels(('Name', 'LowFreq', 'PosLow', 'HighFreq', 'PosHigh', 'Steps'))
+        self.__table.itemClicked.connect(self.__row_changed)
         grid.addWidget(self.__table, 1, 0, 1, 2)
         
         # Sub grid
@@ -315,6 +319,9 @@ class Config(QDialog):
         if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
             self.__add.setEnabled(False)
             self.__new.setEnabled(False)
+        if self.__table.currentRow() == -1:
+            self.__remove.setEnabled(False)
+        
     
     def __populate_timeouts(self, grid):
         # Defaults for timeouts
@@ -401,6 +408,14 @@ class Config(QDialog):
     #=======================================================
     # Calibration events
 
+    #========================
+    # Table events
+    def __row_changed(self):
+        if self.__table.currentRow() == -1:
+            self.__remove.setEnabled(False)
+        else:
+            self.__remove.setEnabled(True)
+            
     #========================
     # Combo box events
     def __loop_change(self, index):
@@ -500,5 +515,22 @@ class Config(QDialog):
     def __do_close(self):
         self.close()
     
+    # =======================================================
+    # Background activities
+    def __idleProcessing(self):
     
-    
+        # Adjust buttons
+        if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
+            self.__add.setEnabled(False)
+            self.__new.setEnabled(False)
+        else:
+            self.__new.setEnabled(True)
+            if len(self.__nametxt.text()) > 0 and len(self.__lowfreqtxt.text()) > 0 and len(self.__highfreqtxt.text()) > 0 and self.__poslowtxt.value() > 0 and self.__poshitxt.value() > 0 and self.__steptxt.value() > 0:
+                self.__add.setEnabled(True)
+                
+        if self.__table.currentRow() == -1:
+            self.__remove.setEnabled(False)
+        
+        # Reset timer    
+        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
+        

@@ -36,6 +36,7 @@ import copy
 from defs import *
 import model
 import serialcomms
+from utils import *
 
 VERB = False
 
@@ -249,7 +250,7 @@ class Calibrate(threading.Thread):
             self.__msg_cb("Calibrating set %s..." % key)
             
             # Run steps and build the cal-map
-            r, msg, cal_map = self.__do_steps(self, loop, cal_map, values)
+            r, msg, cal_map = self.__do_steps(loop, cal_map, values)
             if not r:
                 return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
         return True, '', cal_map       
@@ -260,11 +261,12 @@ class Calibrate(threading.Thread):
         # Interval is a %age of the difference between feedback readings for low and high
         
         [low_freq, low_pos, high_freq, high_pos, steps] = cal_set
-        span = high_freq - low_pos
-        fb_inc = span/steps
-        
+        low_pos_abs = int(absolute_pos_to_relative(self.__model, int(low_pos)))
+        high_pos_abs = int(absolute_pos_to_relative(self.__model, int(high_pos)))
+        span = low_pos_abs - high_pos_abs
+        fb_inc = span/int(steps)
         # Do high pos
-        if not self.__move_wait(high_pos):
+        if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high position!")
             return False, "Failed to move to high position!", cal_map
         self.__msg_cb("Please enter frequency and SWR for high limit", MSG_ALERT)
@@ -277,22 +279,22 @@ class Calibrate(threading.Thread):
         
         # Do intermediate steps
         self.__msg_cb("Calibrating intermediate frequencies...")
-        next_inc = pos_high + fb_inc
+        next_inc = high_pos_abs + fb_inc
         counter = 0
-        while next_inc < pos_low:
-            if not self.__move_wait(next_inc):
+        while next_inc < low_pos_abs:
+            if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
             self.__msg_cb("Please enter frequency and SWR for step", MSG_ALERT)
             r, (f, swr, pos) = self.__get_current()
             cal_map.append([pos, f, swr])
-            next_inc += inc
+            next_inc += fb_inc
             counter += 1
         # Add the intermediate position
         cal_map.append([pos, f, swr])
         
         # Do low pos
-        if not self.__move_wait(low_pos):
+        if not self.__move_wait(low_pos_abs):
             self.logger.warning("Failed to move to low position!")
             return False, "Failed to move to low position!", cal_map
         self.__msg_cb("Please enter frequency and SWR for low limit", MSG_ALERT)
