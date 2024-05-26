@@ -271,6 +271,7 @@ class Calibrate(threading.Thread):
             return False, "Failed to move to high position!", cal_map
         self.__msg_cb("Please enter frequency and SWR for high limit", MSG_ALERT)
         r, (f, swr, pos) = self.__get_current()
+        self.__msg_cb("Target: %d, Actual %d" % (high_pos_abs, pos)) 
         if not r:
             self.logger.warning("Failed to get params for high position!")
             return False, "Failed to get params for high position!", cal_map 
@@ -285,8 +286,9 @@ class Calibrate(threading.Thread):
             if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
-            self.__msg_cb("Please enter frequency and SWR for step", MSG_ALERT)
+            self.__msg_cb("Please enter frequency and SWR for step %d" % counter, MSG_ALERT)
             r, (f, swr, pos) = self.__get_current()
+            self.__msg_cb("Step: %d, Target: %d, Actual %d" % (counter, next_inc, pos)) 
             cal_map.append([pos, f, swr])
             next_inc += fb_inc
             counter += 1
@@ -299,6 +301,7 @@ class Calibrate(threading.Thread):
             return False, "Failed to move to low position!", cal_map
         self.__msg_cb("Please enter frequency and SWR for low limit", MSG_ALERT)
         r, (f, swr, pos) = self.__get_current()
+        self.__msg_cb("Target: %d, Actual %d" % (low_pos_abs, pos))
         if not r:
             self.logger.warning("Failed to get params for low position!")
             return False, "Failed to get params for low position!", cal_map
@@ -332,7 +335,7 @@ class Calibrate(threading.Thread):
             r, (f, swr, pos) = self.__man_cb()
             if r == CAL_SUCCESS:
                 # This gives a MHz freq
-                return True, [(float(f), float(swr), pos)]
+                return True, [(float(f), float(swr), int(absolute_pos_to_relative(self.__model, int(pos))))]
             elif r == CAL_ABORT:
                 return (False, [(None, None, None)])
         

@@ -1074,12 +1074,6 @@ class UI(QMainWindow):
         self.__l5label.setText('2 [%d]' % count)
         count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
         self.__l6label.setText('3 [%d]' % count)
-        
-        # Min/max frequencies
-        loop = model_for_loop(self.__model, self.__selected_loop)
-        if len(loop) > 0:
-            self.__minvalue.setText(str(loop[1]))
-            self.__maxvalue.setText(str(loop[0]))
             
         # SWR
         self.__auto_swrval.setText(str(self.__auto_swr))
