@@ -335,7 +335,7 @@ class Calibrate(threading.Thread):
             r, (f, swr, pos) = self.__man_cb()
             if r == CAL_SUCCESS:
                 # This gives a MHz freq
-                return True, [(float(f), float(swr), int(absolute_pos_to_relative(self.__model, int(pos))))]
+                return True, [(float(f), float(swr), percent_pos_to_analog(self.__model, float(pos)))]
             elif r == CAL_ABORT:
                 return (False, [(None, None, None)])
         
@@ -352,12 +352,15 @@ class Calibrate(threading.Thread):
             self.__event.set() 
         elif name == STATUS:
             # Calculate position and directly event to API which has a pass-through to UI
-            home = self.__model[CONFIG][CAL][HOME]
-            maximum = self.__model[CONFIG][CAL][MAX]
-            if home > 0 and maximum > 0:
-                span = maximum - home
-                offset = val[0] - home
-                self.__cb((name, (True, "", [str(int((offset/span)*100))])))
+            ppos = analog_pos_to_percent(model, val[0])
+            if ppos != None:
+                self.__cb((name, (True, "", [str(ppos)])))
+            #home = self.__model[CONFIG][CAL][HOME]
+            #maximum = self.__model[CONFIG][CAL][MAX]
+            #if home > 0 and maximum > 0:
+            #    span = maximum - home
+            #    offset = val[0] - home
+            #    self.__cb((name, (True, "", [str(int((offset/span)*100))])))
         elif name == ABORT:
             # Just release whatever was going on
             # It should then pick up the abort flag

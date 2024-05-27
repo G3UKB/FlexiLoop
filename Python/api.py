@@ -219,6 +219,11 @@ class API:
         (name, (r, msg, args)) = data
         if name == POS or name == STATUS:
             # Calculate and return position
+            # We need to save the absolute pos not the %age pos
+            self.__absolute_pos = args[0]
+            ppos = analog_pos_to_percent(self.__model, self.__absolute_pos)
+            self.__cb((name, (True, "", [str(ppos)])))
+            '''
             home = self.__model[CONFIG][CAL][HOME]
             maximum = self.__model[CONFIG][CAL][MAX]
             if home == -1 or maximum == -1:
@@ -230,6 +235,7 @@ class API:
                 span = maximum - home
                 offset = args[0] - home
                 self.__cb((name, (True, "", [str(int((offset/span)*100))])))
+            '''
         else:
             self.__cb(data)
         
