@@ -41,7 +41,7 @@ def model_for_loop(model, loop):
     elif loop == 3:
         return model[CONFIG][CAL][CAL_L3]
     else:
-        return []
+        return None
 
 # Return the %age relative position for an absolute feedback offset    
 def percent_pos_to_analog(model, pos):

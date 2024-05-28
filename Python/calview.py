@@ -157,7 +157,7 @@ class Calview(QDialog):
         if len(cps) > 0:
             for item in cps:
                 self.__table.insertRow(row)
-                self.__table.setItem(row, 0, QTableWidgetItem(self.__pos_to_percent(item[0])))
+                self.__table.setItem(row, 0, QTableWidgetItem(str(analog_pos_to_percent(self.__model, item[0]))))
                 self.__table.setItem(row, 1, QTableWidgetItem(str(item[1])))
                 self.__table.setItem(row, 2, QTableWidgetItem(str(item[2])))
                 row += 1
@@ -177,10 +177,4 @@ class Calview(QDialog):
             item = CAL_L1
         return item
 
-    def __pos_to_percent(self, pos):
-        home = self.__model[CONFIG][CAL][HOME]
-        maximum = self.__model[CONFIG][CAL][MAX]
-        span = maximum - home
-        offset = pos - home
-        return str(int((offset/span)*100))
     
