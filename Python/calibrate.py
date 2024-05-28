@@ -259,12 +259,12 @@ class Calibrate(threading.Thread):
         # Move incrementally and take readings
         # We move from high to low for the given number of steps
         # Interval is a %age of the difference between feedback readings for low and high
-        
         [low_freq, low_pos, high_freq, high_pos, steps] = cal_set
-        low_pos_abs = int(absolute_pos_to_relative(self.__model, int(low_pos)))
-        high_pos_abs = int(absolute_pos_to_relative(self.__model, int(high_pos)))
+        low_pos_abs = percent_pos_to_analog(self.__model, low_pos)
+        high_pos_abs = percent_pos_to_analog(self.__model, high_pos)
         span = low_pos_abs - high_pos_abs
-        fb_inc = span/int(steps)
+        fb_inc = span/float(steps)
+        
         # Do high pos
         if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high position!")
@@ -352,7 +352,7 @@ class Calibrate(threading.Thread):
             self.__event.set() 
         elif name == STATUS:
             # Calculate position and directly event to API which has a pass-through to UI
-            ppos = analog_pos_to_percent(model, val[0])
+            ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
                 self.__cb((name, (True, "", [str(ppos)])))
             #home = self.__model[CONFIG][CAL][HOME]

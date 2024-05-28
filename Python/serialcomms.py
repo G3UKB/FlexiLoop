@@ -139,6 +139,8 @@ class SerialComms(threading.Thread):
                     sleep(SLEEP_TIMER)
             except Exception as e:
                 # Something went wrong
+                print(str(e))
+                traceback.print_exc()
                 self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. [%s]' % str(e))
                 break
                 

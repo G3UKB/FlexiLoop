@@ -234,6 +234,7 @@ class Config(QDialog):
         namelabel = QLabel('Name')
         subgrid.addWidget(namelabel, 0, 0)
         self.__nametxt = QLineEdit()
+        self.__nametxt.setObjectName("dialog")
         self.__nametxt.setToolTip('Band bame')
         self.__nametxt.setMaximumWidth(80)
         subgrid.addWidget(self.__nametxt, 0, 1)
@@ -242,6 +243,7 @@ class Config(QDialog):
         lowfreqlabel = QLabel('Low Freq')
         subgrid.addWidget(lowfreqlabel, 0, 2)
         self.__lowfreqtxt = QLineEdit()
+        self.__lowfreqtxt.setObjectName("dialog")
         self.__lowfreqtxt.setInputMask('09.90')
         self.__lowfreqtxt.setToolTip('Low band frequency')
         self.__lowfreqtxt.setMaximumWidth(80)
@@ -250,6 +252,7 @@ class Config(QDialog):
         highfreqlabel = QLabel('High Freq')
         subgrid.addWidget(highfreqlabel, 0, 4)
         self.__highfreqtxt = QLineEdit()
+        self.__highfreqtxt.setObjectName("dialog")
         self.__highfreqtxt.setInputMask('09.90')
         self.__highfreqtxt.setToolTip('High band frequency')
         self.__highfreqtxt.setMaximumWidth(80)
@@ -269,22 +272,20 @@ class Config(QDialog):
         # Position
         poslowlabel = QLabel('PosLow%')
         subgrid.addWidget(poslowlabel, 1, 2)
-        self.__poslowtxt = QSpinBox()
+        self.__poslowtxt = QLineEdit()
+        self.__poslowtxt.setInputMask('09.90')
         self.__poslowtxt.setObjectName("dialog")
         self.__poslowtxt.setToolTip('Set actuator position for low frequency')
-        self.__poslowtxt.setRange(0,100)
-        self.__poslowtxt.setMinimumWidth(80)
-        self.__poslowtxt.setValue(50)
+        self.__poslowtxt.setMaximumWidth(80)
         subgrid.addWidget(self.__poslowtxt, 1, 3)
         
         poshilabel = QLabel('PosHigh%')
         subgrid.addWidget(poshilabel, 1, 4)
-        self.__poshitxt = QSpinBox()
+        self.__poshitxt = QLineEdit()
+        self.__poshitxt.setInputMask('09.90')
         self.__poshitxt.setObjectName("dialog")
         self.__poshitxt.setToolTip('Set actuator position for high frequency')
-        self.__poshitxt.setRange(0,100)
-        self.__poshitxt.setMinimumWidth(80)
-        self.__poshitxt.setValue(50)
+        self.__poshitxt.setMaximumWidth(80)
         subgrid.addWidget(self.__poshitxt, 1, 5)
         
         # Button area
@@ -433,13 +434,13 @@ class Config(QDialog):
         self.__lowfreqtxt.setText('')
         self.__highfreqtxt.setText('')
         self.__steptxt.setValue(10)
-        self.__poslowtxt.setValue(50)
-        self.__poshitxt.setValue(50)
+        self.__poslowtxt.setText('')
+        self.__poshitxt.setText('')
     
     def __do_add(self):
         # Add current set to local sets
         key = self.__get_loop_item()
-        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), str(self.__poslowtxt.value()), str(self.__highfreqtxt.text()), str(self.__poshitxt.value()), str(self.__steptxt.value())]
+        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), float(self.__poslowtxt.text()), float(self.__highfreqtxt.text()), float(self.__poshitxt.text()), int(self.__steptxt.value())]
         self.__populate_table()
         
     def __do_remove(self):
@@ -525,7 +526,7 @@ class Config(QDialog):
             self.__new.setEnabled(False)
         else:
             self.__new.setEnabled(True)
-            if len(self.__nametxt.text()) > 0 and len(self.__lowfreqtxt.text()) > 0 and len(self.__highfreqtxt.text()) > 0 and self.__poslowtxt.value() > 0 and self.__poshitxt.value() > 0 and self.__steptxt.value() > 0:
+            if len(self.__nametxt.text()) > 0 and len(self.__lowfreqtxt.text()) > 0 and len(self.__highfreqtxt.text()) > 0 and len(self.__poslowtxt.text()) > 0 and len(self.__poshitxt.text()) > 0 and self.__steptxt.value() > 0:
                 self.__add.setEnabled(True)
                 
         if self.__table.currentRow() == -1:
