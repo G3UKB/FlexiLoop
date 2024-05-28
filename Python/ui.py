@@ -131,7 +131,6 @@ class UI(QMainWindow):
             pos = '-'
         self.__current_pos = pos
         # SWR
-        self.__auto_swr = '_._'
         self.__man_swr = '_._'
         
         # Default to radio side
@@ -253,7 +252,6 @@ class UI(QMainWindow):
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
                     elif name == TUNE:
-                        self.__auto_swr = args[0]
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
                     self.logger.info ('Activity %s completed successfully' % (self.__current_activity))
@@ -575,16 +573,9 @@ class UI(QMainWindow):
         self.__freqtxt.textChanged.connect(self.__auto_text)
         self.__autogrid.addWidget(self.__freqtxt, 0, 1)
         
-        swrlabel = QLabel('SWR')
-        self.__autogrid.addWidget(swrlabel, 0, 2)
-        swrlabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.__auto_swrval = QLabel('-.-')
-        self.__auto_swrval.setObjectName("minmax")
-        self.__autogrid.addWidget(self.__auto_swrval, 0, 3)
-        
         self.__tune = QPushButton("Tune...")
         self.__tune.setToolTip('Tune to freq...')
-        self.__autogrid.addWidget(self.__tune, 0,4)
+        self.__autogrid.addWidget(self.__tune, 0,2)
         self.__tune.clicked.connect(self.__do_tune)
         
         # -------------------------------------------
@@ -841,17 +832,8 @@ class UI(QMainWindow):
             self.__tune_freq = 0.0
         
     def __do_tune(self):
-        # Switch to ANALYSER, swich back is done in the callback
-        self.__saved_mode = self.__last_switch_mode
-        self.__switch_mode = ANALYSER
-        
-        # This will kick off when the callback from the relay change arrives
-        self.__st_act.setText(TUNE)
-        self.__deferred_activity = self.__do_tune_deferred
-        
-    def __do_tune_deferred(self):
-        # Deferred activity for TUNE
         self.__current_activity = TUNE
+        self.__st_act.setText(TUNE)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_freq(self.__selected_loop, self.__tune_freq)
@@ -1074,9 +1056,6 @@ class UI(QMainWindow):
         self.__l5label.setText('2 [%d]' % count)
         count = len(self.__model[CONFIG][SETPOINTS][SP_L3])
         self.__l6label.setText('3 [%d]' % count)
-            
-        # SWR
-        self.__auto_swrval.setText(str(self.__auto_swr))
         
         # Update min/max pot values
         self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))

@@ -39,6 +39,8 @@ import persist
 import serialcomms
 import calibrate
 
+VERB = False
+
 # Make this a separate module with q etc.
 class Tune(threading.Thread):
     
@@ -87,35 +89,34 @@ class Tune(threading.Thread):
             
             # Get calibration
             cal = model_for_loop(self.__model, self.__loop)
-            if self.__freq < cal[1] or self.__freq > cal[0]:
-                # Not covered by this loop
-                self.logger.warning ("Requested freq {} is outside limits for this loop [{},{}]".format(self.__freq, cal[1], cal[0]))
-                self.__cb(('Tune', (False, "Requested freq {} is outside limits for this loop [{},{}]".format(self.__freq, cal[1], cal[0]), [])))
-                self.__serial_comms.restore_callback()
-                return
             # Stage 1: move as close to frequency as possible
             # Find the two points this frequency falls between
             index = 0
-            idx_low = 0
-            idx_high = 0
-            # The list is in high to low frequency order as home is fully retracted
-            for ft in cal[2]:
+            idx_low = -1
+            idx_high = -1
+            # The list is not necessarily in any order as could cover multiple bands
+            for ft in cal:
                 if ft[1] < self.__freq:
                     # Lower than target
                     idx_high = index-1 
                     idx_low = index
                 else:
                     index += 1
+            if idx_high == -1 or idx_low == -1:
+                self.__cb((TUNE, (False, "Unable to find a tuning point for frequency %f" % self.__freq, [])))
+                # Give back callback
+                self.__serial_comms.restore_callback()
+                continue
             
             # Calculate where between these points the frequency should be
             # Note high is the setting for higher frequency not higher feedback value
             # Same for low
             #
             # The feedback values and frequencies above and below the required frequency
-            fb_high = cal[2][idx_high][0]
-            fb_low = cal[2][idx_low][0]
-            frq_high = cal[2][idx_high][1]
-            frq_low = cal[2][idx_low][1]
+            fb_high = cal[idx_high][0]
+            fb_low = cal[idx_low][0]
+            frq_high = cal[idx_high][1]
+            frq_low = cal[idx_low][1]
             
             # We now need to calculate the feedback value for the required frequency
             frq_span = frq_high - frq_low
@@ -134,7 +135,7 @@ class Tune(threading.Thread):
             # Stage 2 tweak SWR
             # Its a manual tweak
             # TBD what can we do here?
-            self.__cb((TUNE, (True, "", ["?.?"])))
+            self.__cb((TUNE, (True, "", [])))
             # Give back callback
             self.__serial_comms.restore_callback()
             
@@ -143,9 +144,28 @@ class Tune(threading.Thread):
     #=======================================================
     # Stolen Callback  
     def t_tune_cb(self, data):
+        if VERB: self.logger.info("Calibrate: got event: %s" % str(data))
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
             self.__args = val
-            self.__event.set()
+            self.__event.set() 
+        elif name == STATUS:
+            # Calculate position and directly event to API which has a pass-through to UI
+            ppos = analog_pos_to_percent(self.__model, val[0])
+            if ppos != None:
+                self.__cb((name, (True, "", [str(ppos)])))
+            #home = self.__model[CONFIG][CAL][HOME]
+            #maximum = self.__model[CONFIG][CAL][MAX]
+            #if home > 0 and maximum > 0:
+            #    span = maximum - home
+            #    offset = val[0] - home
+            #    self.__cb((name, (True, "", [str(int((offset/span)*100))])))
+        elif name == ABORT:
+            # Just release whatever was going on
+            # It should then pick up the abort flag
+            self.__abort = True
+            self.__event.set() 
+        else:
+            if VERB: self.logger.info ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
             
