@@ -564,7 +564,8 @@ class UI(QMainWindow):
         self.__grid.addWidget(gb_auto, 2,0)
         self.__autogrid.setColumnMinimumWidth(5,300)
         
-        freqlabel = QLabel('Freq')
+        # Move to frequency
+        freqlabel = QLabel('Move to Freq')
         self.__autogrid.addWidget(freqlabel, 0, 0)
         self.__freqtxt = QLineEdit()
         self.__freqtxt.setToolTip('Set tune frequency')
@@ -575,8 +576,32 @@ class UI(QMainWindow):
         
         self.__tune = QPushButton("Tune...")
         self.__tune.setToolTip('Tune to freq...')
-        self.__autogrid.addWidget(self.__tune, 0,2)
+        self.__autogrid.addWidget(self.__tune, 0, 2)
         self.__tune.clicked.connect(self.__do_tune)
+        
+        # Tracking
+        # Sub grid
+        tracksubgrid = QGridLayout()
+        sg_track = QGroupBox()
+        sg_track.setLayout(tracksubgrid)
+        self.__autogrid.addWidget(sg_track, 1,0,1,3)
+        
+        tracklabel = QLabel('Tracking (approx)')
+        tracksubgrid.addWidget(tracklabel, 1, 0)
+        
+        res2label = QLabel('Freq')
+        tracksubgrid.addWidget(res2label, 1, 1)
+        self.__freqval = QLabel('-.-')
+        self.__freqval.setObjectName("minmax")
+        self.__freqval.setMaximumWidth(100)
+        tracksubgrid.addWidget(self.__freqval, 1, 2)
+        
+        res1label = QLabel('SWR')
+        tracksubgrid.addWidget(res1label, 1, 3)
+        self.__swrres = QLabel('-.-')
+        self.__swrres.setObjectName("minmax")
+        self.__swrres.setMaximumWidth(100)
+        tracksubgrid.addWidget(self.__swrres, 1, 4)
         
         # -------------------------------------------
         # Manual area
@@ -640,76 +665,56 @@ class UI(QMainWindow):
         self.__subgrid.addWidget(self.__runfwd, 0,7)
         self.__runfwd.clicked.connect(self.__do_run_fwd)    
         
-        # Get current
-        res1label = QLabel('SWR')
-        self.__mangrid.addWidget(res1label, 1, 0)
-        self.__swrres = QLabel('-.-')
-        self.__swrres.setObjectName("minmax")
-        self.__swrres.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__swrres, 1, 1)
-        
-        res2label = QLabel('Freq')
-        self.__mangrid.addWidget(res2label, 1, 2)
-        self.__freqval = QLabel('-.-')
-        self.__freqval.setObjectName("minmax")
-        self.__freqval.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__freqval, 1, 3)
-        
-        self.__getres = QPushButton("Get Current")
-        self.__getres.setToolTip('Get current SWR and Frequency...')
-        self.__mangrid.addWidget(self.__getres, 1,4)
-        self.__getres.clicked.connect(self.__do_res)
-        
         # Move position
         movelabel = QLabel('Move to (%)')
-        self.__mangrid.addWidget(movelabel, 2, 0)
+        self.__mangrid.addWidget(movelabel, 1, 0)
         self.__movetxt = QSpinBox()
         self.__movetxt.setToolTip('Move position 0-100%')
         self.__movetxt.setRange(0,100)
         self.__movetxt.setValue(50)
         self.__movetxt.setMaximumWidth(80)
-        self.__mangrid.addWidget(self.__movetxt, 2, 1)
+        self.__mangrid.addWidget(self.__movetxt, 1, 1)
         
         self.__movepos = QPushButton("Move")
         self.__movepos.setToolTip('Move to given position 0-100%...')
-        self.__mangrid.addWidget(self.__movepos, 2,2)
+        self.__mangrid.addWidget(self.__movepos, 1,2)
         self.__movepos.clicked.connect(self.__do_pos)
         
         curr1label = QLabel('Current Pos')
-        self.__mangrid.addWidget(curr1label, 2, 3)
+        self.__mangrid.addWidget(curr1label, 1, 3)
         self.__currpos = QLabel('-')
         self.__currpos.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__currpos.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__currpos, 2, 4)
+        self.__mangrid.addWidget(self.__currpos, 1, 4)
         
         # Increment
         inclabel = QLabel('Inc (ms)')
-        self.__mangrid.addWidget(inclabel, 3, 0)
+        self.__mangrid.addWidget(inclabel, 2, 0)
         self.__inctxt = QSpinBox()
         self.__inctxt.setToolTip('Increment time in ms')
         self.__inctxt.setRange(0,1000)
         self.__inctxt.setValue(500)
         self.__inctxt.setMaximumWidth(80)
-        self.__mangrid.addWidget(self.__inctxt, 3, 1)
+        self.__mangrid.addWidget(self.__inctxt, 2, 1)
         
         self.__mvfwd = QPushButton("Move Forward")
         self.__mvfwd.setToolTip('Move forward for given ms...')
-        self.__mangrid.addWidget(self.__mvfwd, 3,2)
+        self.__mangrid.addWidget(self.__mvfwd, 2,2)
         self.__mvfwd.clicked.connect(self.__do_move_fwd)
         
         self.__mvrev = QPushButton("Move Reverse")
         self.__mvrev.setToolTip('Move reverse for given ms...')
-        self.__mangrid.addWidget(self.__mvrev, 3,3)
+        self.__mangrid.addWidget(self.__mvrev, 2,3)
         self.__mvrev.clicked.connect(self.__do_move_rev)
         
         self.__nudgefwd = QPushButton("Nudge Forward")
         self.__nudgefwd.setToolTip('Nudge forward...')
-        self.__mangrid.addWidget(self.__nudgefwd, 3,4)
+        self.__mangrid.addWidget(self.__nudgefwd, 2,4)
         self.__nudgefwd.clicked.connect(self.__do_nudge_fwd)
         
         self.__nudgerev = QPushButton("Nudge Reverse")
         self.__nudgerev.setToolTip('Nudge reverse...')
-        self.__mangrid.addWidget(self.__nudgerev, 3,5)
+        self.__mangrid.addWidget(self.__nudgerev, 2,5)
         self.__nudgerev.clicked.connect(self.__do_nudge_rev)
         
         # -------------------------------------------
@@ -1258,7 +1263,6 @@ class UI(QMainWindow):
         self.__runfwd.setEnabled(state)
         self.__stopact.setEnabled(state)
         self.__runrev.setEnabled(state)
-        self.__getres.setEnabled(state)
         self.__movetxt.setEnabled(state)
         self.__movepos.setEnabled(state)
         self.__inctxt.setEnabled(state)
