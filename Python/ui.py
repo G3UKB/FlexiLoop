@@ -565,7 +565,7 @@ class UI(QMainWindow):
         self.__autogrid.setColumnMinimumWidth(5,300)
         
         # Move to frequency
-        freqlabel = QLabel('Move to Freq')
+        freqlabel = QLabel('Tune to Freq')
         self.__autogrid.addWidget(freqlabel, 0, 0)
         self.__freqtxt = QLineEdit()
         self.__freqtxt.setToolTip('Set tune frequency')
@@ -1181,7 +1181,6 @@ class UI(QMainWindow):
                 self.__loop_sel.setEnabled(True)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(True)
-                self.__getres.setEnabled(False)
                 self.__stopact.setEnabled(False)
             elif state == W_CALIBRATED:
                 # We have calibration for the selected loop
@@ -1300,7 +1299,7 @@ class UI(QMainWindow):
         except:
             return
         apos = percent_pos_to_analog(self.__model, fpos)
-        r, msg, (pos, f, swr) = find_from_position(self, loop, apos)
+        r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
         if r:
             self.__freqval.setText(str(f))
             self.__swrres.setText(str(swr))

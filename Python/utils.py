@@ -51,7 +51,6 @@ def percent_pos_to_analog(model, pos):
     home = model[CONFIG][CAL][HOME]
     maximum = model[CONFIG][CAL][MAX]
     if home == -1 or maximum == -1:
-        print("Failed to convert feedback val to %age as limits are not set!")
         return None
     fspan = float(maximum - home)
     return int(((float(pos)/100.0)*fspan) + float(home))
@@ -64,7 +63,6 @@ def analog_pos_to_percent(model, pos):
     home = model[CONFIG][CAL][HOME]
     maximum = model[CONFIG][CAL][MAX]
     if home == -1 or maximum == -1:
-        print("Failed to convert feedback val to %age as limits are not set!")
         return None
     span = maximum - home
     offset = pos - home
@@ -75,9 +73,9 @@ def round_sig(x, sig=2):
     return round(x, sig)
 
 # Find the best match (interpolate if necessary) frequency for a given absolute position
-def find_from_position(self, loop, pos):
+def find_from_position(model, loop, pos):
     # Get the data set
-    sets = model_for_loop(self.__model, loop)
+    sets = model_for_loop(model, loop)
     # If we have data look for a match
     if len(sets) == 0:
         # Failed to find a candidate
