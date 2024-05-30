@@ -55,9 +55,9 @@ flexi_loop_model = {
             HOME: -1,
             MAX: -1,
             # Loop 1-3 [[feedback value, f, swr], [...], ...]]
-            CAL_L1: [],
-            CAL_L2: [],
-            CAL_L3: [],
+            CAL_L1: {},
+            CAL_L2: {},
+            CAL_L3: {},
         },
         SETPOINTS: {
             SP_L1: {},

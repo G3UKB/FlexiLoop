@@ -250,12 +250,15 @@ class Calibrate(threading.Thread):
             self.__msg_cb("Calibrating set %s..." % key)
             
             # Run steps and build the cal-map
-            r, msg, cal_map = self.__do_steps(loop, cal_map, values)
+            r, msg, cal_map = self.__do_steps(loop, cal_map, key, values)
             if not r:
                 return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
         return True, '', cal_map       
         
-    def __do_steps(self, loop, cal_map, cal_set):
+    def __do_steps(self, loop, cal_map, name, cal_set):
+        # Holds current data
+        temp_map = []
+        
         # Move incrementally and take readings
         # We move from high to low for the given number of steps
         # Interval is a %age of the difference between feedback readings for low and high
@@ -276,7 +279,7 @@ class Calibrate(threading.Thread):
             self.logger.warning("Failed to get params for high position!")
             return False, "Failed to get params for high position!", cal_map 
         # Add the high position
-        cal_map.append([pos, f, swr])
+        temp_map.append([pos, f, swr])
         
         # Do intermediate steps
         self.__msg_cb("Calibrating intermediate frequencies...")
@@ -293,7 +296,7 @@ class Calibrate(threading.Thread):
             next_inc += fb_inc
             counter += 1
         # Add the intermediate position
-        cal_map.append([pos, f, swr])
+        temp_map.append([pos, f, swr])
         
         # Do low pos
         if not self.__move_wait(low_pos_abs):
@@ -306,7 +309,10 @@ class Calibrate(threading.Thread):
             self.logger.warning("Failed to get params for low position!")
             return False, "Failed to get params for low position!", cal_map
         # Add the low position
-        cal_map.append([pos, f, swr])
+        temp_map.append([pos, f, swr])
+        
+        # Assign this set to the set name
+        cal_map[name] = temp_map
         
         # Return the map
         return True, "", cal_map

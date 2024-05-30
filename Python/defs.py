@@ -181,42 +181,9 @@ MSG_INFO = 'MSG_INFO'
 MSG_STATUS = 'MSG_STATUS'
 MSG_ALERT = 'MSG_ALERT'
 
-#=======================================================================
-# VNA parameters
-#
-
-VNA_PRESENT = 'VNA_PRESENT'
-VNA_YES = 'VNA_YES'
-VNA_NO = 'VNA_NO'
-
-# Types
-RQST_FRES = 'fres'
-RQST_FSWR = 'fswr'
-RQST_SCAN = 'scan'
-
-# Freq inc between readings in Hz
-INC_10K = 10000
-INC_5K = 5000
-INC_1K = 1000
-INC_500 = 500
-INC_250 = 250
-
-# Driver
-DRIVER_ID = 'DRIVER_ID'
-DRIVER_PORT = 'DRIVER_PORT'
-
-# Scanner defs
-CAL_FILE = 'CAL_FILE'
-SCAN_MODE = 'REFL'
-EXPORTS = 'csv'
-EXPORT_FILENAME = 'EXPORT_FILENAME'
-VNA_JAR = 'VNA_JAR'
-
-# Decoder defs
-EXPORT_PATH = 'EXPORT_PATH'
-DEC_FREQ = 0
-DEC_SWR = 4
-
+# Set types
+SET_POS = 0
+SET_FREQ = 1
 
 
 

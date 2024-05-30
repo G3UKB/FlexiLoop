@@ -103,8 +103,8 @@ class Calview(QDialog):
         # Table area
         self.__table = QTableWidget()
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.__table.setColumnCount(3)
-        self.__table.setHorizontalHeaderLabels(('Position %', 'Freq', 'SWR',))
+        self.__table.setColumnCount(4)
+        self.__table.setHorizontalHeaderLabels(('Set Name', 'Position %', 'Freq', 'SWR',))
         grid.addWidget(self.__table, 1, 0, 1, 3)
         
         # Button area
@@ -155,11 +155,12 @@ class Calview(QDialog):
         key = self.__get_loop_item()
         cps = self.__model[CONFIG][CAL][key]
         if len(cps) > 0:
-            for item in cps:
+            for key, item in cps:
                 self.__table.insertRow(row)
-                self.__table.setItem(row, 0, QTableWidgetItem(str(analog_pos_to_percent(self.__model, item[0]))))
-                self.__table.setItem(row, 1, QTableWidgetItem(str(item[1])))
-                self.__table.setItem(row, 2, QTableWidgetItem(str(item[2])))
+                self.__table.setItem(row, 0, QTableWidgetItem(str(key))
+                self.__table.setItem(row, 1, QTableWidgetItem(str(analog_pos_to_percent(self.__model, item[0]))))
+                self.__table.setItem(row, 2, QTableWidgetItem(str(item[1])))
+                self.__table.setItem(row, 3, QTableWidgetItem(str(item[2])))
                 row += 1
             if self.__table.rowCount() > 0:
                 self.__table.selectRow(0)

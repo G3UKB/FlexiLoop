@@ -1296,7 +1296,15 @@ class UI(QMainWindow):
         
         # Get current absolute position
         apos = percent_pos_to_analog(self.__model, float(pos))
-
+        r, msg, (pos, f, swr) = find_from_position(self, loop, apos)
+        if r:
+            self.__freqval.setText(str(f))
+            self.__swrres.setText(str(swr))
+        else:
+            self.__freqval.setText('?.?')
+            self.__swrres.setText('?.?')
+         
+        '''       
         # Get the data set
         sets = model_for_loop(self.__model, loop)
         
@@ -1361,4 +1369,4 @@ class UI(QMainWindow):
                 target_freq = frq_low - frq_frac
                 self.__freqval.setText(str(target_freq))
                 self.__swrres.setText(str(sets[idx_low][2]))
-            
+        '''    

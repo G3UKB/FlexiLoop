@@ -88,14 +88,20 @@ class Tune(threading.Thread):
             self.__serial_comms.steal_callback(self.t_tune_cb)
             
             # Get calibration
-            cal = model_for_loop(self.__model, self.__loop)
+            sets = model_for_loop(self.__model, self.__loop)
             # Stage 1: move as close to frequency as possible
+            # Find suitable candidate set
+            candidate = find_candidate(sets, self.__freq, SET_FREQ)
+            if candidate == None:
+                self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
+            aset = sets[candidate]
+            
             # Find the two points this frequency falls between
             index = 0
             idx_low = -1
             idx_high = -1
             # The list is not necessarily in any order as could cover multiple bands
-            for ft in cal:
+            for ft in aset:
                 if ft[1] < self.__freq:
                     # Lower than target
                     idx_high = index-1 
