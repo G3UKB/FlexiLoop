@@ -157,7 +157,7 @@ class Calview(QDialog):
         if len(cps) > 0:
             for key, item in cps:
                 self.__table.insertRow(row)
-                self.__table.setItem(row, 0, QTableWidgetItem(str(key))
+                self.__table.setItem(row, 0, QTableWidgetItem(str(key)))
                 self.__table.setItem(row, 1, QTableWidgetItem(str(analog_pos_to_percent(self.__model, item[0]))))
                 self.__table.setItem(row, 2, QTableWidgetItem(str(item[1])))
                 self.__table.setItem(row, 3, QTableWidgetItem(str(item[2])))

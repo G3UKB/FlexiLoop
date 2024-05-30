@@ -1295,7 +1295,11 @@ class UI(QMainWindow):
     def __update_tracking(self, loop, pos):
         
         # Get current absolute position
-        apos = percent_pos_to_analog(self.__model, float(pos))
+        try:
+           fpos = float(pos)
+        except:
+            return
+        apos = percent_pos_to_analog(self.__model, fpos)
         r, msg, (pos, f, swr) = find_from_position(self, loop, apos)
         if r:
             self.__freqval.setText(str(f))
