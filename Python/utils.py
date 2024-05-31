@@ -84,25 +84,6 @@ def find_from_position(model, loop, pos):
     # We first determine the best set to look for a match.
     # Sets can overlap so we want the minimum span set as the best candidate
     candidate = find_candidate(sets, pos, SET_POS)
-    '''
-    candidate = None
-    lastlow = None
-    lasthi = None
-    for name, pset in sets:
-        low = pset[0][0]
-        high = pset[-1][0]
-        if pos >= low and pset <= high:
-            # Our position lies within this set
-            if candidate == None:
-                candidate = name
-                lastlow = low
-                lasthi = high
-            else:
-                if low - high < lastlow - lasthi:
-                    candidate = name
-                lastlow = low
-                lasthi = high
-    '''
     if candidate == None:
         # Failed to find a candidate
         return False, 'No candidate found for position %d!' % pos, (None, None, None)

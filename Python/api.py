@@ -223,19 +223,6 @@ class API:
             self.__absolute_pos = args[0]
             ppos = analog_pos_to_percent(self.__model, self.__absolute_pos)
             self.__cb((name, (True, "", [str(ppos)])))
-            '''
-            home = self.__model[CONFIG][CAL][HOME]
-            maximum = self.__model[CONFIG][CAL][MAX]
-            if home == -1 or maximum == -1:
-                if VERB: self.logger.warning("Failed to get position as limits are not set!")
-                # We might get position status while configuring limits. Ignore these as they are invalid.
-            else:
-                # We need to save the absolute pos not the %age pos
-                self.__absolute_pos = args[0]
-                span = maximum - home
-                offset = args[0] - home
-                self.__cb((name, (True, "", [str(int((offset/span)*100))])))
-            '''
         else:
             self.__cb(data)
         

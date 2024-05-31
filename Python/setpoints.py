@@ -199,7 +199,7 @@ class Setpoint(QDialog):
     def __do_moveto(self):
         r = self.__table.currentRow()
         if r != -1:
-            pos = int(self.__table.item(r, 3).text())
+            pos = float(self.__table.item(r, 3).text())
             #Ask UI to move to pos
             self.__cb(pos)
             

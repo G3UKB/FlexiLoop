@@ -77,7 +77,7 @@ class UI(QMainWindow):
         self.__sp_dialog = setpoints.Setpoint(self.__model, self.msg_callback, self.__move_callback)
         
         # Create the calibration view dialog
-        self.__calview_dialog = calview.Calview(self.__model, self.msg_callback)
+        self.__calview_dialog = calview.Calview(self.__model, self.__move_callback, self.msg_callback)
         
         #Loop status
         self.__selected_loop = 1
@@ -1305,70 +1305,4 @@ class UI(QMainWindow):
         else:
             self.__freqval.setText('?.?')
             self.__swrres.setText('?.?')
-         
-        '''       
-        # Get the data set
-        sets = model_for_loop(self.__model, loop)
         
-        # If we have data look for a match
-        if len(sets) > 0:
-            # We need to find best match for the curent position.
-            index = 0
-            offset = 7
-            idx_low = -1
-            idx_high = -1
-            # The list is not necessarily in any order as could cover multiple bands
-            # Also the position could be increasing or decreasing
-            # Also they are not inclusive due to slight drift in the analog value
-            # Iterate through in pairs
-            for index in range(1, len(sets)-1, 2):
-                # See if apos lies between values
-                if sets[index][0] <= apos and sets[index+1][0] >= apos:
-                    idx_low = index
-                    idx_high = index+1
-                    break
-                elif sets[index][0] >= apos and sets[index+1][0] <= apos:
-                    idx_low = index+1
-                    idx_high = index
-                    break
-                # If not are we close enough to one value
-                elif abs(sets[index][0] - apos) < offset:
-                    idx_low = index
-                    idx_high = index
-                    break
-                elif abs(sets[index+1][0] - apos) < offset:
-                    idx_low = index
-                    idx_high = index
-                    break 
-                
-            if idx_low == -1 or  idx_high ==-1:
-                # No match
-                self.__freqval.setText('?.?')
-                self.__swrres.setText('?.?')
-            else:
-                # The feedback values and frequencies above and below the required position
-                fb_high = sets[idx_high][0]
-                fb_low = sets[idx_low][0]
-                frq_high = sets[idx_high][1]
-                frq_low = sets[idx_low][1]
-                # We now need to calculate the frequency value for the required position
-                # Span between positions
-                fb_span = fb_high - fb_low
-                if fb_span < 0:
-                    fb_span = fb_low - fb_high
-                if fb_span == 0: fb_span = 1
-                # Increment from low to actual position
-                fb_inc = apos - fb_low
-                # Fraction to be applied to frequency
-                fb_frac = fb_inc/fb_span
-                # Same for frequency
-                frq_span = frq_high - frq_low
-                if frq_span < 0:
-                    frq_span = frq_low - frq_high 
-                frq_frac = fb_frac * frq_span
-                
-                # Interpolate target frequency
-                target_freq = frq_low - frq_frac
-                self.__freqval.setText(str(target_freq))
-                self.__swrres.setText(str(sets[idx_low][2]))
-        '''    

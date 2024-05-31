@@ -42,7 +42,7 @@ import api
 # Setpoint config dialog        
 class Calview(QDialog):
     
-    def __init__(self, model, msgs):
+    def __init__(self, model, callback, msgs):
         super(Calview, self).__init__()
 
         # Get root logger
@@ -50,6 +50,7 @@ class Calview(QDialog):
         
         self.__model = model
         self.__msgs = msgs
+        self.__cb = callback
         
         # Local vars
         self.__loop = -1
@@ -72,6 +73,9 @@ class Calview(QDialog):
         
         # Populate
         self.__populate()
+        
+        # Start idle processing
+        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
         
     #=======================================================
     # PRIVATE
@@ -137,13 +141,11 @@ class Calview(QDialog):
         # Update config
         x,y,w,h = self.__model[STATE][WINDOWS][CALVIEW_WIN]
         self.__model[STATE][WINDOWS][CALVIEW_WIN] = [x,y,event.size().width(),event.size().height()]
-        pass
     
     def moveEvent(self, event):
         # Update config
         x,y,w,h = self.__model[STATE][WINDOWS][CALVIEW_WIN]
         self.__model[STATE][WINDOWS][CALVIEW_WIN] = [event.pos().x(),event.pos().y(),w,h]
-        pass
     
     #=======================================================
     # User events
@@ -151,7 +153,10 @@ class Calview(QDialog):
         self.close()
     
     def __do_move(self):
-        pass
+        row = self.__table.currentRow()
+        pos = float(self.__table.item(row, 1).text())
+        #Ask UI to move to pos
+        self.__cb(pos)
         
     #=======================================================
     # Helpers
@@ -191,3 +196,16 @@ class Calview(QDialog):
         return item
 
     
+    # =======================================================
+    # Background activities
+    def __idleProcessing(self):
+                
+        r = self.__table.currentRow()
+        if r == -1 or not self.__model[STATE][ARDUINO][ONLINE]:
+            # No row selected
+            self.__moveto.setEnabled(False)
+        else:
+            self.__moveto.setEnabled(True) 
+        
+        # Reset timer    
+        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
