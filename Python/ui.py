@@ -472,7 +472,7 @@ class UI(QMainWindow):
         self.__loopgrid.addWidget(self.__caldel, 1, 2)
         self.__caldel.clicked.connect(self.__do_cal_del)
         
-        self.__calview = QPushButton("View...")
+        self.__calview = QPushButton("Calibration...")
         self.__calview.setToolTip('View calibrations')
         self.__loopgrid.addWidget(self.__calview, 1, 3)
         self.__calview.clicked.connect(self.__do_cal_view)
@@ -1292,7 +1292,6 @@ class UI(QMainWindow):
             self.__next.setEnabled(True)
     
     def __update_tracking(self, loop, pos):
-        
         # Get current absolute position
         try:
            fpos = float(pos)

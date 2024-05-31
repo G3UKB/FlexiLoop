@@ -108,11 +108,17 @@ class Calview(QDialog):
         grid.addWidget(self.__table, 1, 0, 1, 3)
         
         # Button area
+        self.__moveto = QPushButton("Move to")
+        self.__moveto.setToolTip('Move to selected frequency')
+        self.__moveto.clicked.connect(self.__do_move)
+        self.__moveto.setMinimumHeight(20)
+        grid.addWidget(self.__moveto, 2, 1)
+        
         self.__exit = QPushButton("Close")
         self.__exit.setToolTip('Close the application')
         self.__exit.clicked.connect(self.__do_close)
         self.__exit.setMinimumHeight(20)
-        grid.addWidget(self.__exit, 2, 2)     
+        grid.addWidget(self.__exit, 2, 2)
     
     #=======================================================
     # PUBLIC
@@ -144,6 +150,9 @@ class Calview(QDialog):
     def __do_close(self):
         self.close()
     
+    def __do_move(self):
+        pass
+        
     #=======================================================
     # Helpers
     def __populate_table(self):
@@ -155,13 +164,16 @@ class Calview(QDialog):
         key = self.__get_loop_item()
         cps = self.__model[CONFIG][CAL][key]
         if len(cps) > 0:
-            for key, item in cps:
+            for key, item in cps.items():
                 self.__table.insertRow(row)
                 self.__table.setItem(row, 0, QTableWidgetItem(str(key)))
-                self.__table.setItem(row, 1, QTableWidgetItem(str(analog_pos_to_percent(self.__model, item[0]))))
-                self.__table.setItem(row, 2, QTableWidgetItem(str(item[1])))
-                self.__table.setItem(row, 3, QTableWidgetItem(str(item[2])))
                 row += 1
+                for d in item:
+                    self.__table.insertRow(row)
+                    self.__table.setItem(row, 1, QTableWidgetItem(str(analog_pos_to_percent(self.__model, d[0]))))
+                    self.__table.setItem(row, 2, QTableWidgetItem(str(d[1])))
+                    self.__table.setItem(row, 3, QTableWidgetItem(str(d[2])))
+                    row += 1
             if self.__table.rowCount() > 0:
                 self.__table.selectRow(0)
         

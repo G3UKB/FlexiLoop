@@ -119,20 +119,20 @@ def find_from_position(model, loop, pos):
     # Iterate through in pairs
     for index in range(1, len(pset)-1, 2):
         # See if apos lies between values
-        if pset[index][0] <= apos and pset[index+1][0] >= apos:
+        if pset[index][0] <= pos and pset[index+1][0] >= pos:
             idx_low = index
             idx_high = index+1
             break
-        elif pset[index][0] >= apos and pset[index+1][0] <= apos:
+        elif pset[index][0] >= pos and pset[index+1][0] <= pos:
             idx_low = index+1
             idx_high = index
             break
         # If not are we close enough to one value
-        elif abs(pset[index][0] - apos) < offset:
+        elif abs(pset[index][0] - pos) < offset:
             idx_low = index
             idx_high = index
             break
-        elif abs(pset[index+1][0] - apos) < offset:
+        elif abs(pset[index+1][0] - pos) < offset:
             idx_low = index
             idx_high = index
             break 
@@ -153,7 +153,7 @@ def find_from_position(model, loop, pos):
             fb_span = fb_low - fb_high
         if fb_span == 0: fb_span = 1
         # Increment from low to actual position
-        fb_inc = apos - fb_low
+        fb_inc = pos - fb_low
         # Fraction to be applied to frequency
         fb_frac = fb_inc/fb_span
         # Same for frequency
@@ -172,10 +172,10 @@ def find_candidate(sets, pos, qual):
     candidate = None
     lastlow = None
     lasthi = None
-    for name, pset in sets:
+    for name, pset in sets.items():
         low = pset[0][qual]
         high = pset[-1][qual]
-        if pos >= low and pset <= high:
+        if pos >= low and pos <= high:
             # Our position lies within this set
             if candidate == None:
                 candidate = name

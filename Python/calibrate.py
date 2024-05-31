@@ -38,7 +38,7 @@ import model
 import serialcomms
 from utils import *
 
-VERB = False
+VERB = True
 
 # This is a relatively slow process.
 # 1.    Establish the travel end points as feedback analogue values from the Arduino.
@@ -46,14 +46,12 @@ VERB = False
 #       so actual values could be e.g. 200 - 800.These end points stay the same so this
 #       is a one off calibration until a recalibration is requested.
 # 2.    We need to know which loop is connected. This will be a UI function as is calling
-#       (re)calibration.
+#       calibration.
 # 3.    We set calibration point at the (user selectable) interval as a percentage of
 #       the full travel. So if we select 10% there will be 11 calibration points. The
 #       more points the slower calibration will be but the quicker the (re)tuning as we
 #       get closer to the requested frequency.
-# 4.    At each calibration point we get a resonance reading and SWR from the VNA.
-# 5.    The tables of readings are stored and retrieved. If there is no retrieved table
-#       for the current loop the user will be asked to perform calibration.
+# 4.    At each calibration point we get a resonance reading and SWR from the user.
 
 #=====================================================
 # The main application class
@@ -161,7 +159,11 @@ class Calibrate(threading.Thread):
         r, sets, cal_map = self.retrieve_context(loop)
         if r:
             if len(cal_map) == 0:
-                r, msg, cal_map = self.create_map(loop, sets, cal_map)
+                try:
+                    r, msg, cal_map = self.create_map(loop, sets, cal_map)
+                except Exception as e:
+                    print('Calibrate exception %s [%s]' % (str(e), traceback.print_exc()))
+                    exit()
                 if not r:
                     if self.__abort:
                         self.__abort = False
@@ -289,14 +291,12 @@ class Calibrate(threading.Thread):
             if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
-            self.__msg_cb("Please enter frequency and SWR for step %d" % counter, MSG_ALERT)
+            self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
             r, (f, swr, pos) = self.__get_current()
             self.__msg_cb("Step: %d, Target: %d, Actual %d" % (counter, next_inc, pos)) 
-            cal_map.append([pos, f, swr])
+            temp_map.append([pos, f, swr])
             next_inc += fb_inc
             counter += 1
-        # Add the intermediate position
-        temp_map.append([pos, f, swr])
         
         # Do low pos
         if not self.__move_wait(low_pos_abs):
@@ -321,7 +321,9 @@ class Calibrate(threading.Thread):
         self.__comms_q.put(('move', [move_to]))
         # Wait response
         self.__wait_for = 'MoveTo'
+        if VERB: self.logger.info("Waiting for: MoveTo")
         self.__event.wait()
+        if VERB: self.logger.info("Out of wait")
         if self.__abort:
             self.__event.clear()
             return False

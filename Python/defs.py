@@ -87,7 +87,7 @@ CONFIG_PATH = '../config/flexi_loop.cfg'
 # Run idle processing every IDLE_TICKER ms
 IDLE_TICKER = 250
 # Check Arduino every HEARTBEAT_TIMER ms
-HEARTBEAT_TIMER = 5000
+HEARTBEAT_TIMER = 10000
 
 # Loop selection
 LOOP_1 = 1

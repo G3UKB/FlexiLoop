@@ -36,7 +36,7 @@ import logging
 from defs import *
 
 # Verbose flag
-VERB = False
+VERB = True
 # Set False when testing
 MODEL = True
 # Pause at end of processing SLEEP_TIMER secs
