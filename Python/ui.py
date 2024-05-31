@@ -398,7 +398,7 @@ class UI(QMainWindow):
         self.__potdel.clicked.connect(self.__do_pot_del)
         
         # Limits
-        gb_lim = QGroupBox('Pot feedback limits')
+        gb_lim = QGroupBox('Feedback limits')
         hbox_lim = QHBoxLayout()
         
         potminlabel = QLabel('Home')
@@ -680,7 +680,7 @@ class UI(QMainWindow):
         self.__mangrid.addWidget(self.__movepos, 1,2)
         self.__movepos.clicked.connect(self.__do_pos)
         
-        curr1label = QLabel('Current Pos')
+        curr1label = QLabel('Current Position')
         self.__mangrid.addWidget(curr1label, 1, 3)
         self.__currpos = QLabel('-')
         self.__currpos.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
@@ -934,15 +934,6 @@ class UI(QMainWindow):
         # Set loop selection needed by the callback as it cant access widgets
         # Index is zero based, loops are 1 based
         self.__selected_loop = index + 1
-        # Set the min/max frequencies
-        loop = model_for_loop(self.__model, self.__selected_loop)
-        if len(loop) > 0:
-            self.__minvalue.setText(str(loop[0]))
-            self.__maxvalue.setText(str(loop[1]))
-        else:
-            self.__minvalue.setText('0.0')
-            self.__maxvalue.setText('0.0')
-    
     
     #=======================================================
     # Manual calibration events

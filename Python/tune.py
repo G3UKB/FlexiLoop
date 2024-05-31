@@ -91,9 +91,11 @@ class Tune(threading.Thread):
             sets = model_for_loop(self.__model, self.__loop)
             # Stage 1: move as close to frequency as possible
             # Find suitable candidate set
-            candidate = find_candidate(sets, self.__freq, SET_FREQ)
+            candidate = find_freq_candidate(sets, self.__freq)
             if candidate == None:
                 self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
+                self.__serial_comms.restore_callback()
+                continue
             aset = sets[candidate]
             
             # Find the two points this frequency falls between
@@ -119,10 +121,10 @@ class Tune(threading.Thread):
             # Same for low
             #
             # The feedback values and frequencies above and below the required frequency
-            fb_high = cal[idx_high][0]
-            fb_low = cal[idx_low][0]
-            frq_high = cal[idx_high][1]
-            frq_low = cal[idx_low][1]
+            fb_high = aset[idx_high][0]
+            fb_low = aset[idx_low][0]
+            frq_high = aset[idx_high][1]
+            frq_low = aset[idx_low][1]
             
             # We now need to calculate the feedback value for the required frequency
             frq_span = frq_high - frq_low

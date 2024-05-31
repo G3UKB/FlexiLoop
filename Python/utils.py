@@ -31,6 +31,11 @@ from math import log10, floor
 # Application imports
 from defs import *
 
+# ***********************************************
+# NOTE - functions are NOT re-entrant
+# If calling from more than one thread add protection
+# ***********************************************
+
 # Return the loop config for loop id
 def model_for_loop(model, loop):
         
@@ -83,7 +88,7 @@ def find_from_position(model, loop, pos):
     # A set is a dictionary of name:[[pos, freq, swr], [...], ...]
     # We first determine the best set to look for a match.
     # Sets can overlap so we want the minimum span set as the best candidate
-    candidate = find_candidate(sets, pos, SET_POS)
+    candidate = find_pos_candidate(sets, pos)
     if candidate == None:
         # Failed to find a candidate
         return False, 'No candidate found for position %d!' % pos, (None, None, None)
@@ -149,13 +154,13 @@ def find_from_position(model, loop, pos):
         return True, '', (pset[idx_low][0], target_freq, pset[idx_low][2] )
     
 # Find candidate for given position
-def find_candidate(sets, pos, qual):
+def find_pos_candidate(sets, pos):
     candidate = None
     lastlow = None
     lasthi = None
     for name, pset in sets.items():
-        low = pset[0][qual]
-        high = pset[-1][qual]
+        low = pset[0][0]
+        high = pset[-1][0]
         if pos >= low and pos <= high:
             # Our position lies within this set
             if candidate == None:
@@ -166,6 +171,26 @@ def find_candidate(sets, pos, qual):
                 if low - high < lastlow - lasthi:
                     candidate = name
                 lastlow = low
+                lasthi = high   
+    return candidate
+
+# Find candidate for given frequency
+def find_freq_candidate(sets, freq):
+    candidate = None
+    lastlow = None
+    lasthi = None
+    for name, pset in sets.items():
+        low = pset[0][1]
+        high = pset[-1][1]
+        if freq <= low and freq >= high:
+            # Our position lies within this set
+            if candidate == None:
+                candidate = name
+                lastlow = low
                 lasthi = high
-                
+            else:
+                if high - low < lasthi - lastlow:
+                    candidate = name
+                lastlow = low
+                lasthi = high
     return candidate
