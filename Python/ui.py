@@ -743,6 +743,7 @@ class UI(QMainWindow):
     #=======================================================
     # Configuration
     def __do_config(self):
+        self.__config_dialog.each_pass()
         self.__config_dialog.show()
     
     #=======================================================

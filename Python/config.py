@@ -52,13 +52,6 @@ class Config(QDialog):
         self.__model = model
         self.__msgs = msgs
         
-        # Local sets synced back to model on save
-        # Sets are [[name, low_freq, high_freq, steps, position], [...], ...]
-        self.__sets = {
-            CAL_S1: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S1]),
-            CAL_S2: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S2]),
-            CAL_S3: copy.deepcopy(model[CONFIG][CAL][SETS][CAL_S3]),
-        }
         self.__selected_loop = 1
         
         # Start idle processing
@@ -82,6 +75,16 @@ class Config(QDialog):
         
         # Populate
         self.__populate_ui()
+    
+    # Copy any local data required for pass
+    def each_pass(self):
+        # Local sets synced back to model on save
+        # Sets are [[name, low_freq, high_freq, steps, position], [...], ...]
+        self.__sets = {
+            CAL_S1: copy.deepcopy(self.__model[CONFIG][CAL][SETS][CAL_S1]),
+            CAL_S2: copy.deepcopy(self.__model[CONFIG][CAL][SETS][CAL_S2]),
+            CAL_S3: copy.deepcopy(self.__model[CONFIG][CAL][SETS][CAL_S3]),
+        }
         self.__populate_table()
         
     #=======================================================
@@ -497,7 +500,7 @@ class Config(QDialog):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
         # Model is saved on exit
-        self.__dict_compare(self.__model[CONFIG][CAL][SETS][CAL_S1], self.__sets[CAL_S1])
+        self.__dict_compare(self.__model[CONFIG][CAL][CAL_L1], self.__sets[CAL_S1])
         self.__model[CONFIG][ARDUINO][PORT] = self.__serialporttxt.text()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW] = self.__slowtxt.value()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED] = self.__medtxt.value()
@@ -510,20 +513,47 @@ class Config(QDialog):
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
-    
-    # Must initialise with copied values before show
-    def __dict_compare(self, d1, d2):
-        d1_keys = set(d1.keys())
-        print(d1_keys)
-        d2_keys = set(d2.keys())
-        print(d2_keys)
-        shared_keys = d1_keys.intersection(d2_keys)
-        print(shared_keys)
-        added = d1_keys - d2_keys
-        removed = d2_keys - d1_keys
-        modified = {o : (d1[o], d2[o]) for o in shared_keys if d1[o] != d2[o]}
-        same = set(o for o in shared_keys if d1[o] == d2[o])
-        print( added, removed, modified, same )
+        # Must redo after a save as we could have multiple saves
+        self.each_pass()
+        
+    def __dict_compare(self, cal_l, cal_s):
+        # cal_l is the result of calibration of cal_s
+        # cal_l : {'40m': [[abs pos, freq, swr], [...], ...]], name ...}
+        # cal_s : {'40m': [low freq, low pos%, high freq, high pos%, steps], name ...}
+        # In order to know if this has changed we need to compare the low and high freq an pos.
+        # Note - this is the first and last entries in cal_l.
+        # Note - cal_l has abs pos and cal_s %pos.
+        # Note - and change in freq is a change whereas the pos has a range due to poitioning
+        # accuracy and conversion.
+        cal_l_keys = set(cal_l.keys())
+        cal_s_keys = set(cal_s.keys())
+        shared_keys = cal_l_keys.intersection(cal_s_keys)
+        removed = cal_l_keys - cal_s_keys
+        added = cal_s_keys - cal_l_keys
+        # The relevent set is in cal_s
+        modified = []
+        VAR = 10
+        for key, value in cal_s.items():
+            if key in cal_l:
+                # Check the frequencies first
+                if value[0] != cal_l[key][0][1]:
+                    modified.append(key)
+                    break
+                if value[2] != cal_l[key][-1][1]:
+                    modified.append(key)
+                    break
+                # Check the positions
+                pos1 = percent_pos_to_analog(value[1])
+                pos2 = cal_l[key][0][0]
+                if pos1 <= pos2 + variance or pos1 >= pos2 - VAR:
+                    modified.append(key)
+                    break
+                pos1 = percent_pos_to_analog(value[3])
+                pos2 = cal_l[key][-1][0]
+                if pos1 <= pos2 + variance or pos1 >= pos2 - VAR:
+                    modified.append(key)
+                    break
+        print( added, removed, modified)
         
     def __do_cancel(self):
         self.close()
