@@ -536,21 +536,25 @@ class Config(QDialog):
         for key, value in cal_s.items():
             if key in cal_l:
                 # Check the frequencies first
-                if value[0] != cal_l[key][0][1]:
+                #print('1: ',value[2], cal_l[key][0][1])
+                if value[2] != cal_l[key][0][1]:
                     modified.append(key)
                     break
-                if value[2] != cal_l[key][-1][1]:
+                #print('2: ',value[0], cal_l[key][-1][1])
+                if value[0] != cal_l[key][-1][1]:
                     modified.append(key)
                     break
                 # Check the positions
-                pos1 = percent_pos_to_analog(value[1])
+                pos1 = percent_pos_to_analog(self.__model, value[3])
                 pos2 = cal_l[key][0][0]
-                if pos1 <= pos2 + variance or pos1 >= pos2 - VAR:
+                #print('3: ',pos1, pos2)
+                if pos1 <= pos2 + VAR or pos1 >= pos2 - VAR:
                     modified.append(key)
                     break
-                pos1 = percent_pos_to_analog(value[3])
+                pos1 = percent_pos_to_analog(self.__model, value[1])
                 pos2 = cal_l[key][-1][0]
-                if pos1 <= pos2 + variance or pos1 >= pos2 - VAR:
+                #print('4 :',pos1, pos2)
+                if pos1 <= pos2 + VAR or pos1 >= pos2 - VAR:
                     modified.append(key)
                     break
         print( added, removed, modified)
