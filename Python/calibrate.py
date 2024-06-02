@@ -157,6 +157,8 @@ class Calibrate(threading.Thread):
         # Create a calibration map for loop
         # Get descriptor and map for the loop
         r, sets, cal_map = self.retrieve_context(loop)
+        if len(sets) == 0:
+            return (CALIBRATE, (False, "Calibration sets are empty for loop: {}!".format(loop), cal_map))
         if r:
             if len(cal_map) == 0:
                 try:

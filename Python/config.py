@@ -497,6 +497,7 @@ class Config(QDialog):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
         # Model is saved on exit
+        self.__dict_compare(self.__model[CONFIG][CAL][SETS][CAL_S1], self.__sets[CAL_S1])
         self.__model[CONFIG][ARDUINO][PORT] = self.__serialporttxt.text()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW] = self.__slowtxt.value()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED] = self.__medtxt.value()
@@ -509,6 +510,20 @@ class Config(QDialog):
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
+    
+    # Must initialise with copied values before show
+    def __dict_compare(self, d1, d2):
+        d1_keys = set(d1.keys())
+        print(d1_keys)
+        d2_keys = set(d2.keys())
+        print(d2_keys)
+        shared_keys = d1_keys.intersection(d2_keys)
+        print(shared_keys)
+        added = d1_keys - d2_keys
+        removed = d2_keys - d1_keys
+        modified = {o : (d1[o], d2[o]) for o in shared_keys if d1[o] != d2[o]}
+        same = set(o for o in shared_keys if d1[o] == d2[o])
+        print( added, removed, modified, same )
         
     def __do_cancel(self):
         self.close()

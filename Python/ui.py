@@ -821,8 +821,6 @@ class UI(QMainWindow):
                 self.__l3label.setObjectName("stred")
                 self.__l3label.setStyleSheet(self.__l1label.styleSheet())
                 self.__model[CONFIG][CAL][CAL_L3].clear()
-            self.__minvalue.setText('0.0')
-            self.__maxvalue.setText('0.0')
         
     def __do_sp(self):
         # Invoke the setpoint dialog
