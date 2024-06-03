@@ -71,7 +71,7 @@ class UI(QMainWindow):
         self.__api.init_comms()
         
         # Create the config dialog
-        self.__config_dialog = config.Config(self.__model, self.msg_callback)
+        self.__config_dialog = config.Config(self.__model, self.__diff_callback, self.msg_callback)
         
         # Create the setpoint dialog
         self.__sp_dialog = setpoints.Setpoint(self.__model, self.msg_callback, self.__move_callback)
@@ -112,6 +112,8 @@ class UI(QMainWindow):
         self.__deferred_activity = None
         self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
         self.__aborting = False
+        # Of form for loops 1-3 [[added, removed, modified],[...],[...]]
+        self.__cal_diff = [[],[],[]]
         
         # Loop status
         home = self.__model[CONFIG][CAL][HOME]
@@ -148,6 +150,9 @@ class UI(QMainWindow):
         # Populate
         self.__populate()
         
+        # Get calibrate differences
+        self.__config_dialog.cal_init()
+        
     #=======================================================
     # PUBLIC
     #
@@ -180,6 +185,10 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_position(pos)
+    
+    # Called by configuration dialog to highlight differences between config and calibration
+    def __diff_callback(self, diff):
+        self.__cal_diff = diff
         
     # This is called when doing a manual calibration to set the hint and get the next data items.
     # This is called on the calibration thread so will not interrupt the UI
@@ -743,7 +752,7 @@ class UI(QMainWindow):
     #=======================================================
     # Configuration
     def __do_config(self):
-        self.__config_dialog.each_pass()
+        self.__config_dialog.cal_init()
         self.__config_dialog.show()
     
     #=======================================================
@@ -1226,7 +1235,17 @@ class UI(QMainWindow):
                 self.__enable_disable_loop(False)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(False)
-            
+        
+        # Anything that needs to be done even if state does not change
+        self.__cal.setText('Calibrate...')
+        if state == W_CALIBRATED:
+            loop = self.__selected_loop-1
+            if len(self.__cal_diff[loop]) > 0:
+                self.__cal.setEnabled(True)
+                self.__cal.setText('Sync...')
+            else:
+                self.__cal.setEnabled(False)
+                
     # All enabled (True) or disabled (False)
     def __enable_disable_feedback(self, state):
         # Feedback sectiom

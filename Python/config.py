@@ -43,13 +43,14 @@ import api
 # Main config dialog        
 class Config(QDialog):
     
-    def __init__(self, model, msgs):
+    def __init__(self, model, cb, msgs):
         super(Config, self).__init__()
 
         # Get root logger
         self.logger = logging.getLogger('root')
         
         self.__model = model
+        self.__cb = cb
         self.__msgs = msgs
         
         self.__selected_loop = 1
@@ -75,9 +76,9 @@ class Config(QDialog):
         
         # Populate
         self.__populate_ui()
-    
-    # Copy any local data required for pass
-    def each_pass(self):
+        
+    # Init for each pass and at startup
+    def cal_init(self):
         # Local sets synced back to model on save
         # Sets are [[name, low_freq, high_freq, steps, position], [...], ...]
         self.__sets = {
@@ -86,6 +87,7 @@ class Config(QDialog):
             CAL_S3: copy.deepcopy(self.__model[CONFIG][CAL][SETS][CAL_S3]),
         }
         self.__populate_table()
+        self.__cal_diff()
         
     #=======================================================
     # PRIVATE
@@ -500,7 +502,11 @@ class Config(QDialog):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
         # Model is saved on exit
-        self.__dict_compare(self.__model[CONFIG][CAL][CAL_L1], self.__sets[CAL_S1])
+        
+        # First look for changes unless no previous calibration
+        self.__cal_diff()
+            
+        # Save any updates    
         self.__model[CONFIG][ARDUINO][PORT] = self.__serialporttxt.text()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW] = self.__slowtxt.value()
         self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED] = self.__medtxt.value()
@@ -513,8 +519,20 @@ class Config(QDialog):
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
+        
         # Must redo after a save as we could have multiple saves
-        self.each_pass()
+        self.cal_init()
+    
+    def __cal_diff(self):
+        diff = [[],[],[]]
+        if len(self.__model[CONFIG][CAL][CAL_L1]) > 0:
+            diff[0] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L1], self.__sets[CAL_S1])
+        if len(self.__model[CONFIG][CAL][CAL_L2]) > 0:
+            diff[1] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L2], self.__sets[CAL_S2])
+        if len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
+            diff[1] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L3], self.__sets[CAL_S3])
+        # Tell Ui differences
+        self.__cb(diff)
         
     def __dict_compare(self, cal_l, cal_s):
         # cal_l is the result of calibration of cal_s
@@ -557,7 +575,7 @@ class Config(QDialog):
                 if pos1 <= pos2 + VAR or pos1 >= pos2 - VAR:
                     modified.append(key)
                     break
-        print( added, removed, modified)
+        return [list(added), list(removed), modified]
         
     def __do_cancel(self):
         self.close()
