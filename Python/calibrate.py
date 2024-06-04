@@ -185,6 +185,7 @@ class Calibrate(threading.Thread):
     def __sync(self, args):
         # Get args
         loop, self.__man_cb, cal_diff = args
+        
         cal_map = []
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
@@ -197,19 +198,18 @@ class Calibrate(threading.Thread):
         if len(sets) == 0:
             return (CALIBRATE, (False, "Calibration sets are empty for loop: {}!".format(loop), cal_map))
         if r:
-            if len(cal_map) == 0:
-                try:
-                    r, msg, cal_map = self.create_synced_map(loop, sets, cal_map, cal_diff)
-                except Exception as e:
-                    print('Calibrate exception %s [%s]' % (str(e), traceback.print_exc()))
-                    exit()
-                if not r:
-                    if self.__abort:
-                        self.__abort = False
-                        return (ABORT, (False, "Operation aborted by user!", []))
-                    else:
-                        # We have a problem
-                        return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
+            try:
+                r, msg, cal_map = self.create_synced_map(loop, sets, cal_map, cal_diff)
+            except Exception as e:
+                print('Calibrate exception %s [%s]' % (str(e), traceback.print_exc()))
+                exit()
+            if not r:
+                if self.__abort:
+                    self.__abort = False
+                    return (ABORT, (False, "Operation aborted by user!", []))
+                else:
+                    # We have a problem
+                    return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
         else:
             self.logger.warning ("Error in retrieving calibration map!: {}".format(cal_map))
             return (CALIBRATE, (False, "Error in retrieving calibration map!", cal_map))
@@ -350,12 +350,12 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high position!")
             return False, "Failed to move to high position!", cal_map
-        self.__msg_cb("Please enter frequency and SWR for high limit", MSG_ALERT)
+        self.__msg_cb("Please enter frequency and SWR for high limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
         r, (f, swr, pos) = self.__get_current()
-        self.__msg_cb("Target: %d, Actual %d" % (high_pos_abs, pos)) 
         if not r:
             self.logger.warning("Failed to get params for high position!")
-            return False, "Failed to get params for high position!", cal_map 
+            return False, "Failed to get params for high position!", cal_map
+        self.__msg_cb("Target: %d, Actual %d" % (high_pos_abs, pos))
         # Add the high position
         temp_map.append([pos, f, swr])
         
@@ -369,6 +369,9 @@ class Calibrate(threading.Thread):
                 return False, "Failed to move to intermediate position!", cal_map
             self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
             r, (f, swr, pos) = self.__get_current()
+            if not r:
+                self.logger.warning("Failed to get params for step position!")
+                return False, "Failed to get params for step position!", cal_map
             self.__msg_cb("Step: %d, Target: %d, Actual %d" % (counter, next_inc, pos)) 
             temp_map.append([pos, f, swr])
             next_inc += fb_inc
@@ -378,12 +381,12 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(low_pos_abs):
             self.logger.warning("Failed to move to low position!")
             return False, "Failed to move to low position!", cal_map
-        self.__msg_cb("Please enter frequency and SWR for low limit", MSG_ALERT)
+        self.__msg_cb("Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
         r, (f, swr, pos) = self.__get_current()
-        self.__msg_cb("Target: %d, Actual %d" % (low_pos_abs, pos))
         if not r:
             self.logger.warning("Failed to get params for low position!")
             return False, "Failed to get params for low position!", cal_map
+        self.__msg_cb("Target: %d, Actual %d" % (low_pos_abs, pos))
         # Add the low position
         temp_map.append([pos, f, swr])
         
@@ -410,7 +413,7 @@ class Calibrate(threading.Thread):
         r, [vals] = self.__get_vals()
         if not r:
             self.logger.warning("Failed to get values at current step!")
-            return False, [(None, None, None)]
+            return False, (None, None, None)
         return True, vals
         
     def __get_vals(self):
@@ -421,7 +424,7 @@ class Calibrate(threading.Thread):
                 # This gives a MHz freq
                 return True, [(float(f), float(swr), percent_pos_to_analog(self.__model, float(pos)))]
             elif r == CAL_ABORT:
-                return (False, [(None, None, None)])
+                return False, [(None, None, None)]
         
     # =========================================================================
     # Callback from comms module
