@@ -121,6 +121,10 @@ class API:
         self.logger.info("Calibrating loop: {}. This may take a while...".format(loop))
         self.__c_q.put(('calibrate', [loop, man_cb]))
     
+    def sync(self, loop, man_cb, cal_diff):
+        self.logger.info("Syncing loop: {}. This may take a while...".format(loop))
+        self.__c_q.put(('sync', [loop, man_cb, cal_diff]))
+
     # Change speed
     def speed_change(self, speed):
         self.__s_q.put(('speed', [speed]))

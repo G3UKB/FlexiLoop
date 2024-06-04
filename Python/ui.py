@@ -799,7 +799,12 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         # Dispatches on separate thread
-        self.__api.calibrate(self.__selected_loop, self.man_cal_callback)
+        if self.__loop_status[self.__selected_loop-1] and len(self.__cal_diff[self.__selected_loop-1]) > 0:
+            # We need to sync the new calibration data
+            self.__api.sync(self.__selected_loop, self.man_cal_callback, self.__cal_diff[self.__selected_loop-1])
+        else:
+            # Just calibrate
+            self.__api.calibrate(self.__selected_loop, self.man_cal_callback)
     
     def __do_cal_view(self):
         # Invoke the calview dialog

@@ -114,6 +114,7 @@ class Calibrate(threading.Thread):
         disp_tab = {
             'configure': self.__configure,
             'calibrate': self.__calibrate,
+            'sync': self.__sync,
         }
         # Execute and return response
         # We need to steal the callback for the comms thread
@@ -180,7 +181,43 @@ class Calibrate(threading.Thread):
         self.__msg_cb("Calibration complete", MSG_STATUS)
         self.save_context(loop, cal_map)
         return ('Calibrate', (True, "", cal_map))
-     
+    
+    def __sync(self, args):
+        # Get args
+        loop, self.__man_cb, cal_diff = args
+        cal_map = []
+        # Retrieve the end points
+        r, self.__end_points = self.retrieve_end_points()
+        if not r:
+            # We have a problem
+            return (CALIBRATE, (False, "Unable to retrieve end points for sync!", cal_map))
+        # Create a calibration map for loop
+        # Get descriptor and map for the loop
+        r, sets, cal_map = self.retrieve_context(loop)
+        if len(sets) == 0:
+            return (CALIBRATE, (False, "Calibration sets are empty for loop: {}!".format(loop), cal_map))
+        if r:
+            if len(cal_map) == 0:
+                try:
+                    r, msg, cal_map = self.create_synced_map(loop, sets, cal_map, cal_diff)
+                except Exception as e:
+                    print('Calibrate exception %s [%s]' % (str(e), traceback.print_exc()))
+                    exit()
+                if not r:
+                    if self.__abort:
+                        self.__abort = False
+                        return (ABORT, (False, "Operation aborted by user!", []))
+                    else:
+                        # We have a problem
+                        return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
+        else:
+            self.logger.warning ("Error in retrieving calibration map!: {}".format(cal_map))
+            return (CALIBRATE, (False, "Error in retrieving calibration map!", cal_map))
+        
+        self.__msg_cb("Calibration complete", MSG_STATUS)
+        self.save_context(loop, cal_map)
+        return ('Calibrate', (True, "", cal_map))
+    
     def retrieve_end_points(self):
         
         h = self.__model[CONFIG][CAL][HOME]
@@ -257,7 +294,44 @@ class Calibrate(threading.Thread):
             r, msg, cal_map = self.__do_steps(loop, cal_map, key, values)
             if not r:
                 return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
-        return True, '', cal_map       
+        return True, '', cal_map
+    
+    def create_synced_map(self, loop, sets, cal_map, cal_diff):
+        
+        # See what we have to deal with
+        added, removed, changed = cal_diff
+        
+        # Delete sets that have been removed
+        for name in removed:
+            del cal_map[name]
+            
+        # Sets that have been added or modified need to be re-calibrated
+        # Remove sets that have changed
+        for name in changed:
+            del cal_map[name]
+            
+        # Merge the sets we need to add
+        merged = added + changed
+        
+        # Sets are {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
+        # Each set is treated as a calibration but combined in cal_map
+        # For each set we step between low and high positions.
+        
+        # Current low/high pos
+        current = None
+        
+        # Iterate the sets dictionary
+        for key, values in sets.items():
+            # Only add merged items
+            if key in merged:
+                # Calibrating set n of sets
+                self.__msg_cb("Calibrating set %s..." % key)
+                
+                # Run steps and build the cal-map
+                r, msg, cal_map = self.__do_steps(loop, cal_map, key, values)
+                if not r:
+                    return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
+        return True, '', cal_map
         
     def __do_steps(self, loop, cal_map, name, cal_set):
         # Holds current data
