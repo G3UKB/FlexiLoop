@@ -445,7 +445,7 @@ class Config(QDialog):
     def __do_add(self):
         # Add current set to local sets
         key = self.__get_loop_item()
-        self.__sets[key][self.__nametxt.text()] = [self.__lowfreqtxt.text(), float(self.__poslowtxt.text()), float(self.__highfreqtxt.text()), float(self.__poshitxt.text()), int(self.__steptxt.value())]
+        self.__sets[key][self.__nametxt.text()] = [float(self.__lowfreqtxt.text()), float(self.__poslowtxt.text()), float(self.__highfreqtxt.text()), float(self.__poshitxt.text()), int(self.__steptxt.value())]
         self.__populate_table()
         
     def __do_remove(self):
@@ -524,13 +524,13 @@ class Config(QDialog):
         self.cal_init()
     
     def __cal_diff(self):
-        diff = [[],[],[]]
+        diff = [[[],[],[]],[[],[],[]],[[],[],[]]]
         if len(self.__model[CONFIG][CAL][CAL_L1]) > 0:
             diff[0] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L1], self.__sets[CAL_S1])
         if len(self.__model[CONFIG][CAL][CAL_L2]) > 0:
             diff[1] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L2], self.__sets[CAL_S2])
         if len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
-            diff[1] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L3], self.__sets[CAL_S3])
+            diff[2] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L3], self.__sets[CAL_S3])
         # Tell Ui differences
         self.__cb(diff)
         
@@ -566,13 +566,13 @@ class Config(QDialog):
                 pos1 = percent_pos_to_analog(self.__model, value[3])
                 pos2 = cal_l[key][0][0]
                 #print('3: ',pos1, pos2)
-                if pos1 <= pos2 + VAR or pos1 >= pos2 - VAR:
+                if pos1 <= pos2 - VAR or pos1 >= pos2 + VAR:
                     modified.append(key)
                     break
                 pos1 = percent_pos_to_analog(self.__model, value[1])
                 pos2 = cal_l[key][-1][0]
                 #print('4 :',pos1, pos2)
-                if pos1 <= pos2 + VAR or pos1 >= pos2 - VAR:
+                if pos1 <= pos2 - VAR or pos1 >= pos2 + VAR:
                     modified.append(key)
                     break
         return [list(added), list(removed), modified]

@@ -128,9 +128,10 @@ class SerialComms(threading.Thread):
             # Process messages
             try:
                 if self.__q.qsize() > 0:
+                    if VERB: self.logger.info("Q sz: {0}, ".format(self.__q.qsize()))
                     while self.__q.qsize() > 0:
                         name, args = self.__q.get()
-                        #print("Got ", name, args)
+                        if VERB: self.logger.info("Name: {0}, Args: {1}".format(name, args))
                         # By default this is synchronous so will wait for the response
                         # Response goes to main code callback, we don't care here
                         self.__dispatch(name, args)

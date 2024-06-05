@@ -802,6 +802,9 @@ class UI(QMainWindow):
         if self.__loop_status[self.__selected_loop-1] and len(self.__cal_diff[self.__selected_loop-1]) > 0:
             # We need to sync the new calibration data
             self.__api.sync(self.__selected_loop, self.man_cal_callback, self.__cal_diff[self.__selected_loop-1])
+            # Did we succeed
+            # This will get us the current differences and set the status
+            self.__config_dialog.cal_init()
         else:
             # Just calibrate
             self.__api.calibrate(self.__selected_loop, self.man_cal_callback)
@@ -1245,7 +1248,7 @@ class UI(QMainWindow):
         self.__cal.setText('Calibrate...')
         if state == W_CALIBRATED:
             loop = self.__selected_loop-1
-            if len(self.__cal_diff[loop]) > 0:
+            if len(self.__cal_diff[loop][0]) > 0 or len(self.__cal_diff[loop][1]) > 0 or len(self.__cal_diff[loop][2]) > 0:
                 self.__cal.setEnabled(True)
                 self.__cal.setText('Sync...')
             else:
