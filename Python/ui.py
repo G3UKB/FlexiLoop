@@ -99,7 +99,6 @@ class UI(QMainWindow):
                            }''')   
         
         # Local state holders
-        # Current (long running) activity
         self.__selected_loop = 1
         self.__tune_freq = 0.0
         self.__current_activity = NONE
@@ -132,8 +131,6 @@ class UI(QMainWindow):
         if pos == -1:
             pos = '-'
         self.__current_pos = pos
-        # SWR
-        self.__man_swr = '_._'
         
         # Default to radio side
         self.__relay_state = RADIO
@@ -147,7 +144,7 @@ class UI(QMainWindow):
         # Initialise the GUI
         self.__initUI()
         
-        # Populate
+        # Populate controls
         self.__populate()
         
         # Get calibrate differences
@@ -213,7 +210,8 @@ class UI(QMainWindow):
         else:
             self.__man_cal_state = MANUAL_DATA_REQD
             return CAL_RETRY, (None, None, None)
-        
+    
+    # Main callback    
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
         # Everything south of the API is threaded so as not to block
@@ -378,7 +376,7 @@ class UI(QMainWindow):
         self.statusBar.addPermanentWidget(self.__exit)       
         
     #=======================================================
-    # Create all widgets
+    # Create and position all widgets
     def __populate(self):
         #=======================================================
         # Set main layout
@@ -425,6 +423,7 @@ class UI(QMainWindow):
         self.__msglist = QListWidget()
         self.__grid.addWidget(self.__msglist, 4, 0)
     
+    # Populate feedback zone
     def __pop_feedback(self, grid):
         # Configure
         self.__pot = QPushButton("Configure...")
@@ -464,6 +463,7 @@ class UI(QMainWindow):
         grid.setColumnStretch(2, 2)
         grid.setColumnStretch(3, 1)
     
+    # Populate loop zone
     def pop_loop(self, grid):
         
         looplabel = QLabel('Select Loop')
@@ -591,7 +591,8 @@ class UI(QMainWindow):
         
         # Normally hidden
         self.__manualcal.hide()
-        
+    
+    # Populate auto zone    
     def __pop_auto(self, grid):
         
         # Move to frequency
@@ -633,6 +634,7 @@ class UI(QMainWindow):
         self.__swrres.setMaximumWidth(100)
         tracksubgrid.addWidget(self.__swrres, 1, 4)
     
+    # Populate manual zone
     def __pop_man(self, grid):
         
         # Sub grid
@@ -761,13 +763,13 @@ class UI(QMainWindow):
         self.__model[STATE][WINDOWS][MAIN_WIN] = [event.pos().x(),event.pos().y(),w,h]
     
     #=======================================================
-    # Configuration
+    # Menu events
     def __do_config(self):
         self.__config_dialog.cal_init()
         self.__config_dialog.show()
     
     #=======================================================
-    # Button events
+    # Main buttons events
     def __do_close(self):
         self.__close()
         self.__qt_app.quit()
@@ -776,6 +778,8 @@ class UI(QMainWindow):
         self.__aborting = True
         self.__api.abort_activity()
     
+    #=======================================================
+    # Feedback zone events
     def __do_pot(self):
         # Do the configure sequence
         self.__current_activity = CONFIGURE
@@ -795,6 +799,13 @@ class UI(QMainWindow):
             self.__model[STATE][ARDUINO][ACT_POS] = -1
             self.__current_pos = -1
     
+    #=======================================================
+    # Calibrate zone events
+    def __loop_change(self, index):
+        # Set loop selection needed by the callback as it cant access widgets
+        # Index is zero based, loops are 1 based
+        self.__selected_loop = index + 1
+        
     def __do_cal(self):
         # Switch to ANALYSER, switch back is done in the callback
         self.__saved_mode = self.__last_switch_mode
@@ -857,6 +868,20 @@ class UI(QMainWindow):
         self.__sp_dialog.set_loop(self.__selected_loop)
         self.__sp_dialog.show()
     
+    #=======================================================
+    # Manual calibration events
+    def __do_man_save(self):
+        self.__man_cal_freq = self.__manfreqtxt.text()
+        self.__man_cal_swr = self.__manswrtxt.text()
+        self.__man_cal_state = MANUAL_DATA_AVAILABLE
+    
+    def __do_man_next(self):
+        self.__manfreqtxt.setText('')
+        self.__manswrtxt.setText('')
+        self.__man_cal_state = MANUAL_NEXT
+        
+    #=======================================================
+    # Auto zone events
     def __auto_text(self, text):
         try:
             self.__tune_freq = float(text)
@@ -869,7 +894,9 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_freq(self.__selected_loop, self.__tune_freq)
-        
+    
+    #=======================================================
+    # Manual zone events    
     def __relay_change(self):
         target = self.__relay_sel.currentText()
         if target == RADIO:
@@ -954,25 +981,6 @@ class UI(QMainWindow):
         self.__st_act.setText(NUDGEREV)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.nudge_rev()
-
-    #=======================================================
-    # Combo box events
-    def __loop_change(self, index):
-        # Set loop selection needed by the callback as it cant access widgets
-        # Index is zero based, loops are 1 based
-        self.__selected_loop = index + 1
-    
-    #=======================================================
-    # Manual calibration events
-    def __do_man_save(self):
-        self.__man_cal_freq = self.__manfreqtxt.text()
-        self.__man_cal_swr = self.__manswrtxt.text()
-        self.__man_cal_state = MANUAL_DATA_AVAILABLE
-    
-    def __do_man_next(self):
-        self.__manfreqtxt.setText('')
-        self.__manswrtxt.setText('')
-        self.__man_cal_state = MANUAL_NEXT
     
     #=======================================================
     # Helpers
@@ -1001,11 +1009,11 @@ class UI(QMainWindow):
         except:
             return False
 
-    # =======================================================
-    # Background activities
+    #=======================================================
+    # Idle processing called every IDLE_TICKER secs when no UI activity
     def __idleProcessing(self):
         
-        # =======================================================
+        #=======================================================
         # Here we update the UI according to current activity and the status set by the callbacks
         if self.__model[STATE][ARDUINO][ONLINE]:
             # Update the on-line indicators
