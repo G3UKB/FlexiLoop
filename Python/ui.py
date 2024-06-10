@@ -393,17 +393,49 @@ class UI(QMainWindow):
         gb_fb = QGroupBox('Feedback system')
         gb_fb.setLayout(self.__fbgrid)
         self.__grid.addWidget(gb_fb, 0,0)
+        self.__pop_feedback(self.__fbgrid)
         
+        # -------------------------------------------
+        # Loop area
+        self.__loopgrid = QGridLayout()
+        gb_loop = QGroupBox('Mag loops')
+        gb_loop.setLayout(self.__loopgrid)
+        self.__grid.addWidget(gb_loop, 1,0)
+        self.pop_loop(self.__loopgrid)
+        
+        # -------------------------------------------
+        # Auto area
+        self.__autogrid = QGridLayout()
+        gb_auto = QGroupBox('Auto')
+        gb_auto.setLayout(self.__autogrid)
+        self.__grid.addWidget(gb_auto, 2,0)
+        self.__autogrid.setColumnMinimumWidth(5,300)
+        self.__pop_auto(self.__autogrid)
+        
+        # -------------------------------------------
+        # Manual area
+        self.__mangrid = QGridLayout()
+        gb_man = QGroupBox('Manual')
+        gb_man.setLayout(self.__mangrid)
+        self.__grid.addWidget(gb_man, 3,0)
+        self.__pop_man(self.__mangrid)
+        
+        # -------------------------------------------
+        # Message area
+        self.__msglist = QListWidget()
+        self.__grid.addWidget(self.__msglist, 4, 0)
+    
+    def __pop_feedback(self, grid):
         # Configure
         self.__pot = QPushButton("Configure...")
         self.__pot.setToolTip('Configure limits...')
-        self.__fbgrid.addWidget(self.__pot, 0, 0)
+        grid.addWidget(self.__pot, 0, 0)
         self.__pot.clicked.connect(self.__do_pot)
         
         # Delete
         self.__potdel = QPushButton("Delete")
         self.__potdel.setToolTip('Delete limits...')
-        self.__fbgrid.addWidget(self.__potdel, 0, 1)
+        grid.addWidget(self.__potdel, 0, 1)
         self.__potdel.clicked.connect(self.__do_pot_del)
         
         # Limits
@@ -426,27 +458,22 @@ class UI(QMainWindow):
         hbox_lim.addWidget(self.__potmaxvalue)
         
         gb_lim.setLayout(hbox_lim)
-        self.__fbgrid.addWidget(gb_lim, 0, 2)
+        grid.addWidget(gb_lim, 0, 2)
         
         # Space out
-        self.__fbgrid.setColumnStretch(2, 2)
-        self.__fbgrid.setColumnStretch(3, 1)
-        
-        # -------------------------------------------
-        # Loop area
-        self.__loopgrid = QGridLayout()
-        gb_loop = QGroupBox('Mag loops')
-        gb_loop.setLayout(self.__loopgrid)
-        self.__grid.addWidget(gb_loop, 1,0)
+        grid.setColumnStretch(2, 2)
+        grid.setColumnStretch(3, 1)
+    
+    def pop_loop(self, grid):
         
         looplabel = QLabel('Select Loop')
-        self.__loopgrid.addWidget(looplabel, 0, 0)
+        grid.addWidget(looplabel, 0, 0)
         self.__loop_sel = QComboBox()
         self.__loop_sel.addItem("1")
         self.__loop_sel.addItem("2")
         self.__loop_sel.addItem("3")
         self.__loop_sel.setMinimumHeight(20)
-        self.__loopgrid.addWidget(self.__loop_sel, 0, 1)
+        grid.addWidget(self.__loop_sel, 0, 1)
         self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
         
         s = QGroupBox('Calibrate Status')
@@ -468,7 +495,7 @@ class UI(QMainWindow):
         self.__l3label.setStyleSheet(self.__l3label.styleSheet())
         self.__l3label.setAlignment(QtCore.Qt.AlignCenter)
         s.setLayout(hbox)
-        self.__loopgrid.addWidget(s, 0, 2, 1, 2)
+        grid.addWidget(s, 0, 2, 1, 2)
         
         # Calibration
         self.__cal = QPushButton("Calibrate...")
@@ -483,14 +510,14 @@ class UI(QMainWindow):
         
         self.__calview = QPushButton("Calibration...")
         self.__calview.setToolTip('View calibrations')
-        self.__loopgrid.addWidget(self.__calview, 1, 3)
+        grid.addWidget(self.__calview, 1, 3)
         self.__calview.clicked.connect(self.__do_cal_view)
 
         # Set points
         self.__sp = QPushButton("Setpoints...")
         self.__sp.setToolTip('Manage setpoints for loop...')
         self.__sp.setObjectName("calchange")
-        self.__loopgrid.addWidget(self.__sp, 2, 0)
+        grid.addWidget(self.__sp, 2, 0)
         self.__sp.clicked.connect(self.__do_sp)
         
         sps = QGroupBox('Setpoint Status')
@@ -517,7 +544,7 @@ class UI(QMainWindow):
         self.__l6label.setStyleSheet(self.__l6label.styleSheet())
         self.__l6label.setAlignment(QtCore.Qt.AlignCenter)
         sps.setLayout(hbox1)
-        self.__loopgrid.addWidget(sps, 2, 1, 1, 3)
+        grid.addWidget(sps, 2, 1, 1, 3)
         
         # Manual layout
         self.__manualcal = QGroupBox('Entry')
@@ -560,18 +587,12 @@ class UI(QMainWindow):
         self.__next.setMinimumHeight(20)
         manualgrid.addWidget(self.__next, 0, 7)
         
-        self.__loopgrid.addWidget(self.__manualcal, 3, 0, 1, 8)
+        grid.addWidget(self.__manualcal, 3, 0, 1, 8)
         
         # Normally hidden
         self.__manualcal.hide()
         
-        # -------------------------------------------
-        # Auto area
-        self.__autogrid = QGridLayout()
-        gb_auto = QGroupBox('Auto')
-        gb_auto.setLayout(self.__autogrid)
-        self.__grid.addWidget(gb_auto, 2,0)
-        self.__autogrid.setColumnMinimumWidth(5,300)
+    def __pop_auto(self, grid):
         
         # Move to frequency
         freqlabel = QLabel('Tune to Freq')
@@ -581,7 +602,7 @@ class UI(QMainWindow):
         self.__freqtxt.setInputMask('09.90')
         self.__freqtxt.setMaximumWidth(80)
         self.__freqtxt.textChanged.connect(self.__auto_text)
-        self.__autogrid.addWidget(self.__freqtxt, 0, 1)
+        grid.addWidget(self.__freqtxt, 0, 1)
         
         self.__tune = QPushButton("Tune...")
         self.__tune.setToolTip('Tune to freq...')
@@ -593,7 +614,7 @@ class UI(QMainWindow):
         tracksubgrid = QGridLayout()
         sg_track = QGroupBox()
         sg_track.setLayout(tracksubgrid)
-        self.__autogrid.addWidget(sg_track, 1,0,1,3)
+        grid.addWidget(sg_track, 1,0,1,3)
         
         tracklabel = QLabel('Tracking (approx)')
         tracksubgrid.addWidget(tracklabel, 1, 0)
@@ -611,19 +632,14 @@ class UI(QMainWindow):
         self.__swrres.setObjectName("minmax")
         self.__swrres.setMaximumWidth(100)
         tracksubgrid.addWidget(self.__swrres, 1, 4)
-        
-        # -------------------------------------------
-        # Manual area
-        self.__mangrid = QGridLayout()
-        gb_man = QGroupBox('Manual')
-        gb_man.setLayout(self.__mangrid)
-        self.__grid.addWidget(gb_man, 3,0)
+    
+    def __pop_man(self, grid):
         
         # Sub grid
         self.__subgrid = QGridLayout()
         w4 = QGroupBox()
         w4.setLayout(self.__subgrid)
-        self.__mangrid.addWidget(w4, 0,0,1,6)
+        grid.addWidget(w4, 0,0,1,6)
         
         # Target select
         relaylabel = QLabel('Target')
@@ -676,7 +692,7 @@ class UI(QMainWindow):
         
         # Move position
         movelabel = QLabel('Move to (%)')
-        self.__mangrid.addWidget(movelabel, 1, 0)
+        grid.addWidget(movelabel, 1, 0)
         self.__movetxt = QSpinBox()
         self.__movetxt.setToolTip('Move position 0-100%')
         self.__movetxt.setRange(0,100)
@@ -690,46 +706,41 @@ class UI(QMainWindow):
         self.__movepos.clicked.connect(self.__do_pos)
         
         curr1label = QLabel('Current Position')
-        self.__mangrid.addWidget(curr1label, 1, 3)
+        grid.addWidget(curr1label, 1, 3)
         self.__currpos = QLabel('-')
         self.__currpos.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__currpos.setMaximumWidth(100)
-        self.__mangrid.addWidget(self.__currpos, 1, 4)
+        grid.addWidget(self.__currpos, 1, 4)
         
         # Increment
         inclabel = QLabel('Inc (ms)')
-        self.__mangrid.addWidget(inclabel, 2, 0)
+        grid.addWidget(inclabel, 2, 0)
         self.__inctxt = QSpinBox()
         self.__inctxt.setToolTip('Increment time in ms')
         self.__inctxt.setRange(0,1000)
         self.__inctxt.setValue(500)
         self.__inctxt.setMaximumWidth(80)
-        self.__mangrid.addWidget(self.__inctxt, 2, 1)
+        grid.addWidget(self.__inctxt, 2, 1)
         
         self.__mvfwd = QPushButton("Move Forward")
         self.__mvfwd.setToolTip('Move forward for given ms...')
-        self.__mangrid.addWidget(self.__mvfwd, 2,2)
+        grid.addWidget(self.__mvfwd, 2,2)
         self.__mvfwd.clicked.connect(self.__do_move_fwd)
         
         self.__mvrev = QPushButton("Move Reverse")
         self.__mvrev.setToolTip('Move reverse for given ms...')
-        self.__mangrid.addWidget(self.__mvrev, 2,3)
+        grid.addWidget(self.__mvrev, 2,3)
         self.__mvrev.clicked.connect(self.__do_move_rev)
         
         self.__nudgefwd = QPushButton("Nudge Forward")
         self.__nudgefwd.setToolTip('Nudge forward...')
-        self.__mangrid.addWidget(self.__nudgefwd, 2,4)
+        grid.addWidget(self.__nudgefwd, 2,4)
         self.__nudgefwd.clicked.connect(self.__do_nudge_fwd)
         
         self.__nudgerev = QPushButton("Nudge Reverse")
         self.__nudgerev.setToolTip('Nudge reverse...')
-        self.__mangrid.addWidget(self.__nudgerev, 2,5)
+        grid.addWidget(self.__nudgerev, 2,5)
         self.__nudgerev.clicked.connect(self.__do_nudge_rev)
-        
-        # -------------------------------------------
-        # Message area
-        self.__msglist = QListWidget()
-        self.__grid.addWidget(self.__msglist, 4, 0)
         
     #=======================================================
     # Window events
