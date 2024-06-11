@@ -80,7 +80,9 @@ class AppMain:
         
         # The one and only QApplication 
         self.__qt_app = QApplication(sys.argv)
+        # Use the stylesheet
         self.__qt_app.setStyleSheet(Path('css/flexiloop.css').read_text())
+        # Create and run the UI
         ui_inst = ui.UI(self.__model, self.__qt_app)
         ui_inst.run()
         # Return here when UI is closed

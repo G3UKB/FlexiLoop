@@ -936,21 +936,6 @@ class UI(QMainWindow):
     def __do_stop_act(self):
         self.__api.free_stop()
     
-    def __do_res(self):
-        self.__switch_mode = ANALYSER
-        self.__tg_ard.setText(ANALYSER)
-        self.__relay_sel.setCurrentText(ANALYSER)
-        self.__relay_state = ANALYSER
-        self.__current_activity = RESONANCE
-        self.__st_act.setText(RESONANCE)
-        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT]*(1000/IDLE_TICKER)
-        r, (f,swr) = self.__api.get_current_res(self.__selected_loop)
-        if r:
-            self.__freqval.setText(f)
-            self.__swrres.setText(swr)
-        self.__current_activity = NONE
-        self.__switch_mode = RADIO
-    
     def __do_pos(self):
         self.__current_activity = MOVETO
         self.__st_act.setText(MOVETO)
