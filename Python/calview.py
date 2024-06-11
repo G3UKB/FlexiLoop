@@ -29,10 +29,7 @@ import traceback
 import logging
 
 # PyQt5 imports
-from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip, QAbstractItemView
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QStatusBar, QTabWidget, QTableWidget, QInputDialog, QFileDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QTableWidgetItem
+from qt_inc import *
 
 # Application imports
 from defs import *
@@ -48,16 +45,18 @@ class Calview(QDialog):
         # Get root logger
         self.logger = logging.getLogger('root')
         
+        # Parameters
         self.__model = model
-        self.__msgs = msgs
+        # Callback for positioning and messages
         self.__cb = callback
+        self.__msgs = msgs
         
-        # Local vars
+        # Instance vars
         self.__loop = -1
      
         # Set the back colour
-        palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))
+        palette = QPalette()
+        palette.setColor(QPalette.Background, QColor(149,142,132))
         self.setPalette(palette)
 
         # Set the tooltip style
@@ -75,7 +74,7 @@ class Calview(QDialog):
         self.__populate()
         
         # Start idle processing
-        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
+        QtCore.QTimer.singleShot(IDLE_LONG_TICKER, self.__idleProcessing)
         
     #=======================================================
     # PRIVATE
@@ -87,7 +86,6 @@ class Calview(QDialog):
         self.setGeometry(x,y,w,h)
                          
         self.setWindowTitle('Flexi-Loop Calibration View')
-        
         
     #=======================================================
     # Create all widgets
@@ -127,6 +125,7 @@ class Calview(QDialog):
     #=======================================================
     # PUBLIC
     #
+    # Called to set current loop before showing dialog
     def set_loop(self, loop):
         self.__loop = loop
         self.__looplabel.setText('Calibration points for loop [%d]' % self.__loop)
@@ -149,9 +148,11 @@ class Calview(QDialog):
     
     #=======================================================
     # User events
+    # Close dialog
     def __do_close(self):
         self.close()
     
+    # Move to calibration point
     def __do_move(self):
         row = self.__table.currentRow()
         pos = float(self.__table.item(row, 1).text())
@@ -160,6 +161,7 @@ class Calview(QDialog):
         
     #=======================================================
     # Helpers
+    # Populate the table from model data for current loop
     def __populate_table(self):
         # Clear table
         row = 0
@@ -181,7 +183,8 @@ class Calview(QDialog):
                     row += 1
             if self.__table.rowCount() > 0:
                 self.__table.selectRow(0)
-        
+    
+    # Get key for loop    
     def __get_loop_item(self):
         if self.__loop == 1:
            item = CAL_L1
@@ -199,7 +202,8 @@ class Calview(QDialog):
     # =======================================================
     # Background activities
     def __idleProcessing(self):
-                
+         
+        # Adjust buttons       
         r = self.__table.currentRow()
         if r == -1 or not self.__model[STATE][ARDUINO][ONLINE]:
             # No row selected
@@ -208,4 +212,5 @@ class Calview(QDialog):
             self.__moveto.setEnabled(True) 
         
         # Reset timer    
-        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
+        QtCore.QTimer.singleShot(IDLE_LONG_TICKER, self.__idleProcessing)
+        

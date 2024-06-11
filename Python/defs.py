@@ -86,6 +86,7 @@ ACT_POS = 'ACT_POS'
 CONFIG_PATH = '../config/flexi_loop.cfg'
 # Run idle processing every IDLE_TICKER ms
 IDLE_TICKER = 250
+IDLE_LONG_TICKER = 1000
 # Check Arduino every HEARTBEAT_TIMER ms
 HEARTBEAT_TIMER = 10000
 

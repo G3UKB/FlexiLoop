@@ -30,10 +30,7 @@ import logging
 import copy
 
 # PyQt5 imports
-from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip, QAbstractItemView
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QStatusBar, QTabWidget, QTableWidget, QInputDialog, QFileDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QTableWidgetItem
+from qt_inc import *
 
 # Application imports
 from defs import *
@@ -49,18 +46,20 @@ class Config(QDialog):
         # Get root logger
         self.logger = logging.getLogger('root')
         
+        # Parameters
         self.__model = model
         self.__cb = cb
         self.__msgs = msgs
         
+        # Instance vars
         self.__selected_loop = 1
         
         # Start idle processing
-        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
+        QtCore.QTimer.singleShot(IDLE_LONG_TICKER, self.__idleProcessing)
         
-    # Set the back colour
-        palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))
+        # Set the back colour
+        palette = QPalette()
+        palette.setColor(QPalette.Background, QColor(149,142,132))
         self.setPalette(palette)
 
         # Set the tooltip style
@@ -77,7 +76,7 @@ class Config(QDialog):
         # Populate
         self.__populate_ui()
         
-    # Init for each pass and at startup
+    # Init for each pass and at startup to set local context and tell UI of any differences
     def cal_init(self):
         # Local sets synced back to model on save
         # Sets are [[name, low_freq, high_freq, steps, position], [...], ...]
@@ -104,7 +103,6 @@ class Config(QDialog):
     #=======================================================
     # Create all widgets
     def __populate_ui(self):
-        #=======================================================
         
         # Set up the tabs
         self.top_tab_widget = QTabWidget()
@@ -156,12 +154,13 @@ class Config(QDialog):
         common.addWidget(self.__close, 0, 3)
         self.__close.clicked.connect(self.__do_close)
         
+        # Adjust layout
         gap = QWidget()
         common.addWidget(gap, 0, 2)
         common.setColumnStretch(2, 1)
         
     #=======================================================
-    # Populate dialog
+    # Populate tabs
     def __populate_arduino(self, grid):
         # Serial port
         portlabel = QLabel('Arduino Port')
@@ -328,7 +327,6 @@ class Config(QDialog):
         if self.__table.currentRow() == -1:
             self.__remove.setEnabled(False)
         
-    
     def __populate_timeouts(self, grid):
         # Defaults for timeouts
         # Note values are configured in seconds
@@ -412,27 +410,29 @@ class Config(QDialog):
         self.__model[STATE][WINDOWS][CONFIG_WIN] = [event.pos().x(),event.pos().y(),w,h]
         
     #=======================================================
-    # Calibration events
+    # User events
 
-    #========================
-    # Table events
+    #===========================
+    # Arduino tab events
+    # None
+    
+    #===========================
+    # Calibration tab events
+    # Target loop changed
+    def __loop_change(self, index):
+        # Set loop selection needed by the callback as it cant access widgets
+        # Index is zero based, loops are 1 based
+        self.__selected_loop = index + 1
+        self.__populate_table()
+        
+    # New table row selected
     def __row_changed(self):
         if self.__table.currentRow() == -1:
             self.__remove.setEnabled(False)
         else:
             self.__remove.setEnabled(True)
             
-    #========================
-    # Combo box events
-    def __loop_change(self, index):
-        # Set loop selection needed by the callback as it cant access widgets
-        # Index is zero based, loops are 1 based
-        self.__selected_loop = index + 1
-        self.__populate_table()
-    
-    #========================
     # Button events
-
     def __do_new(self):
         # Just clear the fields
         self.__nametxt.setText('')
@@ -442,14 +442,14 @@ class Config(QDialog):
         self.__poslowtxt.setText('')
         self.__poshitxt.setText('')
     
+    # Add current set to local sets
     def __do_add(self):
-        # Add current set to local sets
         key = self.__get_loop_item()
         self.__sets[key][self.__nametxt.text()] = [float(self.__lowfreqtxt.text()), float(self.__poslowtxt.text()), float(self.__highfreqtxt.text()), float(self.__poshitxt.text()), int(self.__steptxt.value())]
         self.__populate_table()
-        
+    
+    # Remove selected set from the local sets    
     def __do_remove(self):
-        # Remove selected set from the local sets
         r = self.__table.currentRow()
         if r != -1:
             name = self.__table.item(r, 0).text()
@@ -457,47 +457,14 @@ class Config(QDialog):
             del sets[name]
             self.__table.removeRow(r);
             self.__populate_table()
-            
-    #=======================================================
-    # Other events
-
-    #=======================================================
-    # Helpers
-    def __populate_table(self):
-        # Clear table
-        row = 0
-        while self.__table.rowCount() > 0:
-            self.__table.removeRow(0);
-        # Populate
-        # Sets are {name: [low_freq, pos_low, high_freq, pos_high, steps], name:[...], ...}
-        key = self.__get_loop_item()
-        sets = self.__sets[key]
-        if len(sets) > 0:
-            for key, values in sets.items():
-                self.__table.insertRow(row)
-                self.__table.setItem(row, 0, QTableWidgetItem(str(key)))
-                self.__table.setItem(row, 1, QTableWidgetItem(str(values[0])))
-                self.__table.setItem(row, 2, QTableWidgetItem(str(values[1])))
-                self.__table.setItem(row, 3, QTableWidgetItem(str(values[2])))
-                self.__table.setItem(row, 4, QTableWidgetItem(str(values[3])))
-                self.__table.setItem(row, 5, QTableWidgetItem(str(values[4])))
-                row += 1
-            if self.__table.rowCount() > 0:
-                self.__table.selectRow(0)
-        
-    def __get_loop_item(self):
-        if self.__selected_loop == 1:
-           item = CAL_S1
-        elif self.__selected_loop == 2:
-           item = CAL_S2
-        elif self.__selected_loop == 3:
-           item = CAL_S3
-        else:
-            # Should not happen
-            self.logger.warn("Invalid loop id %d" % self.__loop)
-            item = CAL_S1
-        return item
     
+    #===========================
+    # Timeout tab events
+    # None
+    
+    #===========================
+    # Common button events
+    # Save the changes to the model
     def __do_save(self):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
@@ -523,6 +490,54 @@ class Config(QDialog):
         # Must redo after a save as we could have multiple saves
         self.cal_init()
     
+    # Cancel changes    
+    def __do_cancel(self):
+        self.close()
+    
+    # Close
+    def __do_close(self):
+        self.close()
+        
+    #=======================================================
+    # Helpers
+    # Populate table from model
+    def __populate_table(self):
+        # Clear table
+        row = 0
+        while self.__table.rowCount() > 0:
+            self.__table.removeRow(0);
+        # Populate
+        # Sets are {name: [low_freq, pos_low, high_freq, pos_high, steps], name:[...], ...}
+        key = self.__get_loop_item()
+        sets = self.__sets[key]
+        if len(sets) > 0:
+            for key, values in sets.items():
+                self.__table.insertRow(row)
+                self.__table.setItem(row, 0, QTableWidgetItem(str(key)))
+                self.__table.setItem(row, 1, QTableWidgetItem(str(values[0])))
+                self.__table.setItem(row, 2, QTableWidgetItem(str(values[1])))
+                self.__table.setItem(row, 3, QTableWidgetItem(str(values[2])))
+                self.__table.setItem(row, 4, QTableWidgetItem(str(values[3])))
+                self.__table.setItem(row, 5, QTableWidgetItem(str(values[4])))
+                row += 1
+            if self.__table.rowCount() > 0:
+                self.__table.selectRow(0)
+    
+    # Key for loop    
+    def __get_loop_item(self):
+        if self.__selected_loop == 1:
+           item = CAL_S1
+        elif self.__selected_loop == 2:
+           item = CAL_S2
+        elif self.__selected_loop == 3:
+           item = CAL_S3
+        else:
+            # Should not happen
+            self.logger.warn("Invalid loop id %d" % self.__loop)
+            item = CAL_S1
+        return item
+    
+    # Map differences between config sets and calibrated sets
     def __cal_diff(self):
         diff = [[[],[],[]],[[],[],[]],[[],[],[]]]
         if len(self.__model[CONFIG][CAL][CAL_L1]) > 0:
@@ -577,14 +592,8 @@ class Config(QDialog):
                     break
         return [list(added), list(removed), modified]
         
-    def __do_cancel(self):
-        self.close()
-    
-    def __do_close(self):
-        self.close()
-    
-    # =======================================================
-    # Background activities
+    #=======================================================
+    # Idle loop processing
     def __idleProcessing(self):
     
         # Adjust buttons
@@ -600,5 +609,5 @@ class Config(QDialog):
             self.__remove.setEnabled(False)
         
         # Reset timer    
-        QtCore.QTimer.singleShot(1000, self.__idleProcessing)
+        QtCore.QTimer.singleShot(IDLE_LONG_TICKER, self.__idleProcessing)
         
