@@ -29,10 +29,7 @@ import traceback
 import logging
 
 # PyQt5 imports
-from PyQt5.QtWidgets import QMainWindow, QDialog, QApplication, QToolTip, QAbstractItemView
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QFont, QDoubleValidator
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QStatusBar, QTabWidget, QTableWidget, QInputDialog, QFileDialog, QFrame, QGroupBox, QMessageBox, QLabel, QSlider, QLineEdit, QTextEdit, QComboBox, QPushButton, QCheckBox, QRadioButton, QSpinBox, QAction, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QTableWidgetItem
+from qt_inc import *
 
 # Application imports
 from defs import *
@@ -56,8 +53,8 @@ class Setpoint(QDialog):
         self.__loop = -1
      
         # Set the back colour
-        palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Background,QtGui.QColor(149,142,132))
+        palette = QPalette()
+        palette.setColor(QPalette.Background, QColor(149,142,132))
         self.setPalette(palette)
 
         # Set the tooltip style

@@ -37,8 +37,7 @@ from defs import *
 
 # Verbose flag
 VERB = True
-# Set False when testing
-MODEL = True
+
 # Pause at end of processing SLEEP_TIMER secs
 SLEEP_TIMER = 0.02
 
@@ -50,48 +49,43 @@ class SerialComms(threading.Thread):
     # =============================================================== 
     # Initialise class
     def __init__(self, model, q, main_callback):
-        """
-        Constructor
-        
-        Arguments:
-            q           --  queue to accept commands on
-            callback    --  on status or error
-        
-        """
-        
         super(SerialComms, self).__init__()
         
         # Get root logger
         self.logger = logging.getLogger('root')
 
+        # Parameters
         self.__model = model
         self.__q = q
         self.__cb = main_callback
+        
+        # Instance vars
         self.__originalcb = main_callback
         self.term = False
-        
         self.__port = None
         self.__ser = None
         self.__ticks = (HEARTBEAT_TIMER/1000)/SLEEP_TIMER
         self.__heartbeat = self.__ticks
 
+    # Attempt connect to Arduino
     def connect(self):
-        if MODEL: self.__port = self.__model[CONFIG][ARDUINO][PORT]
+        self.__port = self.__model[CONFIG][ARDUINO][PORT]
         try:
             self.__ser = serial.Serial(self.__port, 9600, timeout=1)
         except Exception as e:
-            #self.logger.info("Failed to initialise Arduino port. Is the Arduino connected?")
-            if MODEL: self.__model[STATE][ARDUINO][ONLINE] = False
+            self.__model[STATE][ARDUINO][ONLINE] = False
             return False
         
-        if MODEL: self.__model[STATE][ARDUINO][ONLINE] = True
+        self.__model[STATE][ARDUINO][ONLINE] = True
         self.__ser.reset_input_buffer()
         return True
-        
+    
+    # Caller changes callback     
     def steal_callback( self, new_callback) :
         """ Steal the dispatcher callback """
         self.__cb = new_callback
     
+    # Caller restors callback
     def restore_callback(self) :
         """ Restore the dispatcher callback """
         self.__cb = self.__originalcb
@@ -120,7 +114,7 @@ class SerialComms(threading.Thread):
                     heartbeat = False
                 if not heartbeat:
                     # This will get picked up and a reconnect attempted
-                    if MODEL: self.__model[STATE][ARDUINO][ONLINE] = False
+                    self.__model[STATE][ARDUINO][ONLINE] = False
                     self.__ser.close()
                     self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
                     break
@@ -132,9 +126,9 @@ class SerialComms(threading.Thread):
                     while self.__q.qsize() > 0:
                         name, args = self.__q.get()
                         if VERB: self.logger.info("Name: {0}, Args: {1}".format(name, args))
-                        # By default this is synchronous so will wait for the response
-                        # Response goes to main code callback, we don't care here
+                        # Execute command, responses are by callback
                         self.__dispatch(name, args)
+                        # Here after command/response sequence
                         self.__q.task_done()
                 else:
                     sleep(SLEEP_TIMER)
@@ -150,7 +144,7 @@ class SerialComms(threading.Thread):
     # ===============================================================
     # PRIVATE
     # Command execution
-    # Switcher
+    # Dispatch to handler
     def __dispatch(self, name, args):
         disp_tab = {
             'speed': self.__speed,
@@ -171,7 +165,8 @@ class SerialComms(threading.Thread):
         }
         # Execute and return response
         self.__cb(disp_tab[name](args))
-        
+    
+    # Execute Arduino function and wait response    
     def __speed(self, args):
         speed = args[0]
         b = bytearray(b"s,")
@@ -285,7 +280,6 @@ class SerialComms(threading.Thread):
             chr = self.__ser.read().decode('utf-8')
             if chr == '':
                 # Timeout on read
-                #if VERB: print("Waiting response...")
                 if resp_timeout <= 0:
                     # Timeout on waiting for a response
                     if VERB: self.logger.info("Response timeout!")
@@ -316,7 +310,6 @@ class SerialComms(threading.Thread):
                 success = True
                 break
         if success:
-            #print("Response ", self.__encode(acc))
             return(self.__encode(acc))
         else:
             return (name, (success, msg, val))
@@ -352,7 +345,7 @@ class SerialComms(threading.Thread):
 
     # ===============================================================
     # Abort is available for long running commands that maybe have multiple actions.
-    # Stop is used to stop the actuator when using manual free running fprward or reverse.
+    # Stop is used to stop the actuator when using manual free running forward or reverse.
     # An abort has no response but simply closes all current and pending activities.
     # A stop will cause the forward or reverse commands to complete with their normal response.
     def __check_stop_abort(self):
