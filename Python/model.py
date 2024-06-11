@@ -45,7 +45,8 @@ flexi_loop_model = {
             SHORT_TIMEOUT: 2,
         },
         CAL: {
-            # Number of steps for set points
+            # Calibration sets for each loop
+            # {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
             SETS: {
                 CAL_S1: {},
                 CAL_S2: {},
@@ -60,6 +61,7 @@ flexi_loop_model = {
             CAL_L3: {},
         },
         SETPOINTS: {
+            # Loop 1-3 [...?]
             SP_L1: {},
             SP_L2: {},
             SP_L3: {},

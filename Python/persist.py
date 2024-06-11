@@ -33,14 +33,6 @@ import pickle
 Utility functions to get and save configuration and state
 """
 def getSavedCfg(path):
-    """
-    Restore the saved configuration
-    
-    Arguments:
-        path    -- path to configuration file
-            
-    """
-    
     cfg = None
     if os.path.exists(path):
         try:       
@@ -48,8 +40,7 @@ def getSavedCfg(path):
             cfg = pickle.load(f)
         except Exception as e:
             # Error retrieving configuration file
-            #QMessageBox.information(None, 'Configuration File - Exception','Exception [%s]' % (str(e)), QMessageBox.Ok)
-            print('Configuration File - Exception','Exception [%s]' % (str(e)))
+            print('Read Configuration File - Exception [%s]' % (str(e)))
         finally:
             try:
                 f.close()
@@ -58,15 +49,6 @@ def getSavedCfg(path):
     return cfg
     
 def saveCfg(path, cfg):
-    """
-    Save the configuration
-    
-    Arguments:
-        path    -- path to state file
-        cfg   	-- configuration to save
-        
-    """
-    
     try:
         dir, file = os.path.split(path)
         if not os.path.exists(dir):
@@ -75,8 +57,7 @@ def saveCfg(path, cfg):
         pickle.dump(cfg, f)
     except Exception as e:
         # Error saving configuration file
-        #QMessageBox.information(None, 'Configuration File - Exception','Exception [%s]' % (str(e)), QMessageBox.Ok)
-        print('Configuration File - Exception','Exception [%s]' % (str(e)))
+        print('Save Configuration File - Exception [%s]' % (str(e)))
     finally:
         try:
             f.close()

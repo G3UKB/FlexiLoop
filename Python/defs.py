@@ -24,12 +24,6 @@
 #
 
 #=======================================================================
-# Calibration
-#======================================
-MIN_FREQ = 1800000
-MAX_FREQ = 30000000
-
-#=======================================================================
 # Model
 #======================================
 # Configutation
@@ -61,8 +55,6 @@ SETPOINTS = 'SETPOINTS'
 SP_L1 = 'SP_L1'
 SP_L2 = 'SP_L2'
 SP_L3 = 'SP_L3'
-# VNA section
-VNA_CONF = 'VNA_CONF'
 
 #======================================
 # State
@@ -82,9 +74,9 @@ ACT_POS = 'ACT_POS'
 #=======================================================================
 # User Interface, Calibrate and Tuning
 #
-# Path to configuration file
+# Default path to configuration file
 CONFIG_PATH = '../config/flexi_loop.cfg'
-# Run idle processing every IDLE_TICKER ms
+# Run idle processing every TICKER ms
 IDLE_TICKER = 250
 IDLE_LONG_TICKER = 1000
 # Check Arduino every HEARTBEAT_TIMER ms
@@ -156,12 +148,6 @@ FWD = 'FWD'
 REV = 'REV'
 
 # Widget states
-W_DISABLE_ALL = 'WDisableAll'
-W_NO_CONFIG = 'WNoConfig'
-W_LONG_RUNNING = 'WLongRunning'
-W_FREE_RUNNING = 'WFreeRunning'
-W_NORMAL = 'WNormal'
-
 W_OFF_LINE = 'WOffLine'
 W_LONG_RUNNING = 'WLongRunning'
 W_FREE_RUNNING = 'WFreeRunning'
@@ -177,7 +163,7 @@ MANUAL_DATA_REQD = 1
 MANUAL_DATA_AVAILABLE = 2
 MANUAL_NEXT = 3
 
-# Hints for messages
+# Message highlights
 MSG_INFO = 'MSG_INFO'
 MSG_STATUS = 'MSG_STATUS'
 MSG_ALERT = 'MSG_ALERT'
