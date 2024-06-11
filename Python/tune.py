@@ -41,7 +41,10 @@ import calibrate
 
 VERB = False
 
-# Make this a separate module with q etc.
+#=====================================================
+# Tune to a given frequency
+# Again a threaded operation to keep UI alive
+#===================================================== 
 class Tune(threading.Thread):
     
     def __init__(self, model, serial, s_q, cb):
@@ -50,21 +53,22 @@ class Tune(threading.Thread):
         # Get root logger
         self.logger = logging.getLogger('root')
         
+        # Parameters
         self.__model = model
         self.__serial_comms = serial
-        self.__loop = None
-        self.__freq = None
         self.__s_q = s_q
         self.__cb = cb
         
+        # Instance vars
+        self.__freq = None
+        self.__loop = None
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
-        
         self.one_pass = False
         self.term = False
     
-    # Allow one execution pass
+    # Perform one tuning pass for given loop and frequency
     def do_one_pass(self, loop, freq):
         self.__loop = loop
         self.__freq = freq
@@ -73,7 +77,8 @@ class Tune(threading.Thread):
     # Terminate instance
     def terminate(self):
         self.term = True
-        
+    
+    # Entry point    
     def run(self):
         # Run until terminate
         while not self.term:
@@ -102,7 +107,6 @@ class Tune(threading.Thread):
             index = 0
             idx_low = -1
             idx_high = -1
-            # The list is not necessarily in any order as could cover multiple bands
             for ft in aset:
                 if ft[1] < self.__freq:
                     # Lower than target
@@ -150,7 +154,7 @@ class Tune(threading.Thread):
         print("Tune thread  exiting...")
               
     #=======================================================
-    # Stolen Callback  
+    # Stolen Callback for serial comms
     def t_tune_cb(self, data):
         if VERB: self.logger.info("Calibrate: got event: %s" % str(data))
         (name, (success, msg, val)) = data
@@ -163,12 +167,6 @@ class Tune(threading.Thread):
             ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
                 self.__cb((name, (True, "", [str(ppos)])))
-            #home = self.__model[CONFIG][CAL][HOME]
-            #maximum = self.__model[CONFIG][CAL][MAX]
-            #if home > 0 and maximum > 0:
-            #    span = maximum - home
-            #    offset = val[0] - home
-            #    self.__cb((name, (True, "", [str(int((offset/span)*100))])))
         elif name == ABORT:
             # Just release whatever was going on
             # It should then pick up the abort flag
