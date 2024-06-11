@@ -47,14 +47,14 @@ VERB = True
 #       is a one off calibration until a recalibration is requested.
 # 2.    We need to know which loop is connected. This will be a UI function as is calling
 #       calibration.
-# 3.    We set calibration point at the (user selectable) interval as a percentage of
-#       the full travel. So if we select 10% there will be 11 calibration points. The
-#       more points the slower calibration will be but the quicker the (re)tuning as we
-#       get closer to the requested frequency.
-# 4.    At each calibration point we get a resonance reading and SWR from the user.
+# 3.    Calibration is done according to the configuration where multiple spans can be
+#       set for each loop. The actuator is positioned manually for the config limits on
+#       each span and then automatically during configuration. However the frequency and
+#       swr has to be entered manually.
 
 #=====================================================
-# The main application class
+# The main calibration class
+# Calibration is threaded as the UI must remain available throughout.
 #===================================================== 
 class Calibrate(threading.Thread):
 
@@ -64,25 +64,29 @@ class Calibrate(threading.Thread):
         # Get root logger
         self.logger = logging.getLogger('root')
         
+        # Parameters
+        # Serial interface and queue
         self.__comms = comms
         self.__comms_q = comms_q
+        # Incoming queue
         self.__cal_q = cal_q
+        # Model instance
         self.__model = model
+        # Callbacks to UI for completion and messages
         self.__cb = callback
         self.__msg_cb = msgs
-                
+         
+        # Instance variables       
         self.__end_points = [-1,-1]
         self.term = False
         self.__abort = False
         self.__man_cb = None
-        
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
     
-    # Terminate instance
+    # Terminate
     def terminate(self):
-        """ Thread terminating """
         self.term = True
 
     # Thread entry point
@@ -93,23 +97,24 @@ class Calibrate(threading.Thread):
                 if self.__cal_q.qsize() > 0:
                     while self.__cal_q.qsize() > 0:
                         name, args = self.__cal_q.get()
-                        # By default this is synchronous so will wait for the response
-                        # Response goes to main code callback, we don't care here
+                        # Execute the command
                         self.__dispatch(name, args)
+                        # Returns when the command and response completes
                         self.__cal_q.task_done()
                 else:
                     sleep(0.02)
             except Exception as e:
                 # Something went wrong
-                print(str(e))
-                #self.__cb('fatal: {0}'.format(e))
+                self.__msg_cb('Exception in calibrate: [%s]' % str(e))
+                self.__cb((CONFIGURE, (False, 'Exception in calibrate: [%s]' % str(e), [])))
+                self.logger.faltal('Exception in calibrate: [%s]' % str(e))
                 break
         self.logger.info("Calibrate thread exiting...")
     
     # ===============================================================
     # PRIVATE
     # Command execution
-    # Switcher
+    # Dispatch command
     def __dispatch(self, name, args):
         disp_tab = {
             'configure': self.__configure,
@@ -123,6 +128,7 @@ class Calibrate(threading.Thread):
         # Restore the callback for the comms thread
         self.__comms.restore_callback()
     
+    # Configure the feedback end points
     def __configure(self, args):
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
@@ -146,6 +152,7 @@ class Calibrate(threading.Thread):
                 return (CONFIGURE, (False, "Reverse pot hot ends, home > max. Configure again: {}!".format(self.__end_points), self.__end_points))
         return (CONFIGURE, (True, '', self.__end_points))
     
+    # Do calibration sequence for given loop
     def __calibrate(self, args):
         # Get args
         loop, self.__man_cb = args
@@ -182,6 +189,8 @@ class Calibrate(threading.Thread):
         self.save_context(loop, cal_map)
         return ('Calibrate', (True, "", cal_map))
     
+    # Do calibration sequence for given loop according to the calibration differences
+    # [added, removed, changed]
     def __sync(self, args):
         # Get args
         loop, self.__man_cb, cal_diff = args
@@ -218,6 +227,7 @@ class Calibrate(threading.Thread):
         self.save_context(loop, cal_map)
         return ('Calibrate', (True, "", cal_map))
     
+    # Retrieve feedback end points from model
     def retrieve_end_points(self):
         
         h = self.__model[CONFIG][CAL][HOME]
@@ -227,7 +237,8 @@ class Calibrate(threading.Thread):
             return False, [h, m]
         else:
             return True, [h, m]
-        
+    
+    # Set the feedback end points    
     def cal_end_points(self):
         
         extents = [0, 0]    # home, max
@@ -255,6 +266,7 @@ class Calibrate(threading.Thread):
             
         return True, ""
     
+    # Retrieve the calibration definition and execution maps from the model 
     def retrieve_context(self, loop):
         if loop == 1:
             return True, self.__model[CONFIG][CAL][SETS][CAL_S1], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L1])
@@ -265,6 +277,7 @@ class Calibrate(threading.Thread):
         else:
             return False, []
 
+    # Save the configured/updated calibration for the loop
     def save_context(self, loop, cal_map):
         if loop == 1:
             self.__model[CONFIG][CAL][CAL_L1] = cal_map
@@ -272,7 +285,8 @@ class Calibrate(threading.Thread):
             self.__model[CONFIG][CAL][CAL_L2] = cal_map
         elif loop == 3:
             self.__model[CONFIG][CAL][CAL_L3] = cal_map
-        
+    
+    # Perform calibration and create the calibration map    
     def create_map(self, loop, sets, cal_map):
         
         # Just in case
@@ -296,6 +310,7 @@ class Calibrate(threading.Thread):
                 return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
         return True, '', cal_map
     
+    # As above but for the map changes only
     def create_synced_map(self, loop, sets, cal_map, cal_diff):
         
         # See what we have to deal with
@@ -332,7 +347,8 @@ class Calibrate(threading.Thread):
                 if not r:
                     return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
         return True, '', cal_map
-        
+    
+    # Step through the given calibration set and save the points to the map    
     def __do_steps(self, loop, cal_map, name, cal_set):
         # Holds current data
         temp_map = []
@@ -396,6 +412,7 @@ class Calibrate(threading.Thread):
         # Return the map
         return True, "", cal_map
     
+    # Move to a position and wait for the response
     def __move_wait(self, move_to):
         self.__comms_q.put(('move', [move_to]))
         # Wait response
@@ -409,6 +426,7 @@ class Calibrate(threading.Thread):
         self.__event.clear()
         return True
     
+    # Get the manual input for this step (frequency/swr)
     def __get_current(self):
         r, [vals] = self.__get_vals()
         if not r:
@@ -442,12 +460,6 @@ class Calibrate(threading.Thread):
             ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
                 self.__cb((name, (True, "", [str(ppos)])))
-            #home = self.__model[CONFIG][CAL][HOME]
-            #maximum = self.__model[CONFIG][CAL][MAX]
-            #if home > 0 and maximum > 0:
-            #    span = maximum - home
-            #    offset = val[0] - home
-            #    self.__cb((name, (True, "", [str(int((offset/span)*100))])))
         elif name == ABORT:
             # Just release whatever was going on
             # It should then pick up the abort flag

@@ -87,14 +87,15 @@ class API:
     # Called to (re)connect to the Arduino via the serial link
     def init_comms(self):
         if self.__serial_running:
-            self.__msgs('Serial comms running')
             # We were running but there has been a disconnection
             # We need to start again as a thread cannot be restarted
+            self.__serial_running = False
             self.__serial_comms = None
             self.__serial_comms = serialcomms.SerialComms(self.__model, self.__s_q, self.serial_callback)
             if self.__serial_comms.connect():
                 self.__serial_comms.start()
                 self.__serial_running = True
+                self.__msgs('Serial comms running')
                 return True
         else:
             # Not yet running so we can connect and start the thread
