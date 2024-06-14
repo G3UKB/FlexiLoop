@@ -150,6 +150,7 @@ class Calibrate(threading.Thread):
             if self.__end_points[0] > self.__end_points[1]:
                 # pot hot ends are reversed
                 return (CONFIGURE, (False, "Reverse pot hot ends, home > max. Configure again: {}!".format(self.__end_points), self.__end_points))
+        self.__msg_cb("Configuring fedback endpoints complete.")
         return (CONFIGURE, (True, '', self.__end_points))
     
     # Do calibration sequence for given loop
@@ -449,9 +450,9 @@ class Calibrate(threading.Thread):
     # Note this is called on the comms thread and stolen from api.py
     def callback(self, data):
         
-        if VERB: self.logger.info("Calibrate: got event: %s" % str(data))
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
+            if VERB: self.logger.info("Calibrate: got event: %s" % str(data))
             # Extract args and release thread
             self.__args = val
             self.__event.set() 

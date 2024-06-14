@@ -280,7 +280,10 @@ class UI(QMainWindow):
                 self.__switch_mode = self.__saved_mode
                 self.logger.info("Activity aborted by user!")
             else:
-                self.logger.info ('Waiting for activity %s to completed but got activity %s! Continuing to wait' % (self.__current_activity, name))
+                self.logger.info ('Waiting for activity %s to completed but got activity %s! Aborting, please restart the activity.' % (self.__current_activity, name))
+                # Treat this as an abort because it will probably lock us up
+                self.__aborting = True
+                self.__api.abort_activity()
                 
     #=======================================================
     # PRIVATE

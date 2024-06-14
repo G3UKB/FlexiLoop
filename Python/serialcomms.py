@@ -97,6 +97,7 @@ class SerialComms(threading.Thread):
     
     # Thread entry point
     def run(self):
+        global VERB
         self.logger.info("Running...")
         while not self.term:
             
@@ -107,7 +108,10 @@ class SerialComms(threading.Thread):
                 # Time to check
                 heartbeat = True
                 try:
+                    verb = VERB
+                    VERB = False
                     name, (success, msg, val) = self.send(b"z;", 1)
+                    VERB = verb
                     if not success:
                         heartbeat = False
                 except:
@@ -295,7 +299,7 @@ class SerialComms(threading.Thread):
                 # Found terminator character
                 if "Status" in acc:
                     # Its a status message so return this directly
-                    if VERB: self.logger.info("Status: {0}".format(acc))
+                    #if VERB: self.logger.info("Status: {0}".format(acc))
                     self.__cb(self.__encode(acc))
                     acc = ""
                     continue
