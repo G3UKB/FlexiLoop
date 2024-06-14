@@ -47,6 +47,7 @@ import ui
 class AppMain:
     def __init__(self, path, log ):
         self.path = path
+        CONFIG_PATH = path
         self.log = log
     
     def run(self):

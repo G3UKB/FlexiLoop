@@ -84,7 +84,7 @@ def find_from_position(model, loop, pos):
     # If we have data look for a match
     if len(sets) == 0:
         # Failed to find a candidate
-        return False, 'No currebnt sets for loop %d!' % loop, (None, None, None)
+        return False, 'No current sets for loop %d!' % loop, (None, None, None)
     # A set is a dictionary of name:[[pos, freq, swr], [...], ...]
     # We first determine the best set to look for a match.
     # Sets can overlap so we want the minimum span set as the best candidate
@@ -125,7 +125,7 @@ def find_from_position(model, loop, pos):
         
     if idx_low == -1 or  idx_high ==-1:
         # Failed to find a match in candidate set
-        return False, 'No match found in candidate %d!' % candidate, (None, None, None)
+        return False, 'No match found in candidate %s!' % candidate, (None, None, None)
     else:
         # The feedback values and frequencies above and below the required position
         fb_high = pset[idx_high][0]

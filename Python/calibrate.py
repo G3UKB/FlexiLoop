@@ -37,6 +37,7 @@ from defs import *
 import model
 import serialcomms
 from utils import *
+import persist
 
 VERB = True
 
@@ -151,6 +152,8 @@ class Calibrate(threading.Thread):
                 # pot hot ends are reversed
                 return (CONFIGURE, (False, "Reverse pot hot ends, home > max. Configure again: {}!".format(self.__end_points), self.__end_points))
         self.__msg_cb("Configuring fedback endpoints complete.")
+        # Save model
+        persist.saveCfg(CONFIG_PATH, self.__model)
         return (CONFIGURE, (True, '', self.__end_points))
     
     # Do calibration sequence for given loop
@@ -188,6 +191,8 @@ class Calibrate(threading.Thread):
         
         self.__msg_cb("Calibration complete", MSG_STATUS)
         self.save_context(loop, cal_map)
+        # Save model
+        persist.saveCfg(CONFIG_PATH, self.__model)
         return ('Calibrate', (True, "", cal_map))
     
     # Do calibration sequence for given loop according to the calibration differences

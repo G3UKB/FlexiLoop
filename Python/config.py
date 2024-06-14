@@ -36,6 +36,7 @@ from qt_inc import *
 from defs import *
 from utils import *
 import api
+import persist
 
 # Main config dialog        
 class Config(QDialog):
@@ -486,6 +487,9 @@ class Config(QDialog):
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
+        
+        # Save model
+        persist.saveCfg(CONFIG_PATH, self.__model)
         
         # Must redo after a save as we could have multiple saves
         self.cal_init()
