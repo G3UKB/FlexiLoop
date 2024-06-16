@@ -260,6 +260,7 @@ int get_feedback_value() {
 // Move to home or max position
 int go_home_or_max(int pos) {
   // Assume home is reverse
+  int counter = 5;
   int speed;
   if (pos == HOME) {
     speed = -current_speed;
@@ -276,15 +277,18 @@ int go_home_or_max(int pos) {
     int last_val = -1;
     delay(200);
     while (get_feedback_value() != last_val) {
-      Serial.print("Status: ");
-      Serial.print(get_feedback_value());
-      Serial.print(";");
-      last_val = get_feedback_value();
-      if (check_abort()) {
-        md.setM1Speed(0);
-        return TRUE;
+      if (counter-- <= 0) {
+          counter = 5;
+        Serial.print("Status: ");
+        Serial.print(get_feedback_value());
+        Serial.print(";");
+        last_val = get_feedback_value();
+        if (check_abort()) {
+          md.setM1Speed(0);
+          return TRUE;
+        }
       }
-      delay(500);
+      delay(100);
     }
     delay(100);
     md.setM1Speed(0);
@@ -294,6 +298,7 @@ int go_home_or_max(int pos) {
 
 // Move actuator to given feedback value
 int move_to_feedback_value(int target) {
+  int counter = 5;
   int current_val = get_feedback_value();
   int speed = 0;
   int dir = FORWARD;
@@ -313,25 +318,31 @@ int move_to_feedback_value(int target) {
   } else {
     if (dir == FORWARD) {
       while(get_feedback_value() < target) {
-        Serial.print("Status: ");
-        Serial.print(get_feedback_value());
-        Serial.print(";");
-        if (check_abort()) {
-          md.setM1Speed(0);
-          return TRUE;
+        if (counter-- <= 0) {
+          counter = 5;
+          Serial.print("Status: ");
+          Serial.print(get_feedback_value());
+          Serial.print(";");
+          if (check_abort()) {
+            md.setM1Speed(0);
+            return TRUE;
+          }
         }
-        delay(500);
+        delay(100);
       }
     } else {
       while(get_feedback_value() > target){
-        Serial.print("Status: ");
-        Serial.print(get_feedback_value());
-        Serial.print(";");
-        if (check_abort()) {
-          md.setM1Speed(0);
-          return TRUE;
+        if (counter-- <= 0) {
+          counter = 5;
+          Serial.print("Status: ");
+          Serial.print(get_feedback_value());
+          Serial.print(";");
+          if (check_abort()) {
+            md.setM1Speed(0);
+            return TRUE;
+          }
         }
-        delay(500);
+        delay(100);
       }
     }
     // Stop driving
@@ -364,16 +375,20 @@ int move_ms(int ms, int pos) {
 }
 
 int move_fwd() {
+  int counter = 5;
   md.setM1Speed(current_speed);
   if (md.getFault()) {
     md.setM1Speed(0);
     return FALSE;
   } else {
     while (!check_stop()) {
-      delay (500);
-      Serial.print("Status: ");
-      Serial.print(get_feedback_value());
-      Serial.print(";");
+      delay (100);
+      if (counter-- <= 0) {
+        counter = 5;
+        Serial.print("Status: ");
+        Serial.print(get_feedback_value());
+        Serial.print(";");
+      }
     }
   }
   md.setM1Speed(0);
@@ -381,16 +396,20 @@ int move_fwd() {
 }
 
 int move_rev() {
+  int counter = 5;
   md.setM1Speed(-current_speed);
   if (md.getFault()) {
     md.setM1Speed(0);
     return FALSE;
   } else {
     while (!check_stop()) {
-      delay (500);
-      Serial.print("Status: ");
-      Serial.print(get_feedback_value());
-      Serial.print(";");
+      delay (100);
+      if (counter-- <= 0) {
+        counter = 5;
+        Serial.print("Status: ");
+        Serial.print(get_feedback_value());
+        Serial.print(";");
+      }
     }
   }
   md.setM1Speed(0);

@@ -194,3 +194,66 @@ def find_freq_candidate(sets, freq):
                 lastlow = low
                 lasthi = high
     return candidate
+
+#=================================================
+# Testing
+def sim_steps(model):
+    low_pos = 40
+    high_pos = 20
+    steps = 10
+    
+    low_pos_abs = percent_pos_to_analog(model, low_pos)
+    high_pos_abs = percent_pos_to_analog(model, high_pos)
+    span = low_pos_abs - high_pos_abs
+    fb_inc = span/float(steps)
+    
+    next_inc = high_pos_abs + fb_inc
+    counter = 0
+    print(low_pos_abs, high_pos_abs, span, fb_inc)
+    while next_inc < low_pos_abs:
+        print('Counter: %d, Next: %d' % (counter, int(next_inc)))
+        next_inc += fb_inc
+        counter += 1
+    
+def self_test():
+    
+    model = {
+        CONFIG: {
+            CAL: {
+                # Calibration sets for each loop
+                # {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
+                SETS: {
+                    CAL_S1: {},
+                    CAL_S2: {},
+                    CAL_S3: {},
+                },
+                # Feedback values for min and max
+                HOME: 508,
+                MAX: 779,
+                # Loop 1-3 [[feedback value, f, swr], [...], ...]]
+                CAL_L1: {},
+                CAL_L2: {},
+                CAL_L3: {},
+            },
+            SETPOINTS: {
+                # Loop 1-3 [...?]
+                SP_L1: {},
+                SP_L2: {},
+                SP_L3: {},
+            },
+        }
+    }
+    
+    val = percent_pos_to_analog(model, 50.0)
+    print('%->an ', val)
+    
+    print('an->% home ', analog_pos_to_percent(model, 508))
+    print('an->% max ', analog_pos_to_percent(model, (779-508) + 508))
+    
+    arg = ((779-508)/2.0) + 508
+    print('an arg ', arg)
+    val = analog_pos_to_percent(model, arg)
+    print('an->% ', val)
+    
+    sim_steps(model)
+
