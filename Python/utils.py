@@ -198,22 +198,25 @@ def find_freq_candidate(sets, freq):
 #=================================================
 # Testing
 def sim_steps(model):
-    low_pos = 40
-    high_pos = 20
+    low_pos = 30.0
+    high_pos = 20.0
     steps = 10
     
     low_pos_abs = percent_pos_to_analog(model, low_pos)
     high_pos_abs = percent_pos_to_analog(model, high_pos)
     span = low_pos_abs - high_pos_abs
-    fb_inc = span/float(steps)
-    
-    next_inc = high_pos_abs + fb_inc
-    counter = 0
+    fb_inc = float(span)/float(steps)
     print(low_pos_abs, high_pos_abs, span, fb_inc)
-    while next_inc < low_pos_abs:
+    
+    next_inc = round(float(low_pos_abs) - fb_inc, 0)
+    counter = 0
+    print(low_pos_abs, high_pos_abs, span, fb_inc, next_inc)
+    print('Low ', low_pos_abs)
+    while next_inc > high_pos_abs:
         print('Counter: %d, Next: %d' % (counter, int(next_inc)))
-        next_inc += fb_inc
+        next_inc -= fb_inc
         counter += 1
+    print('High ', high_pos_abs)
     
 def self_test():
     
@@ -244,16 +247,16 @@ def self_test():
         }
     }
     
-    val = percent_pos_to_analog(model, 50.0)
-    print('%->an ', val)
+    #val = percent_pos_to_analog(model, 50.0)
+    #print('%->an ', val)
     
-    print('an->% home ', analog_pos_to_percent(model, 508))
-    print('an->% max ', analog_pos_to_percent(model, (779-508) + 508))
+    #print('an->% home ', analog_pos_to_percent(model, 508))
+    #print('an->% max ', analog_pos_to_percent(model, (779-508) + 508))
     
-    arg = ((779-508)/2.0) + 508
-    print('an arg ', arg)
-    val = analog_pos_to_percent(model, arg)
-    print('an->% ', val)
+    #arg = ((779-508)/2.0) + 508
+    #print('an arg ', arg)
+    #val = analog_pos_to_percent(model, arg)
+    #print('an->% ', val)
     
     sim_steps(model)
 

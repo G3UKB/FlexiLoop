@@ -160,7 +160,7 @@ class Calibrate(threading.Thread):
     def __calibrate(self, args):
         # Get args
         loop, self.__man_cb = args
-        cal_map = []
+        cal_map = {}
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
         if not r:
@@ -281,7 +281,7 @@ class Calibrate(threading.Thread):
         elif loop == 3:
             return True, self.__model[CONFIG][CAL][SETS][CAL_S2], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L3])
         else:
-            return False, []
+            return False, (), {}
 
     # Save the configured/updated calibration for the loop
     def save_context(self, loop, cal_map):
@@ -366,26 +366,26 @@ class Calibrate(threading.Thread):
         low_pos_abs = percent_pos_to_analog(self.__model, low_pos)
         high_pos_abs = percent_pos_to_analog(self.__model, high_pos)
         span = low_pos_abs - high_pos_abs
-        fb_inc = span/float(steps)
+        fb_inc = float(span)/float(steps)
         
         # Do high pos
-        if not self.__move_wait(high_pos_abs):
-            self.logger.warning("Failed to move to high position!")
-            return False, "Failed to move to high position!", cal_map
-        self.__msg_cb("Please enter frequency and SWR for high limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
+        if not self.__move_wait(low_pos_abs):
+            self.logger.warning("Failed to move to low frequency position!")
+            return False, "Failed to move to low frequency position!", cal_map
+        self.__msg_cb("Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
         r, (f, swr, pos) = self.__get_current()
         if not r:
-            self.logger.warning("Failed to get params for high position!")
-            return False, "Failed to get params for high position!", cal_map
-        self.__msg_cb("Target: %d, Actual %d" % (high_pos_abs, pos))
-        # Add the high position
+            self.logger.warning("Failed to get params for low frequency position!")
+            return False, "Failed to get params for low frequency position!", cal_map
+        self.__msg_cb("Target: %d, Actual %d" % (low_pos_abs, pos))
+        # Add the low position
         temp_map.append([pos, f, swr])
         
         # Do intermediate steps
         self.__msg_cb("Calibrating intermediate frequencies...")
-        next_inc = high_pos_abs + fb_inc
+        next_inc = round(float(low_pos_abs) - fb_inc, 0)
         counter = 0
-        while next_inc < low_pos_abs:
+        while next_inc > high_pos_abs:
             if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
@@ -396,20 +396,20 @@ class Calibrate(threading.Thread):
                 return False, "Failed to get params for step position!", cal_map
             self.__msg_cb("Step: %d, Target: %d, Actual %d" % (counter, next_inc, pos)) 
             temp_map.append([pos, f, swr])
-            next_inc += fb_inc
+            next_inc -= fb_inc
             counter += 1
         
-        # Do low pos
-        if not self.__move_wait(low_pos_abs):
-            self.logger.warning("Failed to move to low position!")
-            return False, "Failed to move to low position!", cal_map
-        self.__msg_cb("Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
+        # Do high pos
+        if not self.__move_wait(high_pos_abs):
+            self.logger.warning("Failed to move to high frequency position!")
+            return False, "Failed to move to high frequency position!", cal_map
+        self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
         r, (f, swr, pos) = self.__get_current()
         if not r:
-            self.logger.warning("Failed to get params for low position!")
-            return False, "Failed to get params for low position!", cal_map
-        self.__msg_cb("Target: %d, Actual %d" % (low_pos_abs, pos))
-        # Add the low position
+            self.logger.warning("Failed to get params for high frequency position!")
+            return False, "Failed to get params for high frequency position!", cal_map
+        self.__msg_cb("Target: %d, Actual %d" % (high_pos_abs, pos))
+        # Add the high position
         temp_map.append([pos, f, swr])
         
         # Assign this set to the set name
