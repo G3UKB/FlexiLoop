@@ -111,7 +111,7 @@ def main():
         app = AppMain(args.path, args.log)
         sys.exit(app.run()) 
     except Exception as e:
-        print ('Exception [%s][%s]' % (str(e), traceback.format_exc()))
+        print ('Exception {}, [{}]'.format(e, traceback.format_exc()))
  
 # Entry point       
 if __name__ == '__main__':

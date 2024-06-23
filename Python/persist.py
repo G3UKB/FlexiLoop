@@ -40,7 +40,7 @@ def getSavedCfg(path):
             cfg = pickle.load(f)
         except Exception as e:
             # Error retrieving configuration file
-            print('Read Configuration File - Exception [%s]' % (str(e)))
+            print('Read Configuration File exception [{}]'.format(e))
         finally:
             try:
                 f.close()
@@ -57,7 +57,7 @@ def saveCfg(path, cfg):
         pickle.dump(cfg, f)
     except Exception as e:
         # Error saving configuration file
-        print('Save Configuration File - Exception [%s]' % (str(e)))
+        print('Save Configuration File exception [{}]'.format(e))
     finally:
         try:
             f.close()

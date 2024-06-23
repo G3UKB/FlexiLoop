@@ -221,7 +221,6 @@ class UI(QMainWindow):
         # Callbacks are on the thread of the caller and cannot directly call UI methods
         # which must be called on the main thread. Therefore flags are set which are
         # interpreted by the idle time function to manage the UI state.
-        # print("UI callback: ", data)
         
         # Are we waiting for an activity to complete
         if self.__current_activity == NONE:
@@ -230,7 +229,7 @@ class UI(QMainWindow):
             # Activity in progress
             self.__activity_timer -= 1
             if self.__activity_timer <= 0:
-                self.logger.info ('Timed out waiting for activity %s to complete. Maybe the Arduino has gone off-line!' % (self.__current_activity))
+                self.logger.info ('Timed out waiting for activity {} to complete. Maybe the Arduino has gone off-line!'.format(self.__current_activity))
                 self.__current_activity == NONE
                 self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
                 return
@@ -257,7 +256,7 @@ class UI(QMainWindow):
                     elif name == TUNE:
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
-                    self.logger.info ('Activity %s completed successfully' % (self.__current_activity))
+                    self.logger.info ('Activity {} completed successfully'.format(self.__current_activity))
                     # Do we have a deferred activity
                     if self.__deferred_activity != None:
                         self.__deferred_activity()
@@ -265,7 +264,7 @@ class UI(QMainWindow):
                     else:
                         self.__current_activity = NONE
                 else:
-                    self.logger.info ('Activity %s completed but failed!' % (self.__current_activity))
+                    self.logger.info ('Activity {} completed but failed!'.format(self.__current_activity))
                     self.__current_activity = NONE
                     # Switch mode back to what is was before any change for long running activities
                     self.__switch_mode = self.__saved_mode
@@ -280,8 +279,8 @@ class UI(QMainWindow):
                 self.__switch_mode = self.__saved_mode
                 self.logger.info("Activity aborted by user!")
             else:
-                self.logger.info ('Waiting for activity %s to completed but got activity %s! Aborting, please restart the activity.' % (self.__current_activity, name))
-                # Treat this as an abort because it will probably lock us up
+                # Treat this as an abort because it will probably lock us up otherwise
+                self.logger.info ('Waiting for activity {} to completed but got activity {}! Aborting, please restart the activity.'.format(self.__current_activity, name))
                 self.__aborting = True
                 self.__api.abort_activity()
                 
@@ -1146,7 +1145,6 @@ class UI(QMainWindow):
             else:
                 # Arduino off-line
                 widget_state = W_OFF_LINE
-        #print(widget_state)
         return widget_state
     
     # Enable/disable according to state

@@ -194,7 +194,7 @@ class Calview(QDialog):
            item = CAL_L3
         else:
             # Should not happen
-            self.logger.warn("Invalid loop id %d" % self.__loop)
+            self.logger.warn("Invalid loop id {}".format(self.__loop))
             item = CAL_L1
         return item
 

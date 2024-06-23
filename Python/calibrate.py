@@ -108,7 +108,7 @@ class Calibrate(threading.Thread):
                 # Something went wrong
                 self.__msg_cb('Exception in calibrate: [%s]' % str(e))
                 self.__cb((CONFIGURE, (False, 'Exception in calibrate: [%s]' % str(e), [])))
-                self.logger.faltal('Exception in calibrate: [%s]' % str(e))
+                self.logger.fatal('Exception in calibrate: [{}]'.format(e))
                 break
         self.logger.info("Calibrate thread exiting...")
     
@@ -176,7 +176,7 @@ class Calibrate(threading.Thread):
                 try:
                     r, msg, cal_map = self.create_map(loop, sets, cal_map)
                 except Exception as e:
-                    print('Calibrate exception %s [%s]' % (str(e), traceback.print_exc()))
+                    print('Calibrate exception {}, [{}]'.format(e, traceback.print_exc()))
                     exit()
                 if not r:
                     if self.__abort:
@@ -216,7 +216,7 @@ class Calibrate(threading.Thread):
             try:
                 r, msg, cal_map = self.create_synced_map(loop, sets, cal_map, cal_diff)
             except Exception as e:
-                print('Calibrate exception %s [%s]' % (str(e), traceback.print_exc()))
+                print('Calibrate exception {}, [{}]'.format(e, traceback.print_exc()))
                 exit()
             if not r:
                 if self.__abort:
@@ -457,7 +457,7 @@ class Calibrate(threading.Thread):
         
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
-            if VERB: self.logger.info("Calibrate: got event: %s" % str(data))
+            if VERB: self.logger.info("Calibrate: got event: {}".format(data))
             # Extract args and release thread
             self.__args = val
             self.__event.set() 
@@ -472,5 +472,5 @@ class Calibrate(threading.Thread):
             self.__abort = True
             self.__event.set() 
         else:
-            if VERB: self.logger.info ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
+            if VERB: self.logger.info ("Waiting for {}, but got {}, continuing to wait!".format(self.__wait_for, name))
  

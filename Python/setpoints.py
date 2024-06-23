@@ -269,7 +269,7 @@ class Setpoint(QDialog):
            item = SP_L3
         else:
             # Should not happen
-            self.logger.warn("Invalid loop id %d" % self.__loop)
+            self.logger.warn("Invalid loop id {}".format(self.__loop))
             item = SP_L1
         return item
     

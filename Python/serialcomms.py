@@ -126,10 +126,10 @@ class SerialComms(threading.Thread):
             # Process messages
             try:
                 if self.__q.qsize() > 0:
-                    if VERB: self.logger.info("Q sz: {0}, ".format(self.__q.qsize()))
+                    if VERB: self.logger.info("Q sz: {}, ".format(self.__q.qsize()))
                     while self.__q.qsize() > 0:
                         name, args = self.__q.get()
-                        if VERB: self.logger.info("Name: {0}, Args: {1}".format(name, args))
+                        if VERB: self.logger.info("Name: {}, Args: {}".format(name, args))
                         # Execute command, responses are by callback
                         self.__dispatch(name, args)
                         # Here after command/response sequence
@@ -138,9 +138,7 @@ class SerialComms(threading.Thread):
                     sleep(SLEEP_TIMER)
             except Exception as e:
                 # Something went wrong
-                print(str(e))
-                traceback.print_exc()
-                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. [%s]' % str(e))
+                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. {}, [{}]'.format(e, traceback.print_exe()))
                 break
                 
         self.logger.info("Comms thread exiting...")
@@ -239,7 +237,7 @@ class SerialComms(threading.Thread):
         msg = ""
         retries = 5
         while(1):
-            if VERB: self.logger.info("Sending {0}".format(cmd))
+            if VERB: self.logger.info("Sending {}".format(cmd))
             self.__ser.write(cmd)
             self.__ser.flush()
             sleep(0.1)
@@ -304,11 +302,11 @@ class SerialComms(threading.Thread):
                     acc = ""
                     continue
                 # Otherwise its a response to the command
-                if VERB: self.logger.info("Response: {0}".format(acc))
+                if VERB: self.logger.info("Response: {}".format(acc))
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
-                    if VERB: self.logger.info("More data available {0} - collecting... ".format(ser.in_waiting))
+                    if VERB: self.logger.info("More data available {} - collecting... ".format(ser.in_waiting))
                     acc = ""
                     continue
                 success = True
@@ -343,7 +341,7 @@ class SerialComms(threading.Thread):
             if param.isdigit():
                 val.append(int(param))
             else:
-                self.logger.warning("Invalid value for position (not int): %d" % param)
+                self.logger.warning("Invalid value for position (not int): {}".format(param))
                 success = False
         return (name, (success, msg, val))
 

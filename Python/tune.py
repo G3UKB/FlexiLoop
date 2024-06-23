@@ -156,7 +156,7 @@ class Tune(threading.Thread):
     #=======================================================
     # Stolen Callback for serial comms
     def t_tune_cb(self, data):
-        if VERB: self.logger.info("Calibrate: got event: %s" % str(data))
+        if VERB: self.logger.info("Calibrate: got event: {}".format(data))
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             # Extract args and release thread
@@ -173,5 +173,5 @@ class Tune(threading.Thread):
             self.__abort = True
             self.__event.set() 
         else:
-            if VERB: self.logger.info ("Waiting for %s, but got %s, continuing to wait!" % (self.__wait_for, name))
+            if VERB: self.logger.info ("Waiting for {}, but got {}, continuing to wait!".format(self.__wait_for, name))
             
