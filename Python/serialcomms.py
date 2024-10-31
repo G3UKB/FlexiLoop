@@ -301,6 +301,12 @@ class SerialComms(threading.Thread):
                     self.__cb(self.__encode(acc))
                     acc = ""
                     continue
+                if "Dbg" in acc:
+                    # Its a debug message so return this directly
+                    #if VERB: self.logger.info("Dbg: {0}".format(acc))
+                    self.__cb(self.__encode(acc))
+                    acc = ""
+                    continue
                 # Otherwise its a response to the command
                 if VERB: self.logger.info("Response: {}".format(acc))
                 if self.__ser.in_waiting > 0:
