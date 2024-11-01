@@ -347,8 +347,8 @@ class SerialComms(threading.Thread):
             if param.isdigit():
                 val.append(int(param))
             else:
-                self.logger.warning("Invalid value for position (not int): {}".format(param))
-                success = False
+                # Treat as a single string parameter
+                val.append(param)
         return (name, (success, msg, val))
 
     # ===============================================================
