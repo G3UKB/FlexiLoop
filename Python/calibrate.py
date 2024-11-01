@@ -465,6 +465,8 @@ class Calibrate(threading.Thread):
             ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
                 self.__cb((name, (True, "", [str(ppos)])))
+        elif name == DEBUG:
+            if VERB: self.logger.info("Calibrate: got debug: {}".format(data))
         elif name == ABORT:
             # Just release whatever was going on
             # It should then pick up the abort flag

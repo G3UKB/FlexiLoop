@@ -39,6 +39,7 @@
 // Instance of motor driver
 DualMC33926MotorShield md;
 int current_speed = DEFAULT_SPEED; // Current speed in range 0 to +-400
+int p[10];
 
 // Setup runs once on startup
 void setup() {
@@ -359,7 +360,7 @@ int move_ms(int ms, int pos) {
     speed = current_speed;
   } else {
     speed = -current_speed;
-  }e:\DevProjects\Mag\magcal\magcal.ino
+  }
   md.setM1Speed(speed);
   if (md.getFault()) {
     md.setM1Speed(0);
@@ -424,8 +425,12 @@ int stop_move() {
 void debug_print(String msg, int num_args, int args[]) {
   int i;
   Serial.print("Dbg: ");
-  for(i; i<num_args; i++) {
-    Serial.print(String(args[i]));
+  Serial.print(msg);
+  if (num_args > 0) {
+    for(i=0; i<num_args; i++) {
+      Serial.print(String(args[i]));
+      Serial.print("/");
+    }
   }
   Serial.print(";");
 }

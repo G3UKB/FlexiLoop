@@ -177,11 +177,9 @@ class SerialComms(threading.Thread):
         return self.send(b, 2)
             
     def __home(self, args):
-        print('Home')
         return self.send(b"h;", 30)
             
     def __maximum(self, args):
-        print('Max')
         return self.send(b"x;", 30)
             
     def __pos(self, args):
@@ -303,7 +301,7 @@ class SerialComms(threading.Thread):
                     self.__cb(self.__encode(acc))
                     acc = ""
                     continue
-                if "Dbg" in acc:
+                elif "Dbg" in acc:
                     # Its a debug message so return this directly
                     #if VERB: self.logger.info("Dbg: {0}".format(acc))
                     self.__cb(self.__encode(acc))

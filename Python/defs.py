@@ -111,6 +111,7 @@ RLYOFF = 'RlyOff'
 STATUS = 'Status'
 ABORT = 'Abort'
 STOP = 'Stop'
+DEBUG = 'Dbg'
 NONE = 'None'
 
 # Cal manual return values
