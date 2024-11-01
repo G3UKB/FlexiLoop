@@ -420,3 +420,12 @@ int stop_move() {
   md.setM1Speed(0);
   return TRUE;
 }
+
+void debug_print(String msg, int num_args, int args[]) {
+  int i;
+  Serial.print("Dbg: ");
+  for(i; i<num_args; i++) {
+    Serial.print(String(args[i]));
+  }
+  Serial.print(";");
+}
