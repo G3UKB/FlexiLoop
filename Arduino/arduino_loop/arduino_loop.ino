@@ -359,7 +359,7 @@ int move_ms(int ms, int pos) {
     speed = current_speed;
   } else {
     speed = -current_speed;
-  }
+  }e:\DevProjects\Mag\magcal\magcal.ino
   md.setM1Speed(speed);
   if (md.getFault()) {
     md.setM1Speed(0);

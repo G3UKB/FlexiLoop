@@ -177,9 +177,11 @@ class SerialComms(threading.Thread):
         return self.send(b, 2)
             
     def __home(self, args):
+        print('Home')
         return self.send(b"h;", 30)
             
     def __maximum(self, args):
+        print('Max')
         return self.send(b"x;", 30)
             
     def __pos(self, args):

@@ -454,7 +454,6 @@ class Calibrate(threading.Thread):
     # Callback from comms module
     # Note this is called on the comms thread and stolen from api.py
     def callback(self, data):
-        
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
             if VERB: self.logger.info("Calibrate: got event: {}".format(data))
