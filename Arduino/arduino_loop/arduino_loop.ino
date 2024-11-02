@@ -261,13 +261,22 @@ int get_feedback_value() {
 // Move to home or max position
 int go_home_or_max(int pos) {
   // Assume home is reverse
-  int counter = 5;
+
+  // Local vars
+  int fb_val = -1;
+  int last_fb_val = -1;
+  int fb_counter = 5;
+  int st_counter = 5;
   int speed;
+
+  // Which way are we going?
   if (pos == HOME) {
     speed = -current_speed;
   } else {
     speed = current_speed;
   }
+
+  // Set speed and test we are go
   md.setM1Speed(speed);
   if (md.getFault()) {
     md.setM1Speed(0);
@@ -275,22 +284,40 @@ int go_home_or_max(int pos) {
   } else {
     // We wait until the feedback no longer changes.
     // This means we have hit the limit switch and movement has stopped.
-    int last_val = -1;
-    delay(200);
-    while (get_feedback_value() != last_val) {
-      if (counter-- <= 0) {
-          counter = 5;
+    // Precaution wait
+    delay(100);
+    // Loop until success or abort
+    while(TRUE) {
+      // Test for end of travel
+      last_fb_val = fb_val;
+      fb_val = get_feedback_value();
+      //p[0] = fb_val;
+      //p[1] = last_fb_val;
+      //debug_print("Pass: ", 2, p);
+      if (((fb_val + 2) >= last_fb_val) && ((fb_val - 2) <= last_fb_val)) {
+        // Possibly at end stop
+        if (fb_counter-- <= 0) {
+          // Feedback stationary ish for 5 counts
+          break; 
+        }
+      }
+      // Time for a status report?
+      if (st_counter-- <= 0) {
+        st_counter = 5;
         Serial.print("Status: ");
         Serial.print(get_feedback_value());
         Serial.print(";");
-        last_val = get_feedback_value();
-        if (check_abort()) {
-          md.setM1Speed(0);
-          return TRUE;
-        }
       }
-      delay(100);
+      // Check for user abort
+      if (check_abort()) {
+        md.setM1Speed(0);
+        break;
+      }
+      // If we spin too fast the feedback may not change enough and give a false positive
+      delay (500);   
     }
+
+    // All done
     delay(100);
     md.setM1Speed(0);
     return TRUE;
