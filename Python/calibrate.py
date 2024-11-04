@@ -31,6 +31,7 @@ import threading
 import traceback
 import logging
 import copy
+from time import sleep
 
 # Application imports
 from defs import *
@@ -133,6 +134,7 @@ class Calibrate(threading.Thread):
     def __configure(self, args):
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
+        sleep(0.1)
         if not r:
             # Calibrate end points
             self.__msg_cb("Configuring potentiometer feedback end points...")
@@ -163,6 +165,7 @@ class Calibrate(threading.Thread):
         cal_map = {}
         # Retrieve the end points
         r, self.__end_points = self.retrieve_end_points()
+        sleep(0.1)
         if not r:
             # We have a problem
             return (CALIBRATE, (False, "Unable to retrieve end points!", cal_map))

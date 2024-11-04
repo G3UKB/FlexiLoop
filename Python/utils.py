@@ -176,13 +176,15 @@ def find_pos_candidate(sets, pos):
 
 # Find candidate for given frequency
 def find_freq_candidate(sets, freq):
+    print(sets, freq)
     candidate = None
     lastlow = None
     lasthi = None
     for name, pset in sets.items():
         low = pset[0][1]
         high = pset[-1][1]
-        if freq <= low and freq >= high:
+        print(low, high)
+        if freq >= low and freq <= high:
             # Our position lies within this set
             if candidate == None:
                 candidate = name
