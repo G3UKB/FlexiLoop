@@ -373,7 +373,31 @@ int move_to_feedback_value(int target) {
         delay(100);
       }
     }
+    // See how close we got
+    int diff = abs(get_feedback_value() - target);
+    int l_speed = current_speed;
+    if (diff > 3) {
+      // More than about 0.2% deviation
+      // See if we can do better
+      current_speed = 100;  // slow it down
+      int attempts = 10;    // Limit this at 10 correction attempts
+      int dir;
+      while (diff > 3) {
+        if (get_feedback_value() > target) {
+          dir = FORWARD;
+        } else {
+          dir = REVERSE;
+        }
+        move_ms(50, dir);
+        diff = abs(get_feedback_value() - target);
+        if (attempts -- <= 0) {
+          break;
+        }
+      }
+    }
+
     // Stop driving
+    current_speed = l_speed;
     md.setM1Speed(0);
   }
   return TRUE;
