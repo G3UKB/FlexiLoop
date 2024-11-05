@@ -102,6 +102,7 @@ class Tune(threading.Thread):
                 self.__serial_comms.restore_callback()
                 continue
             aset = sets[candidate]
+            print(aset)
             
             # Find the two points this frequency falls between
             index = 0
@@ -110,10 +111,11 @@ class Tune(threading.Thread):
             for ft in aset:
                 if ft[1] < self.__freq:
                     # Lower than target
-                    idx_high = index-1 
+                    idx_high = index+1 
                     idx_low = index
-                else:
-                    index += 1
+                elif ft[1] > self.__freq:
+                    break
+                index+=1
             if idx_high == -1 or idx_low == -1:
                 self.__cb((TUNE, (False, "Unable to find a tuning point for frequency %f" % self.__freq, [])))
                 # Give back callback
@@ -129,14 +131,15 @@ class Tune(threading.Thread):
             fb_low = aset[idx_low][0]
             frq_high = aset[idx_high][1]
             frq_low = aset[idx_low][1]
+            print(fb_low, fb_high, frq_low, frq_high)
             
             # We now need to calculate the feedback value for the required frequency
             frq_span = frq_high - frq_low
             frq_inc = self.__freq - frq_low
             frq_frac = frq_inc/frq_span
             fb_span = fb_low - fb_high
-            fb_frac = frq_inc * fb_span
-            target_pos = fb_low - fb_frac
+            fb_frac = frq_frac * fb_span
+            target_pos = fb_high + fb_frac
             
             # We now have a position to move to
             self.__s_q.put(('move', [target_pos]))
