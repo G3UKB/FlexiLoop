@@ -223,7 +223,7 @@ class API:
             # We need to save the absolute pos not the %age pos
             self.__absolute_pos = args[0]
             ppos = analog_pos_to_percent(self.__model, self.__absolute_pos)
-            self.__cb((name, (True, "", [str(ppos)])))
+            self.__cb((name, (True, "", [str(ppos), str(self.__absolute_pos)])))
         else:
             self.__cb(data)
     

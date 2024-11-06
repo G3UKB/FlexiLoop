@@ -127,6 +127,7 @@ class UI(QMainWindow):
         if pos == -1:
             pos = '-'
         self.__current_pos = pos
+        self.__fb_pos = '-'
         
         # Default to radio side
         self.__relay_state = RADIO
@@ -271,6 +272,7 @@ class UI(QMainWindow):
             elif name == STATUS:
                 # We expect status at any time
                 self.__current_pos = args[0]
+                self.__fb_pos = args[1]
                 self.__model[STATE][ARDUINO][ACT_POS] = self.__current_pos
             elif name == ABORT:
                 # User hit the abort button
@@ -711,6 +713,10 @@ class UI(QMainWindow):
         self.__currpos.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
         self.__currpos.setMaximumWidth(100)
         grid.addWidget(self.__currpos, 1, 4)
+        self.__currposfb = QLabel('-')
+        self.__currposfb.setStyleSheet("QLabel {color: rgb(65,62,56); font: 20px}")
+        self.__currposfb.setMaximumWidth(100)
+        grid.addWidget(self.__currposfb, 1, 5)
         
         # Increment
         inclabel = QLabel('Inc (ms)')
@@ -1007,8 +1013,11 @@ class UI(QMainWindow):
             # Update current actuatorposition
             if self.__current_pos == -1:
                 self.__currpos.setText('-')
+            if self.__fb_pos == -1:
+                self.__currposfb.setText('-')
             else:
                 self.__currpos.setText(str(self.__current_pos) + '%')
+                self.__currposfb.setText(str(self.__fb_pos))
                 # and tracking
                 self.__update_tracking(self.__selected_loop, self.__current_pos)
                  
