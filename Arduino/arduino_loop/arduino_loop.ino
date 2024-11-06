@@ -376,18 +376,18 @@ int move_to_feedback_value(int target) {
     // See how close we got
     md.setM1Speed(0);
     int diff = abs(get_feedback_value() - target);
-    p[0] = diff;
-    p[1] = get_feedback_value();
-    p[2] = target;
-    debug_print("Diff1: ", 3, p);
+    //p[0] = diff;
+    //p[1] = get_feedback_value();
+    //p[2] = target;
+    //debug_print("Diff1: ", 3, p);
     int l_speed = current_speed;
-    if (diff > 3) {
+    if (diff > 1) {
       // More than about 0.2% deviation
       // See if we can do better
       current_speed = 100;  // slow it down
       int attempts = 10;    // Limit this at 10 correction attempts
       int dir;
-      while (diff > 3) {
+      while (diff > 1) {
         if (get_feedback_value() > target) {
           dir = FORWARD;
         } else {
@@ -395,10 +395,10 @@ int move_to_feedback_value(int target) {
         }
         move_ms(50, dir);
         diff = abs(get_feedback_value() - target);
-        p[0] = diff;
-        p[1] = get_feedback_value();
-        p[2] = target;
-        debug_print("Diff2: ", 3, p);
+        //p[0] = diff;
+        //p[1] = get_feedback_value();
+        //p[2] = target;
+        //debug_print("Diff2: ", 3, p);
         if (attempts -- <= 0) {
           break;
         }
