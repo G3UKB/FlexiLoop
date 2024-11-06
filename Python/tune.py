@@ -102,7 +102,6 @@ class Tune(threading.Thread):
                 self.__serial_comms.restore_callback()
                 continue
             aset = sets[candidate]
-            print(aset)
             
             # Find the two points this frequency falls between
             index = 0
@@ -131,7 +130,6 @@ class Tune(threading.Thread):
             fb_low = aset[idx_low][0]
             frq_high = aset[idx_high][1]
             frq_low = aset[idx_low][1]
-            print(fb_low, fb_high, frq_low, frq_high)
             
             # We now need to calculate the feedback value for the required frequency
             frq_span = frq_high - frq_low
@@ -169,7 +167,9 @@ class Tune(threading.Thread):
             # Calculate position and directly event to API which has a pass-through to UI
             ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
-                self.__cb((name, (True, "", [str(ppos)])))
+                self.__cb((name, (True, "", [str(ppos), val[0]])))
+        elif name == DEBUG:
+            self.logger.info("Tune: got debug: {}".format(data))
         elif name == ABORT:
             # Just release whatever was going on
             # It should then pick up the abort flag

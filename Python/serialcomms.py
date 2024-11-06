@@ -138,7 +138,7 @@ class SerialComms(threading.Thread):
                     sleep(SLEEP_TIMER)
             except Exception as e:
                 # Something went wrong
-                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. {}, [{}]'.format(e, traceback.print_exe()))
+                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. {}, [{}]'.format(e, traceback.print_exc()))
                 break
                 
         self.logger.info("Comms thread exiting...")
@@ -312,7 +312,7 @@ class SerialComms(threading.Thread):
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
-                    if VERB: self.logger.info("More data available {} - collecting... ".format(ser.in_waiting))
+                    if VERB: self.logger.info("More data available {} - collecting... ".format(self.__ser.in_waiting))
                     acc = ""
                     continue
                 success = True
