@@ -344,6 +344,9 @@ int move_to_feedback_value(int target) {
     md.setM1Speed(0);
     return FALSE;
   } else {
+    Serial.print("Status: ");
+    Serial.print(get_feedback_value());
+    Serial.print(";");
     if (dir == FORWARD) {
       while(get_feedback_value() < target) {
         if (counter-- <= 0) {

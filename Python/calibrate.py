@@ -371,7 +371,7 @@ class Calibrate(threading.Thread):
         span = low_pos_abs - high_pos_abs
         fb_inc = float(span)/float(steps)
         
-        # Do high pos
+        # Do low pos
         if not self.__move_wait(low_pos_abs):
             self.logger.warning("Failed to move to low frequency position!")
             return False, "Failed to move to low frequency position!", cal_map
@@ -467,7 +467,7 @@ class Calibrate(threading.Thread):
             # Calculate position and directly event to API which has a pass-through to UI
             ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
-                self.__cb((name, (True, "", [str(ppos)])))
+                self.__cb((name, (True, "", [str(ppos), val[0]])))
         elif name == DEBUG:
             if VERB: self.logger.info("Calibrate: got debug: {}".format(data))
         elif name == ABORT:
