@@ -551,6 +551,7 @@ class Config(QDialog):
         if len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
             diff[2] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L3], self.__sets[CAL_S3])
         # Tell Ui differences
+        self.logger.info("Difference in calibration state {}".format(diff))
         self.__cb(diff)
         
     def __dict_compare(self, cal_l, cal_s):
@@ -572,22 +573,11 @@ class Config(QDialog):
         VAR = 10
         for key, value in cal_s.items():
             if key in cal_l:
-                # Check the frequencies first
-                if value[2] != cal_l[key][0][1]:
+                # The start and end freq must be within a small margin of the corresponding values
+                if (value[0] >= cal_l[key][0][1] + 0.05) or (value[0] <= cal_l[key][0][1] - 0.05):
                     modified.append(key)
                     break
-                if value[0] != cal_l[key][-1][1]:
-                    modified.append(key)
-                    break
-                # Check the positions
-                pos1 = percent_pos_to_analog(self.__model, value[3])
-                pos2 = cal_l[key][0][0]
-                if pos1 <= pos2 - VAR or pos1 >= pos2 + VAR:
-                    modified.append(key)
-                    break
-                pos1 = percent_pos_to_analog(self.__model, value[1])
-                pos2 = cal_l[key][-1][0]
-                if pos1 <= pos2 - VAR or pos1 >= pos2 + VAR:
+                if (value[2] >= cal_l[key][-1][1] + 0.05) or (value[2] <= cal_l[key][-1][1] - 0.05):
                     modified.append(key)
                     break
         return [list(added), list(removed), modified]
