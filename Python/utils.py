@@ -197,7 +197,7 @@ def find_freq_candidate(sets, freq):
                 lastlow = low
                 lasthi = high
     return candidate
-
+    
 #=================================================
 # Testing
 def sim_steps(model):

@@ -470,9 +470,6 @@ class Config(QDialog):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
         # Model is saved on exit
-        
-        # First look for changes unless no previous calibration
-        self.__cal_diff()
             
         # Save any updates    
         self.__model[CONFIG][ARDUINO][PORT] = self.__serialporttxt.text()
@@ -556,8 +553,8 @@ class Config(QDialog):
         
     def __dict_compare(self, cal_l, cal_s):
         # cal_l is the result of calibration of cal_s
-        # cal_l : {'40m': [[abs pos, freq, swr], [...], ...]], name ...}
-        # cal_s : {'40m': [low freq, low pos%, high freq, high pos%, steps], name ...}
+        # cal_l : {'40m': [[abs pos, freq, swr], [...], ...]], name: [...]}
+        # cal_s : {'40m': [low freq, low pos%, high freq, high pos%, steps], name: [...]}
         # In order to know if this has changed we need to compare the low and high freq an pos.
         # Note - this is the first and last entries in cal_l.
         # Note - cal_l has abs pos and cal_s %pos.
