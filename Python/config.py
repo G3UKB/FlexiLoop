@@ -470,9 +470,6 @@ class Config(QDialog):
         # Move every field to the model
         # Changes take effect immediately as nothing uses cached values
         # Model is saved on exit
-        
-        # First look for changes unless no previous calibration
-        self.__cal_diff()
             
         # Save any updates    
         self.__model[CONFIG][ARDUINO][PORT] = self.__serialporttxt.text()
