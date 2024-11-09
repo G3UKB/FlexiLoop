@@ -175,7 +175,6 @@ class UI(QMainWindow):
     # Called on main thread so we can do UI stuff
     def __move_callback(self, pos):
         self.__current_activity = MOVETO
-        self.__st_act.setText(MOVETO)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.move_to_position(pos)
