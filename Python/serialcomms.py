@@ -73,6 +73,7 @@ class SerialComms(threading.Thread):
         try:
             self.__ser = serial.Serial(self.__port, 9600, timeout=1)
         except Exception as e:
+            print(str(e))
             self.__model[STATE][ARDUINO][ONLINE] = False
             return False
         

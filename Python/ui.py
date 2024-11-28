@@ -279,6 +279,8 @@ class UI(QMainWindow):
                 # Switch mode back to what is was before any change for long running activities
                 self.__switch_mode = self.__saved_mode
                 self.logger.info("Activity aborted by user!")
+            elif name == DEBUG:
+                self.logger.info(args[0])
             else:
                 # Treat this as an abort because it will probably lock us up otherwise
                 self.logger.info ('Waiting for activity {} to completed but got activity {}! Aborting, please restart the activity.'.format(self.__current_activity, name))

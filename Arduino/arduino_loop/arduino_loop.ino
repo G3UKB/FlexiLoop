@@ -378,6 +378,7 @@ int move_to_feedback_value(int target) {
     }
     // See how close we got
     md.setM1Speed(0);
+    delay(500);
     int diff = abs(get_feedback_value() - target);
     //p[0] = diff;
     //p[1] = get_feedback_value();
@@ -392,9 +393,9 @@ int move_to_feedback_value(int target) {
       int dir;
       while (diff > 1) {
         if (get_feedback_value() > target) {
-          dir = FORWARD;
-        } else {
           dir = REVERSE;
+        } else {
+          dir = FORWARD;
         }
         move_ms(50, dir);
         diff = abs(get_feedback_value() - target);
