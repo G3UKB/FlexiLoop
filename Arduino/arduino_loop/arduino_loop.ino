@@ -412,6 +412,11 @@ int move_to_feedback_value(int target) {
     // Stop driving
     current_speed = l_speed;
     md.setM1Speed(0);
+    // Final position update
+    delay(500);
+    Serial.print("Status: ");
+          Serial.print(get_feedback_value());
+          Serial.print(";");
   }
   return TRUE;
 }
