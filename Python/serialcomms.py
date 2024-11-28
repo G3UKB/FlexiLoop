@@ -73,7 +73,6 @@ class SerialComms(threading.Thread):
         try:
             self.__ser = serial.Serial(self.__port, 9600, timeout=1)
         except Exception as e:
-            print(str(e))
             self.__model[STATE][ARDUINO][ONLINE] = False
             return False
         
@@ -111,7 +110,7 @@ class SerialComms(threading.Thread):
                 try:
                     verb = VERB
                     VERB = False
-                    name, (success, msg, val) = self.send(b"z;", 1)
+                    name, (success, msg, val) = self.send(b"y;", 1)
                     VERB = verb
                     if not success:
                         heartbeat = False

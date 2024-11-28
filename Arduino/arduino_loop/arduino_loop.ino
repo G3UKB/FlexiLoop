@@ -76,7 +76,8 @@ void process(String data) {
   *     comma separated command
   *     full stop separated parameters
   *     semicolon terminator character
-  *   o Heartbeat : z;
+  *   o Heartbeat : y;
+  *   o Abort : z;
   *   o Set speed (slow, medium, fast) : s,s[m][f].;
   *   o Move to home position : h;
   *   o Move to max extension : x;
@@ -105,10 +106,17 @@ void process(String data) {
   // Switch on command type
   switch (cmd) {
     
-    case 'z':
-      Serial.print("z;");
+    case 'y':
+      // Heartbeat is specifically monitored.
+      Serial.print("y;");
       break;
-
+    case 'z':
+      // This is an abort which has caught us outside of 
+      // the normal 'check for abort' while moving. So may have been 
+      // during a position command etc. We don't want to send any response
+      // here as it will be an unexpected response and the abort should
+      // process normally at the controller level.
+      break;
     case 's':
       // Parse out the speed
       speed = parse_int(data, 2);
