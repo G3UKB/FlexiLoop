@@ -142,7 +142,7 @@ class Calibrate(threading.Thread):
             if not r:
                 if self.__abort:
                     self.__abort = False
-                    return (ABORT, (False, "Operation aborted by user!", [self.__end_points]))
+                    return (ABORT, (False, "Operation aborted!", [self.__end_points]))
                 else:
                     return (CONFIGURE, (False, msg, []))
             r, self.__end_points = self.retrieve_end_points()
@@ -184,7 +184,7 @@ class Calibrate(threading.Thread):
                 if not r:
                     if self.__abort:
                         self.__abort = False
-                        return (ABORT, (False, "Operation aborted by user!", []))
+                        return (ABORT, (False, "Operation aborted!", []))
                     else:
                         # We have a problem
                         return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
@@ -224,7 +224,7 @@ class Calibrate(threading.Thread):
             if not r:
                 if self.__abort:
                     self.__abort = False
-                    return (ABORT, (False, "Operation aborted by user!", []))
+                    return (ABORT, (False, "Operation aborted!", []))
                 else:
                     # We have a problem
                     return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
@@ -261,7 +261,7 @@ class Calibrate(threading.Thread):
             self.__event.wait()
             if self.__abort:
                 self.__event.clear()
-                return False, "Aborted by user!"
+                return False, "Operation aborted!"
             self.__event.clear()
             if act[2] != None: extents[act[2]] = self.__args[0]      
         
@@ -431,7 +431,7 @@ class Calibrate(threading.Thread):
         if VERB: self.logger.info("Out of wait")
         if self.__abort:
             self.__event.clear()
-            return False
+            return False, "Operation aborted!"
         self.__event.clear()
         return True
     
@@ -476,5 +476,8 @@ class Calibrate(threading.Thread):
             self.__abort = True
             self.__event.set() 
         else:
-            if VERB: self.logger.info ("Waiting for {}, but got {}, continuing to wait!".format(self.__wait_for, name))
+            # Wrong response means something has in the sequence has messed up
+            if VERB: self.logger.info ("Waiting for {}, but got {}. Aborting current operation!".format(self.__wait_for, name))
+            self.__abort = True
+            self.__event.set() 
  
