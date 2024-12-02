@@ -449,6 +449,12 @@ class UI(QMainWindow):
         self.__potminvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__potminvalue.setObjectName("minmax")
         hbox_lim.addWidget(self.__potminvalue)
+        
+        self.__reshome = QPushButton("Reset Home")
+        self.__reshome.setToolTip('Reset home from curren pos')
+        hbox_lim.addWidget(self.__reshome)
+        self.__reshome.clicked.connect(self.__do_reshome)
+        
         maxpotlabel = QLabel('Max')
         hbox_lim.addWidget(maxpotlabel)
         maxpotlabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -456,6 +462,11 @@ class UI(QMainWindow):
         self.__potmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__potmaxvalue.setObjectName("minmax")
         hbox_lim.addWidget(self.__potmaxvalue)
+        
+        self.__resmax = QPushButton("Reset Max")
+        self.__resmax.setToolTip('Reset max from curren pos')
+        hbox_lim.addWidget(self.__resmax)
+        self.__resmax.clicked.connect(self.__do_resmax)
         
         gb_lim.setLayout(hbox_lim)
         grid.addWidget(gb_lim, 0, 2)
@@ -804,6 +815,16 @@ class UI(QMainWindow):
             self.__model[STATE][ARDUINO][ACT_POS] = -1
             self.__current_pos = -1
     
+    def __do_reshome(self):
+        pos = int(self.__fb_pos)
+        self.__model[CONFIG][CAL][HOME] = pos
+        self.__reshome.setText(pos)
+    
+    def __do_resmax(self):
+        pos = int(self.__fb_pos)
+        self.__model[CONFIG][CAL][MAX] = pos
+        self.__resmax.setText(pos)
+        
     #=======================================================
     # Calibrate zone events
     def __loop_change(self, index):
@@ -1270,6 +1291,8 @@ class UI(QMainWindow):
         # Feedback sectiom
         self.__pot.setEnabled(state)
         self.__potdel.setEnabled(state)
+        self.__reshome.setEnabled(state)
+        self.__resmax.setEnabled(state)
     
     def __enable_disable_loop(self, state):    
         # Loop section
