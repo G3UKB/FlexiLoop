@@ -1329,6 +1329,7 @@ class UI(QMainWindow):
         # Manual section
         self.__relay_sel.setEnabled(state)
         self.__speed_sel.setEnabled(state)
+        self.__speed_sld.setEnabled(state)
         self.__runfwd.setEnabled(state)
         self.__stopact.setEnabled(state)
         self.__runrev.setEnabled(state)
