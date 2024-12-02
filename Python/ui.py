@@ -667,6 +667,20 @@ class UI(QMainWindow):
         self.__subgrid.addWidget(self.__relay_sel, 0, 1)
         self.__relay_sel.currentIndexChanged.connect(self.__relay_change)
         
+        # Speed
+        speedtag = QLabel('Speed')
+        self.__subgrid.addWidget(speedtag, 1, 0)
+        self.__speed_sld = QSlider()
+        self.__speed_sld.setGeometry(QtCore.QRect(190, 100, 160, 16))
+        self.__speed_sld.setOrientation(QtCore.Qt.Horizontal)
+        self.__speed_sld.setMinimum(40)
+        self.__speed_sld.setMaximum(400)
+        self.__speed_sld.setTickInterval(50)
+        self.__speed_sld.setTickPosition(QSlider.TicksBelow )
+        self.__speed_sld.setValue(200)
+        self.__subgrid.addWidget(self.__speed_sld, 1, 1, 1, 3)
+        self.__speed_sld.valueChanged.connect(self.__speed_changed)
+        
         speedlabel = QLabel('Speed')
         self.__subgrid.addWidget(speedlabel, 0, 2)
         self.__speed_sel = QComboBox()
@@ -816,14 +830,10 @@ class UI(QMainWindow):
             self.__current_pos = -1
     
     def __do_reshome(self):
-        pos = int(self.__fb_pos)
-        self.__model[CONFIG][CAL][HOME] = pos
-        self.__reshome.setText(pos)
+        self.__model[CONFIG][CAL][HOME] = int(self.__fb_pos)
     
     def __do_resmax(self):
-        pos = int(self.__fb_pos)
-        self.__model[CONFIG][CAL][MAX] = pos
-        self.__resmax.setText(pos)
+        self.__model[CONFIG][CAL][MAX] = int(self.__fb_pos)
         
     #=======================================================
     # Calibrate zone events
@@ -945,6 +955,13 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.speed_change(self.__current_speed)
     
+    def __speed_changed(self):
+        self.__current_speed = self.__speed_sld.value()
+        self.__current_activity = SPEED
+        self.__st_act.setText(SPEED)
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
+        self.__api.speed_change(self.__current_speed)
+        
     def __do_run_fwd(self):
         self.__current_activity = RUNFWD
         self.__st_act.setText(RUNFWD)
