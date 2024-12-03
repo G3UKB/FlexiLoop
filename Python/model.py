@@ -31,10 +31,10 @@ flexi_loop_model = {
     CONFIG: {
         ARDUINO: {
             PORT: 'COM5',
-            ACT_SPEED: {
-                ACT_SLOW: SLOW,
-                ACT_MED: MEDIUM,
-                ACT_FAST: FAST,
+            MOTOR_SPEED: {
+                MINIMUM: SPEED_MIN,
+                MAXIMUM: SPEED_MAX,
+                DEFAULT: SPEED_DEF,
             },
         },
         TIMEOUTS: {
@@ -77,6 +77,7 @@ flexi_loop_model = {
         ARDUINO: {
             ONLINE: False,
             ACT_POS: -1,
+            SPEED: SPEED_DEF,
         }
     }
 }

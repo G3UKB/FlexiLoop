@@ -105,7 +105,7 @@ class UI(QMainWindow):
         self.__last_switch_mode= self.__switch_mode
         self.__saved_mode = self.__switch_mode
         self.__deferred_activity = None
-        self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
+        self.__current_speed = self.__model[STATE][ARDUINO][SPEED]
         self.__aborting = False
         # Of form for loops 1-3 [[added, removed, modified],[...],[...]]
         self.__cal_diff = [[],[],[]]
@@ -450,7 +450,7 @@ class UI(QMainWindow):
         self.__potminvalue.setObjectName("minmax")
         hbox_lim.addWidget(self.__potminvalue)
         
-        self.__reshome = QPushButton("Reset Home")
+        self.__reshome = QPushButton("Reset")
         self.__reshome.setToolTip('Reset home from curren pos')
         hbox_lim.addWidget(self.__reshome)
         self.__reshome.clicked.connect(self.__do_reshome)
@@ -463,7 +463,7 @@ class UI(QMainWindow):
         self.__potmaxvalue.setObjectName("minmax")
         hbox_lim.addWidget(self.__potmaxvalue)
         
-        self.__resmax = QPushButton("Reset Max")
+        self.__resmax = QPushButton("Reset")
         self.__resmax.setToolTip('Reset max from curren pos')
         hbox_lim.addWidget(self.__resmax)
         self.__resmax.clicked.connect(self.__do_resmax)
@@ -667,56 +667,42 @@ class UI(QMainWindow):
         self.__subgrid.addWidget(self.__relay_sel, 0, 1)
         self.__relay_sel.currentIndexChanged.connect(self.__relay_change)
         
-        # Speed
+        gap = QWidget()
+        self.__subgrid.addWidget(gap, 0, 2)
+        self.__subgrid.setColumnStretch(2, 1)
+        
+        self.__runrev = QPushButton("<< Run Rev")
+        self.__runrev.setToolTip('Run actuator reverse...')
+        self.__subgrid.addWidget(self.__runrev, 0,3)
+        self.__runrev.clicked.connect(self.__do_run_rev)
+        
+        self.__stopact = QPushButton("Stop")
+        self.__stopact.setToolTip('Stop actuator')
+        self.__subgrid.addWidget(self.__stopact, 0,4)
+        self.__stopact.clicked.connect(self.__do_stop_act)
+        
+        self.__runfwd = QPushButton("Run Fwd >>")
+        self.__runfwd.setToolTip('Run actuator forward...')
+        self.__subgrid.addWidget(self.__runfwd, 0,5)
+        self.__runfwd.clicked.connect(self.__do_run_fwd)
+        
+        gap = QWidget()
+        self.__subgrid.addWidget(gap, 0, 6)
+        self.__subgrid.setColumnStretch(6, 1)
+        
+         # Speed
         speedtag = QLabel('Speed')
         self.__subgrid.addWidget(speedtag, 1, 0)
         self.__speed_sld = QSlider()
         self.__speed_sld.setGeometry(QtCore.QRect(190, 100, 160, 16))
         self.__speed_sld.setOrientation(QtCore.Qt.Horizontal)
-        self.__speed_sld.setMinimum(40)
-        self.__speed_sld.setMaximum(400)
+        self.__speed_sld.setMinimum(SPEED_MIN)
+        self.__speed_sld.setMaximum(SPEED_MAX)
         self.__speed_sld.setTickInterval(50)
         self.__speed_sld.setTickPosition(QSlider.TicksBelow )
-        self.__speed_sld.setValue(200)
+        self.__speed_sld.setValue(SPEED_DEF)
         self.__subgrid.addWidget(self.__speed_sld, 1, 1, 1, 3)
         self.__speed_sld.valueChanged.connect(self.__speed_changed)
-        
-        speedlabel = QLabel('Speed')
-        self.__subgrid.addWidget(speedlabel, 0, 2)
-        self.__speed_sel = QComboBox()
-        self.__speed_sel.setMinimumHeight(20)
-        self.__speed_sel.setMaximumWidth(70)
-        self.__speed_sel.setMinimumWidth(70)
-        self.__speed_sel.addItem("Slow")
-        self.__speed_sel.addItem("Medium")
-        self.__speed_sel.addItem("Fast")
-        self.__subgrid.addWidget(self.__speed_sel, 0, 3)
-        if self.__current_speed == SLOW:
-            self.__speed_sel.setCurrentIndex(0)
-        elif self.__current_speed == MEDIUM:
-            self.__speed_sel.setCurrentIndex(1)
-        else:
-            self.__speed_sel.setCurrentIndex(2)
-        self.__speed_sel.currentIndexChanged.connect(self.__speed_change)
-        
-        gap = QWidget()
-        self.__subgrid.addWidget(gap, 0, 4)
-        self.__subgrid.setColumnStretch(4, 1)
-        
-        self.__runrev = QPushButton("<< Run Rev")
-        self.__runrev.setToolTip('Run actuator reverse...')
-        self.__subgrid.addWidget(self.__runrev, 0,5)
-        self.__runrev.clicked.connect(self.__do_run_rev)
-        
-        self.__stopact = QPushButton("Stop")
-        self.__stopact.setToolTip('Stop actuator')
-        self.__subgrid.addWidget(self.__stopact, 0,6)
-        self.__stopact.clicked.connect(self.__do_stop_act)
-        
-        self.__runfwd = QPushButton("Run Fwd >>")
-        self.__runfwd.setToolTip('Run actuator forward...')
-        self.__subgrid.addWidget(self.__runfwd, 0,7)
-        self.__runfwd.clicked.connect(self.__do_run_fwd)    
         
         # Move position
         movelabel = QLabel('Move to (%)')
@@ -940,27 +926,13 @@ class UI(QMainWindow):
         else:
             self.__switch_mode = ANALYSER
     
-    def __speed_change(self):
-        tspeed = self.__speed_sel.currentText()
-        if tspeed == 'Slow':
-            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_SLOW]
-        elif tspeed == 'Medium':
-            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
-        elif tspeed == 'Fast':
-            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_FAST]
-        else:
-            self.__current_speed = self.__model[CONFIG][ARDUINO][ACT_SPEED][ACT_MED]
-        self.__current_activity = SPEED
-        self.__st_act.setText(SPEED)
-        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
-        self.__api.speed_change(self.__current_speed)
-    
     def __speed_changed(self):
         self.__current_speed = self.__speed_sld.value()
         self.__current_activity = SPEED
         self.__st_act.setText(SPEED)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
         self.__api.speed_change(self.__current_speed)
+        self.__model[STATE][ARDUINO][SPEED] = self.__current_speed
         
     def __do_run_fwd(self):
         self.__current_activity = RUNFWD
@@ -1328,7 +1300,6 @@ class UI(QMainWindow):
     def __enable_disable_manual(self, state):    
         # Manual section
         self.__relay_sel.setEnabled(state)
-        self.__speed_sel.setEnabled(state)
         self.__speed_sld.setEnabled(state)
         self.__runfwd.setEnabled(state)
         self.__stopact.setEnabled(state)
