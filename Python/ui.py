@@ -1023,14 +1023,17 @@ class UI(QMainWindow):
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
             
             # Update current actuatorposition
-            if self.__current_pos == -1:
+            if self.__current_pos == '-':
                 self.__currpos.setText('-')
                 # Initialte a get pos so will be set at startup
                 self.__api.get_pos()
                 self.__current_activity = POS
                 self.__st_act.setText(POS)
-            if self.__fb_pos == -1:
+            if self.__fb_pos == '-':
                 self.__currposfb.setText('-')
+                self.__api.get_pos()
+                self.__current_activity = POS
+                self.__st_act.setText(POS)
             else:
                 self.__currpos.setText(str(self.__current_pos) + '%')
                 self.__currposfb.setText(str(self.__fb_pos))
