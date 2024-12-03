@@ -245,6 +245,7 @@ class UI(QMainWindow):
                     if name == POS:
                         # Update position
                         self.__current_pos = args[0]
+                        self.__fb_pos = args[1]
                     elif name == CONFIGURE:
                         pass
                     elif name == CALIBRATE:
@@ -1024,6 +1025,10 @@ class UI(QMainWindow):
             # Update current actuatorposition
             if self.__current_pos == -1:
                 self.__currpos.setText('-')
+                # Initialte a get pos so will be set at startup
+                self.__api.get_pos()
+                self.__current_activity = POS
+                self.__st_act.setText(POS)
             if self.__fb_pos == -1:
                 self.__currposfb.setText('-')
             else:
