@@ -406,7 +406,7 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high frequency position!")
             return False, "Failed to move to high frequency position!", cal_map
-        self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
+        self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
         r, (f, swr, pos) = self.__get_current()
         if not r:
             self.logger.warning("Failed to get params for high frequency position!")

@@ -230,7 +230,7 @@ class UI(QMainWindow):
             self.__activity_timer -= 1
             if self.__activity_timer <= 0:
                 self.logger.info ('Timed out waiting for activity {} to complete. Maybe the Arduino has gone off-line!'.format(self.__current_activity))
-                self.__current_activity == NONE
+                self.__current_activity = NONE
                 self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
                 return
             
@@ -241,6 +241,7 @@ class UI(QMainWindow):
                 
             if name == self.__current_activity:
                 if success:
+                    self.__current_activity = NONE
                     # Action any data
                     if name == POS:
                         # Update position
@@ -262,8 +263,6 @@ class UI(QMainWindow):
                     if self.__deferred_activity != None:
                         self.__deferred_activity()
                         self.__deferred_activity = None
-                    else:
-                        self.__current_activity = NONE
                 else:
                     self.logger.info ('Activity {} completed but failed!'.format(self.__current_activity))
                     self.__current_activity = NONE
