@@ -109,6 +109,7 @@ RLYON = 'RlyOn'
 RLYOFF = 'RlyOff'
 # Pseudo activities
 STATUS = 'Status'
+LIMIT = 'Limit'
 ABORT = 'Abort'
 STOP = 'Stop'
 DEBUG = 'Dbg'

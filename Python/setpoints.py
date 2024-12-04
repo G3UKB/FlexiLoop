@@ -214,7 +214,7 @@ class Setpoint(QDialog):
         name = self.__nametxt.text()
         freq = self.__freqtxt.text()
         swr = self.__swrtxt.text()
-        pos = self.__model[STATE][ARDUINO][ACT_POS]
+        pos = self.__model[STATE][ARDUINO][MOTOR_POS]
         if pos != -1:
             # Create new row
             rowPosition = self.__table.rowCount()

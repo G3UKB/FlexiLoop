@@ -40,6 +40,10 @@
 DualMC33926MotorShield md;
 int current_speed = DEFAULT_SPEED; // Current speed in range 0 to +-400
 int p[10];
+// Limit switch check
+int fb_val = -1;
+int last_fb_val = -1;
+int fb_counter = 5;
 
 // Setup runs once on startup
 void setup() {
@@ -261,6 +265,21 @@ int check_stop() {
   return FALSE;
 }
 
+int check_limit() {
+  // Test for end of travel
+  last_fb_val = fb_val;
+  fb_val = get_feedback_value();
+  if (((fb_val + 2) >= last_fb_val) && ((fb_val - 2) <= last_fb_val)) {
+    // Possibly at end stop
+    if (fb_counter-- <= 0) {
+      // Feedback stationary ish for 5 counts
+      Serial.print("Limit;");
+      return TRUE; 
+    }
+  }
+  return FALSE;
+}
+
 // Get current feedback pot value (0-1023)
 int get_feedback_value() {
   return analogRead(POTENTIOMETER_PIN);
@@ -454,12 +473,14 @@ int move_ms(int ms, int pos) {
 
 int move_fwd() {
   int counter = 5;
+  // Set the limit switch counter
+  fb_counter = 5;
   md.setM1Speed(current_speed);
   if (md.getFault()) {
     md.setM1Speed(0);
     return FALSE;
   } else {
-    while (!check_stop()) {
+    while (!check_stop() && !check_limit()) {
       delay (100);
       if (counter-- <= 0) {
         counter = 5;
@@ -480,7 +501,8 @@ int move_rev() {
     md.setM1Speed(0);
     return FALSE;
   } else {
-    while (!check_stop()) {
+    delay (300);
+    while (!check_stop() && !check_limit()) {
       delay (100);
       if (counter-- <= 0) {
         counter = 5;

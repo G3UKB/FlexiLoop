@@ -301,6 +301,9 @@ class SerialComms(threading.Thread):
                     self.__cb(self.__encode(acc))
                     acc = ""
                     continue
+                if "Limit" in acc:
+                    self.__cb(self.__encode(acc))
+                    continue
                 elif "Dbg" in acc:
                     # Its a debug message so return this directly
                     #if VERB: self.logger.info("Dbg: {0}".format(acc))
