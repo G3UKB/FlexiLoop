@@ -69,7 +69,7 @@ CALVIEW_WIN = 'CALVIEW_WIN'
 # Arduino section
 ARDUINO = 'ARDUINO'
 ONLINE = 'ONLINE'
-ACT_POS = 'ACT_POS'
+MOTOR_POS = 'MOTOR_POS'
 
 #=======================================================================
 # User Interface, Calibrate and Tuning

@@ -71,7 +71,11 @@ def analog_pos_to_percent(model, pos):
         return None
     span = maximum - home
     offset = pos - home
-    return round_sig(((float(offset)/float(span))*100.0))
+    val = round_sig(((float(offset)/float(span))*100.0))
+    # Due to slight variation in the feedback value we can go slightly over limits.
+    if val < 0.0: val = 0.0
+    if val > 100.0: val = 100.0
+    return val
 
 # Round a floating pint number to n significant digits 
 def round_sig(x, sig=2):

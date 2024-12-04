@@ -122,12 +122,12 @@ class UI(QMainWindow):
                 self.__loop_status[1] = True
             if len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
                 self.__loop_status[2] = True
-        # Last actuator position (may not be correct if its been moved outside app)
-        pos = self.__model[STATE][ARDUINO][ACT_POS]
-        if pos == -1:
-            pos = '-'
-        self.__current_pos = pos
-        self.__fb_pos = '-'
+                
+        # Last saved motor position
+        self.__current_pos = self.__model[STATE][ARDUINO][MOTOR_POS]
+        self.__fb_pos = -1
+        # Flag to initiate a position refresh as SOD
+        self.__init_pos = True
         
         # Default to radio side
         self.__relay_state = RADIO
@@ -813,8 +813,10 @@ class UI(QMainWindow):
         if ret == qm.Yes:
             self.__model[CONFIG][CAL][HOME] = -1
             self.__model[CONFIG][CAL][MAX] = -1
-            self.__model[STATE][ARDUINO][ACT_POS] = -1
+            self.__model[STATE][ARDUINO][MOTOR_POS] = -1
             self.__current_pos = -1
+            # Set to reinit position
+            self.__init_pos = True
     
     def __do_reshome(self):
         self.__model[CONFIG][CAL][HOME] = int(self.__fb_pos)
@@ -1022,23 +1024,26 @@ class UI(QMainWindow):
             self.__st_ard.setObjectName("stgreen")
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
             
-            # Update current actuatorposition
-            if self.__current_pos == '-':
+            # Check feedback status
+            fb_config = False
+            if self.__model[CONFIG][CAL][HOME] != -1 and self.__model[CONFIG][CAL][MAX] != -1:
+                fb_config = True
+            # Update current motor position
+            if self.__current_pos == -1:
                 self.__currpos.setText('-')
-                # Initialte a get pos so will be set at startup
-                self.__api.get_pos()
-                self.__current_activity = POS
-                self.__st_act.setText(POS)
-            if self.__fb_pos == '-':
                 self.__currposfb.setText('-')
-                self.__api.get_pos()
-                self.__current_activity = POS
-                self.__st_act.setText(POS)
             else:
                 self.__currpos.setText(str(self.__current_pos) + '%')
                 self.__currposfb.setText(str(self.__fb_pos))
                 # and tracking
                 self.__update_tracking(self.__selected_loop, self.__current_pos)
+            # Is this first run after feedback configuration   
+            if self.__init_pos and fb_config:
+                self.__init_pos = False
+                # Initialte a get pos so current values reflected at startup
+                self.__api.get_pos()
+                self.__current_activity = POS
+                self.__st_act.setText(POS)
                  
             # Check activity state
             if self.__current_activity == NONE:
@@ -1102,8 +1107,12 @@ class UI(QMainWindow):
         self.__l6label.setText('3 [%d]' % count)
         
         # Update min/max pot values
-        self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))
-        self.__potmaxvalue.setText(str(self.__model[CONFIG][CAL][MAX]))
+        if fb_config:
+            self.__potminvalue.setText(str(self.__model[CONFIG][CAL][HOME]))
+            self.__potmaxvalue.setText(str(self.__model[CONFIG][CAL][MAX]))
+        else:
+            self.__potminvalue.setText('-')
+            self.__potmaxvalue.setText('-')
         
         # =======================================================
         # Output any queued messages
@@ -1203,8 +1212,6 @@ class UI(QMainWindow):
                 self.__enable_disable_loop(False)
                 self.__enable_disable_auto(False)
                 self.__enable_disable_manual(False)
-                self.__runfwd.setEnabled(True)
-                self.__runrev.setEnabled(True)
             elif state == W_LIMITS_DELETE:
                 # We have limits but no calibration for any loop
                 # We allow delete for limits and all manual controls except get current and stop.
