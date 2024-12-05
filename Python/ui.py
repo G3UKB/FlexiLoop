@@ -273,8 +273,8 @@ class UI(QMainWindow):
                 # We expect status at any time
                 self.__current_pos = args[0]
                 self.__fb_pos = args[1]
-                self.__model[STATE][ARDUINO][MOTOR_POS] = self.__current_pos
-                self.__model[STATE][ARDUINO][MOTOR_FB] = self.__fb_pos
+                self.__model[STATE][ARDUINO][MOTOR_POS] = float(self.__current_pos)
+                self.__model[STATE][ARDUINO][MOTOR_FB] = float(self.__fb_pos)
             elif name == LIMIT:
                 # No action required as the current activity will complete
                 pass

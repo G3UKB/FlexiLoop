@@ -108,7 +108,7 @@ class Setpoint(QDialog):
         self.__table = QTableWidget()
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.__table.setColumnCount(4)
-        self.__table.setHorizontalHeaderLabels(('Name','Freq','SWR','Position %'))
+        self.__table.setHorizontalHeaderLabels(('Name','Position %','Freq','SWR'))
         grid.addWidget(self.__table, 1, 0, 1, 3)
         
         # Button area
@@ -197,9 +197,9 @@ class Setpoint(QDialog):
     def __do_moveto(self):
         r = self.__table.currentRow()
         if r != -1:
-            pos = float(self.__table.item(r, 3).text())
+            pos = float(self.__table.item(r, 1).text())
             #Ask UI to move to pos
-            self.__cb(self.__pos_lookup(pos))
+            self.__cb(self.__pos_lookup[pos])
             
     def __do_remove(self):
         r = self.__table.currentRow()
@@ -208,7 +208,6 @@ class Setpoint(QDialog):
             sps = self.__model[CONFIG][SETPOINTS][self.__get_loop_item()]
             del sps[name]
             self.__table.removeRow(r);
-            del self.__pos_lookup[float(self.__table.item(r, 1).text())]
             self.__populate_table()
     
     def __do_add(self):
@@ -223,16 +222,14 @@ class Setpoint(QDialog):
             rowPosition = self.__table.rowCount()
             self.__table.insertRow(rowPosition)
             self.__table.setItem(rowPosition, 0, QTableWidgetItem(name))
-            self.__table.setItem(rowPosition, 1, QTableWidgetItem(freq))
-            self.__table.setItem(rowPosition, 2, QTableWidgetItem(swr))
-            self.__table.setItem(rowPosition, 3, QTableWidgetItem(str(pos)))
+            self.__table.setItem(rowPosition, 1, QTableWidgetItem(str(pos)))
+            self.__table.setItem(rowPosition, 2, QTableWidgetItem(freq))
+            self.__table.setItem(rowPosition, 3, QTableWidgetItem(swr))
             # Manage model
             self.__update_model()
             self.__nametxt.setText('')
             self.__freqtxt.setText('')
             self.__swrtxt.setText('')
-            # Update lookup table
-            self.__pos_lookup[pos] = fb
         else:
             self.logger.warn("No loop position available for add()")
     
@@ -244,13 +241,13 @@ class Setpoint(QDialog):
         row = 0
         while self.__table.rowCount() > 0:
             self.__table.removeRow(0);
-
         for item in sps.items():
             self.__table.insertRow(row)
             self.__table.setItem(row, 0, QTableWidgetItem(item[0]))
-            self.__table.setItem(row, 1, QTableWidgetItem(item[1][0]))
-            self.__table.setItem(row, 2, QTableWidgetItem(item[1][1]))
-            self.__table.setItem(row, 3, QTableWidgetItem(item[1][2]))
+            self.__table.setItem(row, 1, QTableWidgetItem(str(analog_pos_to_percent(self.__model, item[1][0]))))
+            self.__table.setItem(row, 2, QTableWidgetItem(str(item[1][1])))
+            self.__table.setItem(row, 3, QTableWidgetItem(str(item[1][2])))
+            self.__pos_lookup[analog_pos_to_percent(self.__model, item[1][0])] = item[1][0]
             row += 1
         if self.__table.rowCount() > 0:
             self.__table.selectRow(0)
@@ -260,7 +257,7 @@ class Setpoint(QDialog):
         self.__model[CONFIG][SETPOINTS][item].clear()    
         for r in range(0, self.__table.rowCount()):
             name = self.__table.item(r, 0).text()
-            pos = self.__pos_lookup(float(self.__table.item(r, 1).text()))
+            pos = self.__pos_lookup[float(self.__table.item(r, 1).text())]
             freq = self.__table.item(r, 2).text()
             swr = self.__table.item(r, 3).text() 
             self.__model[CONFIG][SETPOINTS][item][name] = [int(pos), float(freq), float(swr)]

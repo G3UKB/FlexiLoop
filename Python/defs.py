@@ -70,6 +70,7 @@ CALVIEW_WIN = 'CALVIEW_WIN'
 ARDUINO = 'ARDUINO'
 ONLINE = 'ONLINE'
 MOTOR_POS = 'MOTOR_POS'
+MOTOR_FB = 'MOTOR_FB'
 
 #=======================================================================
 # User Interface, Calibrate and Tuning
