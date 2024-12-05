@@ -246,7 +246,7 @@ class SerialComms(threading.Thread):
                 sleep(0.2)
                 if VERB: self.logger.info("Command failed, retrying...")
                 if retries <= 0:
-                    msg = "Command failed after %d retries" % retries
+                    msg = "Command failed after 5 retries" 
                     return (resp[0], (False, msg, []))
                 else:
                     retries -= 1
@@ -277,7 +277,7 @@ class SerialComms(threading.Thread):
                 # We return an abort instead of the given command
                 return (ABORT, (True, "User abort!", val))
             elif r == STOP:
-                self.logger.info("Stop actuator after forward or reverse command.")
+                self.logger.info("Stop motor after forward or reverse command.")
             # Read a single character
             chr = self.__ser.read().decode('utf-8')
             if chr == '':

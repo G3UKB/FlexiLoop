@@ -51,6 +51,7 @@ class Setpoint(QDialog):
         
         # Local vars
         self.__loop = -1
+        self.__pos_lookup = {}
      
         # Set the back colour
         palette = QPalette()
@@ -198,7 +199,7 @@ class Setpoint(QDialog):
         if r != -1:
             pos = float(self.__table.item(r, 3).text())
             #Ask UI to move to pos
-            self.__cb(pos)
+            self.__cb(self.__pos_lookup(pos))
             
     def __do_remove(self):
         r = self.__table.currentRow()
@@ -207,6 +208,7 @@ class Setpoint(QDialog):
             sps = self.__model[CONFIG][SETPOINTS][self.__get_loop_item()]
             del sps[name]
             self.__table.removeRow(r);
+            del self.__pos_lookup[float(self.__table.item(r, 1).text())]
             self.__populate_table()
     
     def __do_add(self):
@@ -215,6 +217,7 @@ class Setpoint(QDialog):
         freq = self.__freqtxt.text()
         swr = self.__swrtxt.text()
         pos = self.__model[STATE][ARDUINO][MOTOR_POS]
+        fb = self.__model[STATE][ARDUINO][MOTOR_FB]
         if pos != -1:
             # Create new row
             rowPosition = self.__table.rowCount()
@@ -228,6 +231,8 @@ class Setpoint(QDialog):
             self.__nametxt.setText('')
             self.__freqtxt.setText('')
             self.__swrtxt.setText('')
+            # Update lookup table
+            self.__pos_lookup[pos] = fb
         else:
             self.logger.warn("No loop position available for add()")
     
@@ -255,10 +260,10 @@ class Setpoint(QDialog):
         self.__model[CONFIG][SETPOINTS][item].clear()    
         for r in range(0, self.__table.rowCount()):
             name = self.__table.item(r, 0).text()
-            freq = self.__table.item(r, 1).text()
-            swr = self.__table.item(r, 2).text() 
-            pos = self.__table.item(r, 3).text()
-            self.__model[CONFIG][SETPOINTS][item][name] = [freq, swr, pos]
+            pos = self.__pos_lookup(float(self.__table.item(r, 1).text()))
+            freq = self.__table.item(r, 2).text()
+            swr = self.__table.item(r, 3).text() 
+            self.__model[CONFIG][SETPOINTS][item][name] = [int(pos), float(freq), float(swr)]
             
     def __get_loop_item(self):
         if self.__loop == 1:

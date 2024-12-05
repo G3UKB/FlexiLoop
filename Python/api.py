@@ -144,18 +144,22 @@ class API:
     def move_to_freq(self, loop, freq):
         self.__tune.do_one_pass(loop, freq)
     
-    # Move to a given % extension
-    def move_to_position(self, pos):
-        # pos is given as 0-100%
-        # convert this into the corresponding analog value
-        home = self.__model[CONFIG][CAL][HOME]
-        maximum = self.__model[CONFIG][CAL][MAX]
-        if home == -1 or max == -1:
-            self.logger.warning("Failed to move as limits are not set!")
-            return
-        span = maximum - home
-        frac = (int(pos)/100)*span
-        self.__s_q.put(('move', [int(home+frac)]))
+    # Move to a given extension
+    def move_to_position(self, pos, using=MOVE_ABS):
+        if using == MOVE_ABS:
+            # pos is a feedback value
+            self.__s_q.put(('move', [pos]))
+        else:
+            # pos is 0-100%
+            # convert this into the corresponding analog value
+            home = self.__model[CONFIG][CAL][HOME]
+            maximum = self.__model[CONFIG][CAL][MAX]
+            if home == -1 or max == -1:
+                self.logger.warning("Failed to move as limits are not set!")
+                return
+            span = maximum - home
+            frac = (int(pos)/100)*span
+            self.__s_q.put(('move', [int(home+frac)]))
     
     # Simple functions
     # Change speed

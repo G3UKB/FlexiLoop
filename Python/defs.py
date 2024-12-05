@@ -145,9 +145,11 @@ MAN_STEP = 'MAN_STEP'
 HINT_MOVETO = 'MOVETO'
 HINT_STEP = 'STEP'
 
-# Direction of actuator motion
+# Motor related
 FWD = 'FWD'
 REV = 'REV'
+MOVE_ABS = 'MOVE_ABS'
+MOVE_PERCENT = 'MOVE_PERCENT'
 
 # Widget states
 W_OFF_LINE = 'WOffLine'

@@ -125,7 +125,7 @@ class UI(QMainWindow):
                 
         # Last saved motor position
         self.__current_pos = self.__model[STATE][ARDUINO][MOTOR_POS]
-        self.__fb_pos = -1
+        self.__fb_pos = self.__model[STATE][ARDUINO][MOTOR_FB]
         # Flag to initiate a position refresh as SOD
         self.__init_pos = True
         
@@ -174,6 +174,7 @@ class UI(QMainWindow):
     # Called from calview and setpoints dialog to move to a position.
     # Called on main thread so we can do UI stuff
     def __move_callback(self, pos):
+        # pos is expected to be the feedback value
         self.__current_activity = MOVETO
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
@@ -273,6 +274,7 @@ class UI(QMainWindow):
                 self.__current_pos = args[0]
                 self.__fb_pos = args[1]
                 self.__model[STATE][ARDUINO][MOTOR_POS] = self.__current_pos
+                self.__model[STATE][ARDUINO][MOTOR_FB] = self.__fb_pos
             elif name == LIMIT:
                 # No action required as the current activity will complete
                 pass
@@ -1020,6 +1022,7 @@ class UI(QMainWindow):
         
         #=======================================================
         # Here we update the UI according to current activity and the status set by the callbacks
+        fb_config = False
         if self.__model[STATE][ARDUINO][ONLINE]:
             # Update the on-line indicators
             self.__st_ard.setText('on-line')
@@ -1027,7 +1030,6 @@ class UI(QMainWindow):
             self.__st_ard.setStyleSheet(self.__st_ard.styleSheet())
             
             # Check feedback status
-            fb_config = False
             if self.__model[CONFIG][CAL][HOME] != -1 and self.__model[CONFIG][CAL][MAX] != -1:
                 fb_config = True
             # Update current motor position

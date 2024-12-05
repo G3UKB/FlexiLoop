@@ -77,6 +77,7 @@ flexi_loop_model = {
         ARDUINO: {
             ONLINE: False,
             MOTOR_POS: -1,
+            MOTOR_FB: -1,
             SPEED: SPEED_DEF,
         }
     }

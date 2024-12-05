@@ -53,6 +53,7 @@ class Calview(QDialog):
         
         # Instance vars
         self.__loop = -1
+        self.__pos_lookup = {}
      
         # Set the back colour
         palette = QPalette()
@@ -156,9 +157,13 @@ class Calview(QDialog):
     def __do_move(self):
         row = self.__table.currentRow()
         pos = float(self.__table.item(row, 1).text())
-        #Ask UI to move to pos
-        self.__cb(pos)
-        
+        if pos in self.__pos_lookup:
+            abs_pos = self.__pos_lookup[pos]
+            # Ask UI to move to pos
+            self.__cb(abs_pos)
+        else:
+            self.logger.warn("Failed to lookup [{}] in lookup table [{}]".format(pos, self.__pos_lookup))
+            
     #=======================================================
     # Helpers
     # Populate the table from model data for current loop
@@ -180,10 +185,12 @@ class Calview(QDialog):
                     self.__table.setItem(row, 1, QTableWidgetItem(str(analog_pos_to_percent(self.__model, d[0]))))
                     self.__table.setItem(row, 2, QTableWidgetItem(str(d[1])))
                     self.__table.setItem(row, 3, QTableWidgetItem(str(d[2])))
+                    # Add to dict
+                    self.__pos_lookup[analog_pos_to_percent(self.__model, d[0])] = d[0] 
                     row += 1
             if self.__table.rowCount() > 0:
                 self.__table.selectRow(0)
-    
+        
     # Get key for loop    
     def __get_loop_item(self):
         if self.__loop == 1:
