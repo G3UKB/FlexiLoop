@@ -55,13 +55,13 @@ flexi_loop_model = {
             # Feedback values for min and max
             HOME: -1,
             MAX: -1,
-            # Loop 1-3 {name: [[feedback value, f, swr], [...], ...], name: [...]]
+            # Loop 1-3 {name: [[abs feedback value, f, swr], [...], ...], name: [...]]
             CAL_L1: {},
             CAL_L2: {},
             CAL_L3: {},
         },
         SETPOINTS: {
-            # Loop 1-3 [...?]
+            # Loop 1-3 {name: [[abs feedback value, f, swr], [...], ...], name: [...]]
             SP_L1: {},
             SP_L2: {},
             SP_L3: {},

@@ -171,7 +171,7 @@ class UI(QMainWindow):
     def msg_callback(self, data, msgtype=MSG_INFO):
         self.__msgq.put((data, msgtype))
     
-    # Called from setpoints dialog to move to a setpoint.
+    # Called from calview and setpoints dialog to move to a position.
     # Called on main thread so we can do UI stuff
     def __move_callback(self, pos):
         self.__current_activity = MOVETO
