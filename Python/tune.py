@@ -102,17 +102,16 @@ class Tune(threading.Thread):
                 self.__serial_comms.restore_callback()
                 continue
             aset = sets[candidate]
-            
             # Find the two points this frequency falls between
             index = 0
             idx_low = -1
             idx_high = -1
             for ft in aset:
-                if ft[1] < self.__freq:
+                if ft[1] <= self.__freq:
                     # Lower than target
                     idx_high = index+1 
                     idx_low = index
-                elif ft[1] > self.__freq:
+                elif ft[1] >= self.__freq:
                     break
                 index+=1
             if idx_high == -1 or idx_low == -1:
@@ -126,18 +125,22 @@ class Tune(threading.Thread):
             # Same for low
             #
             # The feedback values and frequencies above and below the required frequency
-            fb_high = aset[idx_high][0]
-            fb_low = aset[idx_low][0]
-            frq_high = aset[idx_high][1]
-            frq_low = aset[idx_low][1]
-            
-            # We now need to calculate the feedback value for the required frequency
-            frq_span = frq_high - frq_low
-            frq_inc = self.__freq - frq_low
-            frq_frac = frq_inc/frq_span
-            fb_span = fb_low - fb_high
-            fb_frac = frq_frac * fb_span
-            target_pos = fb_high + fb_frac
+            if idx_high == len(aset):
+                # We are on last entry
+                fb_low = aset[idx_low][0]
+                target_pos = fb_low
+            else:
+                fb_high = aset[idx_high][0]
+                fb_low = aset[idx_low][0]
+                frq_high = aset[idx_high][1]
+                frq_low = aset[idx_low][1]
+                # We now need to calculate the feedback value for the required frequency
+                frq_span = frq_high - frq_low
+                frq_inc = self.__freq - frq_low
+                frq_frac = frq_inc/frq_span
+                fb_span = fb_low - fb_high
+                fb_frac = frq_frac * fb_span
+                target_pos = fb_low - fb_frac
             
             # We now have a position to move to
             self.__s_q.put(('move', [target_pos]))

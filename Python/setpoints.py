@@ -226,6 +226,7 @@ class Setpoint(QDialog):
             self.__table.setItem(rowPosition, 2, QTableWidgetItem(freq))
             self.__table.setItem(rowPosition, 3, QTableWidgetItem(swr))
             # Manage model
+            self.__pos_lookup[pos] = fb
             self.__update_model()
             self.__nametxt.setText('')
             self.__freqtxt.setText('')
