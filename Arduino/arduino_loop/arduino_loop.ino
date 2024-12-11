@@ -273,7 +273,6 @@ int check_limit() {
     // Possibly at end stop
     if (fb_counter-- <= 0) {
       // Feedback stationary ish for 5 counts
-      Serial.print("Limit;");
       return TRUE; 
     }
   }

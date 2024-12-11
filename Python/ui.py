@@ -963,7 +963,7 @@ class UI(QMainWindow):
         self.__st_act.setText(MOVETO)
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
-        self.__api.move_to_position(self.__movetxt.value())
+        self.__api.move_to_position(self.__movetxt.value(), MOVE_PERCENT)
     
     def __do_move_fwd(self):
         self.__current_activity = MSFWD
