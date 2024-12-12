@@ -165,7 +165,7 @@ def find_pos_candidate(sets, pos):
     for name, pset in sets.items():
         low = pset[0][0]
         high = pset[-1][0]
-        if pos >= low and pos <= high:
+        if pos <= low and pos >= high:
             # Our position lies within this set
             if candidate == None:
                 candidate = name

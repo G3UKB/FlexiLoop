@@ -1359,11 +1359,12 @@ class UI(QMainWindow):
         try:
            fpos = float(pos)
         except:
+            self.logger.warn ('In  update tracking pos is not a float [{}]'.format(pos))
             return
         apos = percent_pos_to_analog(self.__model, fpos)
         r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
         if r:
-            self.__freqval.setText(str(f))
+            self.__freqval.setText(str(round(f, 2)))
             self.__swrres.setText(str(swr))
         else:
             self.__freqval.setText('?.?')
