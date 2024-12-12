@@ -146,7 +146,7 @@ class Setpoint(QDialog):
         hbox.addWidget(freqlabel)
         self.__freqtxt = QLineEdit()
         self.__freqtxt.setToolTip('Record frequency')
-        self.__freqtxt.setInputMask('09.90')
+        self.__freqtxt.setInputMask('09.9000')
         self.__freqtxt.setMaximumWidth(80)
         hbox.addWidget(self.__freqtxt)
         
