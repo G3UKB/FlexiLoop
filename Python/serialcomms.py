@@ -228,7 +228,11 @@ class SerialComms(threading.Thread):
         return self.send(b"b;", 2)
     
     def __abort(self, args):
-        return self.send(b"z;", 1)
+        # There is no response to an abort it just forces a return
+        # from any move in progress or absorbs it if no activity
+        self.__ser.write(b"z;")
+        self.__ser.flush()
+        return (ABORT, (True, "User abort!", []))
         
     # ===============================================================
     # Send a command to the Arduino
