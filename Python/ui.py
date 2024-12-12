@@ -128,6 +128,8 @@ class UI(QMainWindow):
         self.__fb_pos = self.__model[STATE][ARDUINO][MOTOR_FB]
         # Flag to initiate a position refresh as SOD
         self.__init_pos = True
+        # We must wait a little to make sure Arduino has initialised
+        self.__init_pos_dly = 10
         
         # Default to radio side
         self.__relay_state = RADIO
@@ -1043,11 +1045,13 @@ class UI(QMainWindow):
                 self.__update_tracking(self.__selected_loop, self.__current_pos)
             # Is this first run after feedback configuration   
             if self.__init_pos and fb_config:
-                self.__init_pos = False
-                # Initialte a get pos so current values reflected at startup
-                self.__api.get_pos()
-                self.__current_activity = POS
-                self.__st_act.setText(POS)
+                self.__init_pos_dly -= 1
+                if self.__init_pos_dly <= 0:
+                    self.__init_pos = False
+                    # Initialte a get pos so current values reflected at startup
+                    self.__api.get_pos()
+                    self.__current_activity = POS
+                    self.__st_act.setText(POS)
                  
             # Check activity state
             if self.__current_activity == NONE:

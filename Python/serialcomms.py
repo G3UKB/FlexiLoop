@@ -244,6 +244,7 @@ class SerialComms(threading.Thread):
             if VERB: self.logger.info("Sending {}".format(cmd))
             self.__ser.write(cmd)
             self.__ser.flush()
+            retries -= 1
             sleep(0.1)
             resp = self.read_resp(timeout)
             if resp[1][0] == False:
@@ -252,9 +253,6 @@ class SerialComms(threading.Thread):
                 if retries <= 0:
                     msg = "Command failed after 5 retries" 
                     return (resp[0], (False, msg, []))
-                else:
-                    retries -= 1
-                continue
             else:
                 break
             sleep(1)

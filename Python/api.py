@@ -103,7 +103,7 @@ class API:
                 self.__msgs('Serial comms running')
                 self.__serial_comms.start()
                 self.__serial_running = True
-                return True     
+                return True
         return False
             
     # Termination
