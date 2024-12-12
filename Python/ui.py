@@ -1364,7 +1364,7 @@ class UI(QMainWindow):
         apos = percent_pos_to_analog(self.__model, fpos)
         r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
         if r:
-            self.__freqval.setText(str(round(f, 2)))
+            self.__freqval.setText(str(round(f, 4)))
             self.__swrres.setText(str(swr))
         else:
             self.__freqval.setText('?.?')

@@ -282,7 +282,7 @@ class Calibrate(threading.Thread):
         elif loop == 2:
             return True, self.__model[CONFIG][CAL][SETS][CAL_S2], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L2])
         elif loop == 3:
-            return True, self.__model[CONFIG][CAL][SETS][CAL_S2], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L3])
+            return True, self.__model[CONFIG][CAL][SETS][CAL_S3], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L3])
         else:
             return False, (), {}
 
