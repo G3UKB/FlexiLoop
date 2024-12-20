@@ -417,6 +417,13 @@ int move_to_feedback_value(int target) {
       current_speed = 100;  // slow it down
       int attempts = 10;    // Limit this at 10 correction attempts
       int dir;
+
+      // Ensure we take up gear slack in the same direction on every move.
+      // If necessary move reverse so adjustment is always moving forward.
+      while(get_feedback_value() > target) {
+        move_ms(100, REVERSE);
+      }
+
       while (diff > 1) {
         if (get_feedback_value() > target) {
           dir = REVERSE;
