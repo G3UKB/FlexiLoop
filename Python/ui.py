@@ -434,8 +434,8 @@ class UI(QMainWindow):
     # Populate feedback zone
     def __pop_feedback(self, grid):
         # Configure
-        self.__pot = QPushButton("Configure...")
-        self.__pot.setToolTip('Configure limits...')
+        self.__pot = QPushButton("Set Limits...")
+        self.__pot.setToolTip('Set limits...')
         grid.addWidget(self.__pot, 0, 0)
         self.__pot.clicked.connect(self.__do_pot)
         
