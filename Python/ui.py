@@ -838,13 +838,20 @@ class UI(QMainWindow):
         self.__selected_loop = index + 1
         
     def __do_cal(self):
-        # Switch to ANALYSER, switch back is done in the callback
-        self.__saved_mode = self.__last_switch_mode
-        self.__switch_mode = ANALYSER
         
-        # This will kick off when the callback from the relay change arrives
-        self.__st_act.setText(CALIBRATE)
-        self.__deferred_activity = self.__do_cal_deferred
+        if self.__relay_state == RADIO:
+            # Switch to ANALYSER, switch back is done in the callback
+            self.__saved_mode = self.__last_switch_mode
+            self.__switch_mode = ANALYSER
+            
+            # This will kick off when the callback from the relay change arrives
+            self.__st_act.setText(CALIBRATE)
+            self.__deferred_activity = self.__do_cal_deferred
+        else:
+            # Already in analyser mode. Just start calibrate run
+            self.__st_act.setText(CALIBRATE)
+            self.__do_cal_deferred()
+            
     
     def __do_cal_deferred(self):
         # Do the calibrate sequence
