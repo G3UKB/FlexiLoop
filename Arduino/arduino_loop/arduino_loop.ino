@@ -160,7 +160,7 @@ void process(String data) {
       break;
 
     case 'f':
-      if (move_ms(100, FORWARD)) {
+      if (move_ms(20, FORWARD)) {
         Serial.print("NudgeFwd;");
       } else {
         Serial.println("Motor fault on nudge!;");
@@ -168,7 +168,7 @@ void process(String data) {
       break;
 
     case 'r':
-      if (move_ms(100, REVERSE)) {
+      if (move_ms(20, REVERSE)) {
         Serial.print("NudgeRev;");
       } else {
         Serial.print("Motor fault on nudge!;");
