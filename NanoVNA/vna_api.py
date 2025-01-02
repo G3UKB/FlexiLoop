@@ -41,7 +41,7 @@ class VNAApi:
         self.__nv = nanovna.NanoVNA()
         
     def open(self):
-        self.__nv.open()
+        return self.__nv.open()
         
     def close(self):
         self.__nv.close()
