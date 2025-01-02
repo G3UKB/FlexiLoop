@@ -66,6 +66,9 @@ flexi_loop_model = {
             SP_L2: {},
             SP_L3: {},
         },
+        VNA: {
+            VNA_ENABLED: False,
+        }
     },
     STATE: {
         WINDOWS: {
@@ -79,6 +82,9 @@ flexi_loop_model = {
             MOTOR_POS: -1,
             MOTOR_FB: -1,
             SPEED: SPEED_DEF,
+        },
+        VNA: {
+            VNA_OPEN: False,
         }
     }
 }

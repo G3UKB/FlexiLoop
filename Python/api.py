@@ -49,7 +49,7 @@ VERB = False
 class API:
     
     # Initialisation
-    def __init__(self, model, cb, msgs_cb):
+    def __init__(self, model, vna_api, cb, msgs_cb):
         
         # Get root logger
         self.logger = logging.getLogger('root')
@@ -57,6 +57,8 @@ class API:
         # Params
         # Current model instance
         self.__model = model
+        # VNA instance
+        self.__vna_api = vna_api
         # Callback for completion of function
         self.__cb = cb
         # Callback for messages

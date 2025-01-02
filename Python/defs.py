@@ -71,6 +71,10 @@ ARDUINO = 'ARDUINO'
 ONLINE = 'ONLINE'
 MOTOR_POS = 'MOTOR_POS'
 MOTOR_FB = 'MOTOR_FB'
+# VNA Section
+VNA = 'VNA'
+VNA_ENABLED = 'VNA_ENABLED'
+VNA_OPEN = 'VNA_OPEN'
 
 #=======================================================================
 # User Interface, Calibrate and Tuning

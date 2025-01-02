@@ -39,8 +39,13 @@ class VNAApi:
         self.logger = logging.getLogger('root')
         # Instantiate driver
         self.__nv = nanovna.NanoVNA()
+        
+    def open(self):
         self.__nv.open()
-
+        
+    def close(self):
+        self.__nv.close()
+        
     def get_vswr(self, start, stop):
         
         # Set the sweep params

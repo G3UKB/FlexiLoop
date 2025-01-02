@@ -138,6 +138,13 @@ class Config(QDialog):
         timeouttab.setLayout(timeoutgrid)
         self.__populate_timeouts(timeoutgrid)
         
+        # VNA tab
+        vnatab = QWidget()
+        self.top_tab_widget.addTab(vnatab, "VNA")
+        vnagrid = QGridLayout()
+        vnatab.setLayout(vnagrid)
+        self.__populate_vna(vnagrid)
+        
         # Action buttons
         self.__save = QPushButton("Save")
         self.__save.setMaximumWidth(30)
@@ -394,6 +401,25 @@ class Config(QDialog):
         # Close gaps
         grid.setRowStretch(6, 1)
         grid.setColumnStretch(2, 1)
+     
+    #=======================================================
+    # Populate VNA
+    def __populate_vna(self, grid):
+        # VNA enable
+        vnalabel = QLabel('VNA Enable')
+        grid.addWidget(vnalabel, 0, 0)
+        self.__vnacb = QCheckBox('')
+        grid.addWidget(self.__vnacb, 0, 1)
+        self.__vnacb.stateChanged.connect(self.__vna_state_changed)
+        
+        if self.__model[CONFIG][VNA][VNA_ENABLED]:
+            self.__vnacb.setChecked(True)
+        else:
+            self.__vnacb.setChecked(False)
+            
+        # Close gaps
+        grid.setRowStretch(1, 1)
+        grid.setColumnStretch(2, 1)
         
     #=======================================================
     # Window events
@@ -464,6 +490,14 @@ class Config(QDialog):
     # None
     
     #===========================
+    # VNA tab events
+    def __vna_state_changed(self):
+        if self.__vnacb.isChecked():
+            self.__model[STATE][VNA_ENABLED] = True
+        else:
+            self.__model[STATE][VNA_ENABLED] = False
+    
+    #===========================
     # Common button events
     # Save the changes to the model
     def __do_save(self):
@@ -484,6 +518,10 @@ class Config(QDialog):
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
+        if self.__vnacb.isChecked():
+            self.__model[CONFIG][VNA][VNA_ENABLED] = True
+        else:
+            self.__model[CONFIG][VNA][VNA_ENABLED] = False
         
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)

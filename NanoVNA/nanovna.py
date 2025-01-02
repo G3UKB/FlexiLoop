@@ -21,14 +21,13 @@ def getport() -> str:
     device_list = list_ports.comports()
     for device in device_list:
         if device.vid == VID and device.pid == PID:
-            return device.device
-    raise OSError("device not found")
+            return True, device.device
+    return False, None
 
 REF_LEVEL = (1<<9)
 
 class NanoVNA:
-    def __init__(self, dev = None):
-        self.dev = dev or getport()
+    def __init__(self):
         self.serial = None
         self._frequencies = None
         self.points = 101
@@ -44,7 +43,13 @@ class NanoVNA:
 
     def open(self):
         if self.serial is None:
-            self.serial = serial.Serial(self.dev)
+            r, self.dev =  getport()
+            if r:
+                self.serial = serial.Serial(self.dev)
+                return True
+            return False
+        return True
+            
 
     def close(self):
         if self.serial:

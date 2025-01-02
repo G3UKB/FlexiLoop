@@ -39,6 +39,8 @@ import api
 import config
 import setpoints
 import calview
+sys.path.append('../NanoVNA')
+import vna_api
 
 # Vertical line
 class VLine(QFrame):
@@ -63,8 +65,18 @@ class UI(QMainWindow):
         self.__model = model
         self.__qt_app = qt_app
         
+        # Create the VNA instance
+        self.__vna_open = False
+        self.__vna_api = vna_api.VNAApi()
+        if self.__model[CONFIG][VNA][VNA_ENABLED]:
+            
+            if self.__vna_api.open():
+                self.__model[STATE][VNA][VNA_OPEN] = True
+            else:
+                self.logger.warn ('Failed to open VNA device!')
+            
         # Create the API instance
-        self.__api = api.API(model, self.callback, self.msg_callback)
+        self.__api = api.API(model, self.__vna_api, self.callback, self.msg_callback)
         self.__api.init_comms()
         
         # Create the config dialog
