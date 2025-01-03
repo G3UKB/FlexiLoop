@@ -112,6 +112,9 @@ class API:
     def terminate(self):
         # Terminate all and wait for threads to exit
         self.logger.info("Terminating API and dependencies")
+        
+        if self.__model[STATE][VNA][VNA_OPEN]:
+            self.__vna_api.close()
         if self.__serial_running:
             self.__serial_comms.terminate()
             self.__serial_comms.join()

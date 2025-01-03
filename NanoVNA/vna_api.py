@@ -30,21 +30,29 @@ import traceback
 import logging
 
 # Application imports
+from defs import *
 import nanovna
 
 class VNAApi:
     
-    def __init__(self):
+    def __init__(self, model):
         # Get root logger
         self.logger = logging.getLogger('root')
+        self.__model = model
         # Instantiate driver
         self.__nv = nanovna.NanoVNA()
         
     def open(self):
-        return self.__nv.open()
+        if self.__nv.open():
+            self.__model[STATE][VNA][VNA_OPEN] = True
+            return True
+        else:
+            self.__model[STATE][VNA][VNA_OPEN] = False
+        return False
         
     def close(self):
         self.__nv.close()
+        self.__model[STATE][VNA][VNA_OPEN] = False
         
     def get_vswr(self, start, stop):
         

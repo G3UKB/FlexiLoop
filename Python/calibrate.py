@@ -477,14 +477,8 @@ class Calibrate(threading.Thread):
     # Get values at this point from user or VNA
     def __manage_vals(self, start, stop, msg, msg_type):
         op = CAL_MANUAL
-        if self.__model[CONFIG][VNA][VNA_ENABLED]:
-            if self.__model[STATE][VNA][VNA_OPEN]:
-                op = CAL_AUTO
-            else:
-                if self.__vna_api.open():
-                    op = CAL_AUTO
-                    # Oops, still cant open
-                    self.__msg_cb("VNA enabled but unable to open port! Reverting to manual.")
+        if self.__model[STATE][VNA][VNA_OPEN]:
+            op = CAL_AUTO
         if CAL_AUTO:
             # Get current from VNA
             f, swr = self.__vna_api.get_vswr(start, stop)

@@ -67,13 +67,10 @@ class UI(QMainWindow):
         
         # Create the VNA instance
         self.__vna_open = False
-        self.__vna_api = vna_api.VNAApi()
+        self.__vna_api = vna_api.VNAApi(model)
         if self.__model[CONFIG][VNA][VNA_ENABLED]:
-            
-            if self.__vna_api.open():
-                self.__model[STATE][VNA][VNA_OPEN] = True
-            else:
-                self.logger.warn ('Failed to open VNA device!')
+            if not self.__vna_api.open():
+                self.logger.warn ('Failed to open VNA device! Trying periodically.')
             
         # Create the API instance
         self.__api = api.API(model, self.__vna_api, self.callback, self.msg_callback)
@@ -375,6 +372,15 @@ class UI(QMainWindow):
         self.__st_act.setObjectName("stred")
         self.__st_act.setStyleSheet(self.__st_act.styleSheet())
         self.statusBar.addPermanentWidget(self.__st_act)
+        
+        self.statusBar.addPermanentWidget(VLine())
+        
+        # VNA Status
+        self.st_lblvna= QLabel()
+        self.st_lblvna.setText('VNA')
+        self.statusBar.addPermanentWidget(self.st_lblvna)
+        self.st_lblvna.setObjectName("stred")
+        self.st_lblvna.setStyleSheet(self.st_lblvna.styleSheet())
         
         self.statusBar.addPermanentWidget(VLine())
         
@@ -1140,6 +1146,20 @@ class UI(QMainWindow):
         else:
             self.__potminvalue.setText('-')
             self.__potmaxvalue.setText('-')
+        
+        # Update VNA flag
+        if self.__model[CONFIG][VNA][VNA_ENABLED]:
+            if not self.__model[STATE][VNA][VNA_OPEN]:
+                self.__vna_api.open()
+        elif self.__model[STATE][VNA][VNA_OPEN]:
+            # Has been disabled but still open
+            self.__vna_api.close()
+            
+        if self.__model[STATE][VNA][VNA_OPEN]:
+            self.st_lblvna.setObjectName("stgreen")
+        else:
+            self.st_lblvna.setObjectName("stred")
+        self.st_lblvna.setStyleSheet(self.st_lblvna.styleSheet())
         
         # =======================================================
         # Output any queued messages

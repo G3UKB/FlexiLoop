@@ -82,15 +82,15 @@ void process(String data) {
   *     semicolon terminator character
   *   o Heartbeat : y;
   *   o Abort : z;
-  *   o Set speed (slow, medium, fast) : s,s[m][f].;
+  *   o Set speed : s, speed.;
   *   o Move to home position : h;
   *   o Move to max extension : x;
   *   o Get position value : p;
-  *   o Move to position : m,pos as int [0 to 1023].;
+  *   o Move to position : m, pos as int [0 to 1023].;
   *   o Nudge forward : f;
   *   o Nudge reverse : r;
-  *   o Run forward for n ms : w,n[ms].;
-  *   o Run reverse for n ms : v,n[ms].;
+  *   o Run forward for n ms : w,n.;
+  *   o Run reverse for n ms : v,n.;
   *   o Free run forward : c;
   *   o Free run reverse : d;
   *   o Stop free run : e;
