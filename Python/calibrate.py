@@ -378,6 +378,8 @@ class Calibrate(threading.Thread):
             self.logger.warning("Failed to move to low frequency position!")
             return False, "Failed to move to low frequency position!", cal_map
         
+        r, (f, swr, pos) = self.__manage_vals(self, round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
+        """
         op = CAL_MANUAL
         if self.__model[CONFIG][VNA][VNA_ENABLED]:
             if self.__model[STATE][VNA][VNA_OPEN]:
@@ -392,7 +394,8 @@ class Calibrate(threading.Thread):
         else:
             self.__msg_cb("Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
             r, (f, swr, pos) = self.__get_current()
-            
+        """
+        
         if not r:
             self.logger.warning("Failed to get params for low frequency position!")
             return False, "Failed to get params for low frequency position!", cal_map
@@ -408,8 +411,9 @@ class Calibrate(threading.Thread):
             if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
-            self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
-            r, (f, swr, pos) = self.__get_current()
+            r, (f, swr, pos) = self.__manage_vals(self, round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
+            #self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
+            #r, (f, swr, pos) = self.__get_current()
             if not r:
                 self.logger.warning("Failed to get params for step position!")
                 return False, "Failed to get params for step position!", cal_map
@@ -422,8 +426,9 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high frequency position!")
             return False, "Failed to move to high frequency position!", cal_map
-        self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
-        r, (f, swr, pos) = self.__get_current()
+        r, (f, swr, pos) = self.__manage_vals(self, round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
+        #self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
+        #r, (f, swr, pos) = self.__get_current()
         if not r:
             self.logger.warning("Failed to get params for high frequency position!")
             return False, "Failed to get params for high frequency position!", cal_map
@@ -465,10 +470,31 @@ class Calibrate(threading.Thread):
             r, (f, swr, pos) = self.__man_cb()
             if r == CAL_SUCCESS:
                 # This gives a MHz freq
-                return True, [(float(f), float(swr), percent_pos_to_analog(self.__model, float(pos)))]
+                return True, [(float(f), float(swr), float(pos))]
             elif r == CAL_ABORT:
                 return False, [(None, None, None)]
-        
+    
+    # Get values at this point from user or VNA
+    def __manage_vals(self, start, stop, msg, msg_type):
+        op = CAL_MANUAL
+        if self.__model[CONFIG][VNA][VNA_ENABLED]:
+            if self.__model[STATE][VNA][VNA_OPEN]:
+                op = CAL_AUTO
+            else:
+                if self.__vna_api.open():
+                    op = CAL_AUTO
+                    # Oops, still cant open
+                    self.__msg_cb("VNA enabled but unable to open port! Reverting to manual.")
+        if CAL_AUTO:
+            # Get current from VNA
+            f, swr = self.__vna_api.get_vswr(start, stop)
+            pos = self.__model[STATE][ARDUINO][MOTOR_FB]
+            return True, (f, swr, pos)
+        else:
+            # Get current from user
+            self.__msg_cb(msg, msg_type)
+            r, (f, swr, pos) = self.__get_current()
+            
     # =========================================================================
     # Callback from comms module
     # Note this is called on the comms thread and stolen from api.py

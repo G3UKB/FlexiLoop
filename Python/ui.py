@@ -211,7 +211,7 @@ class UI(QMainWindow):
             sleep (0.2)
         
         if self.__is_float(self.__man_cal_freq) and self.__is_float(self.__man_cal_swr):
-            result = (self.__man_cal_freq, self.__man_cal_swr, self.__current_pos)
+            result = (self.__man_cal_freq, self.__man_cal_swr, self.__fb_pos)
             self.__man_cal_freq = 0.0
             self.__man_cal_swr = 1.0
             while self.__man_cal_state != MANUAL_NEXT:
