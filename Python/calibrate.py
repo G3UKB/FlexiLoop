@@ -60,7 +60,7 @@ VERB = True
 #===================================================== 
 class Calibrate(threading.Thread):
 
-    def __init__(self, comms, comms_q, cal_q, model, callback, msgs):
+    def __init__(self, comms, comms_q, cal_q, vna_api, model, callback, msgs):
         super(Calibrate, self).__init__()
         
         # Get root logger
@@ -72,6 +72,8 @@ class Calibrate(threading.Thread):
         self.__comms_q = comms_q
         # Incoming queue
         self.__cal_q = cal_q
+        # VNA instance
+        self.__vna_api = vna_api
         # Model instance
         self.__model = model
         # Callbacks to UI for completion and messages
@@ -375,8 +377,22 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(low_pos_abs):
             self.logger.warning("Failed to move to low frequency position!")
             return False, "Failed to move to low frequency position!", cal_map
-        self.__msg_cb("Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
-        r, (f, swr, pos) = self.__get_current()
+        
+        op = CAL_MANUAL
+        if self.__model[CONFIG][VNA][VNA_ENABLED]:
+            if self.__model[STATE][VNA][VNA_OPEN]:
+                op = CAL_AUTO
+            else:
+                if self.__vna_api.open():
+                    op = CAL_AUTO
+                    # Oops, still cant open
+                    self.__msg_cb("VNA enabled but unable to open port! Reverting to manual")
+        if CAL_AUTO:
+            f, vswr = self.__vna_api.get_vswr(start, stop)
+        else:
+            self.__msg_cb("Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
+            r, (f, swr, pos) = self.__get_current()
+            
         if not r:
             self.logger.warning("Failed to get params for low frequency position!")
             return False, "Failed to get params for low frequency position!", cal_map

@@ -124,6 +124,8 @@ NONE = 'None'
 CAL_SUCCESS = 'CalSuccess'
 CAL_RETRY = 'CalRetry'
 CAL_ABORT = 'CalAbort'
+CAL_MANUAL = 'CAL_MANUAL'
+CAL_AUTO = 'CAL_AUTO'
 
 # Timeouts for the long running operations in seconds
 # Adjusted for the idle tick rate to number of idle passes

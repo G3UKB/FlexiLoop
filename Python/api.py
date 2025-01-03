@@ -70,7 +70,7 @@ class API:
         
         # Create a Calibration instance
         self.__c_q = queue.Queue(10)
-        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, model, self.cal_callback, self.__msgs)
+        self.__cal = calibrate.Calibrate(self.__serial_comms, self.__s_q, self.__c_q, self.__vna_api, model, self.cal_callback, self.__msgs)
         # and start the thread
         self.__cal.start()
         
