@@ -30,8 +30,11 @@ import traceback
 import logging
 
 # Application imports
+sys.path.append('../python')
 from defs import *
 import nanovna
+
+test = True
 
 class VNAApi:
     
@@ -44,15 +47,15 @@ class VNAApi:
         
     def open(self):
         if self.__nv.open():
-            self.__model[STATE][VNA][VNA_OPEN] = True
+            if not test: self.__model[STATE][VNA][VNA_OPEN] = True
             return True
         else:
-            self.__model[STATE][VNA][VNA_OPEN] = False
+            if not test: self.__model[STATE][VNA][VNA_OPEN] = False
         return False
         
     def close(self):
         self.__nv.close()
-        self.__model[STATE][VNA][VNA_OPEN] = False
+        if not test: self.__model[STATE][VNA][VNA_OPEN] = False
         
     def get_vswr(self, start, stop):
         
@@ -80,11 +83,15 @@ class VNAApi:
        
 #======================================================================================================================
 # Test code
-def main():
-    api = VNAApi()
-    f, vswr = api.get_vswr(7e6,8e6)
+def main(start, end):
+    api = VNAApi(None)
+    api.open()
+    #f, vswr = api.get_vswr(6.5e6,30e6)
+    f, vswr = api.get_vswr(float(start), float(end))
     print (f, vswr)
+    api.close()
     
 # Entry point       
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1], sys.argv[2])
+    
