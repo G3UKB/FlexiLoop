@@ -378,7 +378,7 @@ class Calibrate(threading.Thread):
             self.logger.warning("Failed to move to low frequency position!")
             return False, "Failed to move to low frequency position!", cal_map
         
-        r, (f, swr, pos) = self.__manage_vals(self, round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
+        r, (f, swr, pos) = self.__manage_vals(round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
         """
         op = CAL_MANUAL
         if self.__model[CONFIG][VNA][VNA_ENABLED]:
@@ -411,7 +411,7 @@ class Calibrate(threading.Thread):
             if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
-            r, (f, swr, pos) = self.__manage_vals(self, round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
+            r, (f, swr, pos) = self.__manage_vals(round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
             #self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
             #r, (f, swr, pos) = self.__get_current()
             if not r:
@@ -426,7 +426,7 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high frequency position!")
             return False, "Failed to move to high frequency position!", cal_map
-        r, (f, swr, pos) = self.__manage_vals(self, round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
+        r, (f, swr, pos) = self.__manage_vals(round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
         #self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
         #r, (f, swr, pos) = self.__get_current()
         if not r:

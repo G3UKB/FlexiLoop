@@ -34,13 +34,13 @@ sys.path.append('../python')
 from defs import *
 import nanovna
 
-test = True
+test = False
 
 class VNAApi:
     
     def __init__(self, model):
         # Get root logger
-        self.logger = logging.getLogger('root')
+        if not test: self.logger = logging.getLogger('root')
         self.__model = model
         # Instantiate driver
         self.__nv = nanovna.NanoVNA()
@@ -58,9 +58,11 @@ class VNAApi:
         if not test: self.__model[STATE][VNA][VNA_OPEN] = False
         
     def get_vswr(self, start, stop):
-        
+        # start/stop in MHz
+        start_int = int(start*1.0e6)
+        stop_int = int(stop*1.0e6)
         # Set the sweep params
-        self.__nv.set_sweep(start,stop)
+        self.__nv.set_sweep(start_int,stop_int)
         # Ask VNA to fetch the frequency set for the sweep
         self.__nv.fetch_frequencies()
         # Get the frequency set
@@ -79,7 +81,7 @@ class VNAApi:
             idx += 1
         
         # Return a tuple of freq and VSWR
-        return (f[low_idx], vswr[low_idx])
+        return (round((float(f[low_idx]))/1.0e6,3), round(vswr[low_idx], 2))
        
 #======================================================================================================================
 # Test code
