@@ -30,32 +30,34 @@ import traceback
 import logging
 
 # Application imports
-sys.path.append('../python')
-from defs import *
+try:
+    sys.path.append('../python')
+    from defs import *
+except:
+    pass
 import nanovna
-
-test = False
 
 class VNAApi:
     
-    def __init__(self, model):
+    def __init__(self, model, app=True):
         # Get root logger
-        if not test: self.logger = logging.getLogger('root')
+        self.__app = app
+        if self.__app: self.logger = logging.getLogger('root')
         self.__model = model
         # Instantiate driver
         self.__nv = nanovna.NanoVNA()
         
     def open(self):
         if self.__nv.open():
-            if not test: self.__model[STATE][VNA][VNA_OPEN] = True
+            if self.__app: self.__model[STATE][VNA][VNA_OPEN] = True
             return True
         else:
-            if not test: self.__model[STATE][VNA][VNA_OPEN] = False
+            if self.__app: self.__model[STATE][VNA][VNA_OPEN] = False
         return False
         
     def close(self):
         self.__nv.close()
-        if not test: self.__model[STATE][VNA][VNA_OPEN] = False
+        if self.__app: self.__model[STATE][VNA][VNA_OPEN] = False
         
     def get_vswr(self, start, stop):
         # start/stop in MHz
@@ -86,9 +88,8 @@ class VNAApi:
 #======================================================================================================================
 # Test code
 def main(start, end):
-    api = VNAApi(None)
+    api = VNAApi(None, False)
     api.open()
-    #f, vswr = api.get_vswr(6.5e6,30e6)
     f, vswr = api.get_vswr(float(start), float(end))
     print (f, vswr)
     api.close()
