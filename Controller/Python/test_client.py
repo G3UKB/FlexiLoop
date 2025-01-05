@@ -98,19 +98,19 @@ class CtrlTest:
                 # Found terminator character
                 if "Status" in acc:
                     # Its a status message so return this directly
-                    print("{0}".format(self.__encode(acc)))
+                    print("Status Pos: ", self.__encode(acc)[1][1][0])
                     acc = ""
                     continue
                 if "Limit" in acc:
-                    print("{0}".format(self.__encode(acc)))
+                    print("Limit: ", self.__encode(acc)[1][1][0])
                     continue
                 elif "Dbg" in acc:
                     # Its a debug message so return this directly
-                    print("{0}".format(self.__encode(acc)))
+                    print("Debug: ", self.__encode(acc)[1][1][0])
                     acc = ""
                     continue
                 # Otherwise its a response to the command
-                print("Response: {}".format(acc))
+                print("Response: {}".format(self.__encode(acc)))
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
