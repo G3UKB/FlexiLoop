@@ -548,7 +548,7 @@ class UI(QMainWindow):
         
         minf, maxf = self.__model[CONFIG][CAL][LIMITS][LIM_1]
         if minf != None:
-            self.__fminvalue = QLabel(str(minf))
+            self.__fminvalue = QLabel(str(round(minf, 1)))
         else:
             self.__fminvalue = QLabel('-.-')
         self.__fminvalue.setAlignment(QtCore.Qt.AlignCenter)
@@ -556,7 +556,7 @@ class UI(QMainWindow):
         grid.addWidget(self.__fminvalue, 0, 5)
         
         if maxf != None:
-            self.__fmaxvalue = QLabel(str(maxf))
+            self.__fmaxvalue = QLabel(str(round(maxf, 1)))
         else:
             self.__fmaxvalue = QLabel('-.-')
         self.__fmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
@@ -888,11 +888,11 @@ class UI(QMainWindow):
         ls = (LIM_1, LIM_2, LIM_3)
         minf, maxf = self.__model[CONFIG][CAL][LIMITS][ls[index]]
         if minf != None:
-            self.__fminvalue = QLabel(str(minf))
+            self.__fminvalue = QLabel(str(round(minf, 1)))
         else:
             self.__fminvalue = QLabel('-.-')
         if maxf != None:
-            self.__fmaxvalue = QLabel(str(maxf))
+            self.__fmaxvalue = QLabel(str(round(maxf. 1)))
         else:
             self.__fmaxvalue = QLabel('-.-')
         
