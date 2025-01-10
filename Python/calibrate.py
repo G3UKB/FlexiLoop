@@ -244,8 +244,8 @@ class Calibrate(threading.Thread):
         loop = args
         # If we have a VNA then set the frequency limits
         if self.__model[STATE][VNA][VNA_OPEN]:
-            self.__set_limits(self, loop, 'home', HOME):
-            self.__set_limits(self, loop, 'max', MAX):
+            self.__set_limits(loop, 'home', HOME)
+            self.__set_limits(loop, 'max', MAX)
         
     def __set_limits(self, loop, cmd, resp):
         self.__comms_q.put((cmd, []))
@@ -258,11 +258,11 @@ class Calibrate(threading.Thread):
         self.__event.clear()
         # Get the freq at this extent
         r, f, swr = self.__vna_api.get_vswr(1.8, 30.0)
-        l = (LIM_1, LIM_2, LIM_3)
+        sec = (LIM_1, LIM_2, LIM_3)
         if resp == HOME:
-            self.__model[CONGIG][CAL][LIMITS][l[loop-1]][0] = f
+            self.__model[CONGIG][CAL][LIMITS][sec[loop-1]][0] = f
         elif resp == MAX:
-            self.__model[CONGIG][CAL][LIMITS][1[loop-1]][1] = f
+            self.__model[CONGIG][CAL][LIMITS][sec[loop-1]][1] = f
                     
     # Retrieve feedback end points from model
     def retrieve_end_points(self):

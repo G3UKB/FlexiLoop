@@ -146,7 +146,7 @@ class API:
     
     def set_limits(self, loop, man_cb):
         self.logger.info("Setting loop limits: {}. This may take a while...".format(loop))
-        self.__c_q.put(('freqlimits', [loop, man_cb)
+        self.__c_q.put(('freqlimits', [loop, man_cb]))
         
     # Move to lowest SWR for loop on given frequency
     # This is threaded separately as its long running multiple calls
