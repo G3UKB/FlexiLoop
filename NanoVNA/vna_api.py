@@ -59,31 +59,34 @@ class VNAApi:
         self.__nv.close()
         if self.__app: self.__model[STATE][VNA][VNA_OPEN] = False
         
-    def get_vswr(self, start, stop):
-        # start/stop in MHz
-        start_int = int(start*1.0e6)
-        stop_int = int(stop*1.0e6)
-        # Set the sweep params
-        self.__nv.set_sweep(start_int,stop_int)
-        # Ask VNA to fetch the frequency set for the sweep
-        self.__nv.fetch_frequencies()
-        # Get the frequency set
-        f = self.__nv.frequency
-        # Get the VSWR set for the frequency set
-        vswr = self.__nv.vswr(self.__nv.data(0))
-        
-        # Find lowest VSWR in the set
-        low_vswr = 100.0
-        low_idx = 0
-        idx = 0
-        for pt in vswr:
-            if pt < low_vswr:
-                low_vswr = pt
-                low_idx = idx
-            idx += 1
+    def get_vswr(self, start, end):
+        if self.__app: self.__model[STATE][VNA][VNA_OPEN]:
+            # start/stop in MHz
+            start_int = int(start*1.0e6)
+            end_int = int(end*1.0e6)
+            # Set the sweep params
+            self.__nv.set_sweep(start_int,end_int)
+            # Ask VNA to fetch the frequency set for the sweep
+            self.__nv.fetch_frequencies()
+            # Get the frequency set
+            f = self.__nv.frequency
+            # Get the VSWR set for the frequency set
+            vswr = self.__nv.vswr(self.__nv.data(0))
+            
+            # Find lowest VSWR in the set
+            low_vswr = 100.0
+            low_idx = 0
+            idx = 0
+            for pt in vswr:
+                if pt < low_vswr:
+                    low_vswr = pt
+                    low_idx = idx
+                idx += 1
+        else:
+            return (False, None, None)
         
         # Return a tuple of freq and VSWR
-        return (round((float(f[low_idx]))/1.0e6,3), round(vswr[low_idx], 2))
+        return (True, round((float(f[low_idx]))/1.0e6,3), round(vswr[low_idx], 2))
        
 #======================================================================================================================
 # Test code
@@ -91,7 +94,7 @@ def main(start, end):
     api = VNAApi(None, False)
     api.open()
     f, vswr = api.get_vswr(float(start), float(end))
-    print (f, vswr)
+    print ('Freq: {}, VSWR: {}'.format(f, vswr))
     api.close()
     
 # Entry point       

@@ -135,12 +135,12 @@ class Calibrate(threading.Thread):
     # Configure the feedback end points
     def __configure(self, args):
         # Retrieve the end points
-        r, self.__end_points = self.retrieve_end_points()
+        r, loop, self.__end_points = self.retrieve_end_points()
         sleep(0.1)
         if not r:
             # Calibrate end points
             self.__msg_cb("Configuring potentiometer feedback end points...")
-            r, msg = self.cal_end_points()
+            r, msg = self.cal_end_points(loop)
             if not r:
                 if self.__abort:
                     self.__abort = False
@@ -250,7 +250,7 @@ class Calibrate(threading.Thread):
             return True, [h, m]
     
     # Set the feedback end points    
-    def cal_end_points(self):
+    def cal_end_points(self, loop):
         
         extents = [0, 0]    # home, max
         # Note we do max first as that positions us at home for next phase
@@ -265,7 +265,8 @@ class Calibrate(threading.Thread):
                 self.__event.clear()
                 return False, "Operation aborted!"
             self.__event.clear()
-            if act[2] != None: extents[act[2]] = self.__args[0]      
+            if act[2] != None: extents[act[2]] = self.__args[0]
+            self.__set_limits(loop, act[1])
         
         home = extents[0]
         maximum = extents[1]
@@ -274,9 +275,20 @@ class Calibrate(threading.Thread):
         
         self.__model[CONFIG][CAL][HOME] = extents[0]
         self.__model[CONFIG][CAL][MAX] = extents[1]
-            
+        
         return True, ""
     
+    # Set the frequency limits
+    def __set_limits(self, loop, where):
+        # If we have a VNA then set the frequency limits
+        if self.__model[STATE][VNA][VNA_OPEN]:
+            r, f, swr = self.__vna_api.get_vswr(1.8, 30.0)
+            l = (LIM_1, LIM_2, LIM_3)
+            if where == 'HOME':
+                self.__model[CONGIG][CAL][LIMITS][[l[loop-1]][0] = f
+            elif where == 'MAX':
+                self.__model[CONGIG][CAL][LIMITS][[1[loop-1]][1] = f
+                    
     # Retrieve the calibration definition and execution maps from the model 
     def retrieve_context(self, loop):
         if loop == 1:

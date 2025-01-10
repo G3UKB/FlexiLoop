@@ -1,19 +1,44 @@
 /*
+* motor_ctrl.ino
 *
-* Flexi-loop arduino code.
-* Responsible for feedback and motor drive
-* This level is dumb. It simply does what it is told to do.
+* Motor control
+* 
+* Copyright (C) 2025 by G3UKB Bob Cowdery
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*    
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*    
+*  You should have received a copy of the GNU General Public License
+*  along with this program; if not, write to the Free Software
+*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*    
+*  The author can be reached by email at:   
+*     bob@bobcowdery.plus.com
+*
+*/
+
+/*
+* Responsible for motor drive using potentiometer feedback.
+* Driver level code is a request/response architecture.
+* The only autominous aspect is status, limits and debug
+* reporting during move operations.
 *
 * Commands :
-*   o Set speed (slow, medium, fast)
+*   o Set speed (speed)
 *   o Move to home position
 *   o Move to max extension
 *   o Get position value
 *   o Move to position 
 *   o Nudge forward
 *   o Nudge reverse
-*   o Run forward for n ms
-*   o Run reverse for n ms
+*   o Run forward (n ms)
+*   o Run reverse (n ms)
 *   o Free run forward
 *   o Free run reverse
 *   o Stop free run
@@ -26,81 +51,124 @@
 #include "DualMC33926MotorShield.h"
 
 // Constants
+// Change pin assignments here
 #define POTENTIOMETER_PIN A3
-#define FORWARD 0
-#define REVERSE 1
+#define RLY_PIN 22
 #define TRUE 1
 #define FALSE 0
+#define FORWARD 0
+#define REVERSE 1
 #define HOME 0
 #define MAX 1
-#define RLY_PIN 22
+// Speed mid point
 #define DEFAULT_SPEED 200
+// Loop iteration rate in ms
+#define TICK 100
 
 // Instance of motor driver
 DualMC33926MotorShield md;
 int current_speed = DEFAULT_SPEED; // Current speed in range 0 to +-400
+// Param stack for debug messages
 int p[10];
 // Limit switch check
+// Track feedback values
 int fb_val = -1;
 int last_fb_val = -1;
+// Wait time
 int fb_counter = 5;
 
-// Setup runs once on startup
+// ******************************************************************
+// Entry point, runs once on power-on
 void setup() {
   // We use a simple text serial protocol between RPi and ourselves
   Serial.begin(9600);
   // Initialise motor driver
   md.init();
+  // Set pin modes and set default relay state
   pinMode(POTENTIOMETER_PIN, INPUT);
   pinMode(RLY_PIN, OUTPUT);
   digitalWrite(RLY_PIN, HIGH);
 }
 
+// ******************************************************************
 // Execution loop runs continuously
 void loop() {
-  
   // Wait for a command, execute and respond
   if (Serial.available() > 0) {
     // We have some data in the buffer
-    // We expect commands to be \n terminated
+    // Read until terminator
     String data = Serial.readStringUntil(';');
+    // Ececute command and return response
     process(data);
   }
-  delay (100);
+  // Wait TICK ms
+  delay (TICK);
 }
 
+// ******************************************************************
 // Process command
 void process(String data) {
   /*
   * Commands consist of:
-  *   a single command character followed by one or more arguments
-  *   arguments are command specific, elements are comma separated
+  *   A single command character followed by one or more arguments.
   *
   *   Protocol is variable length:
-  *     comma separated command
-  *     full stop separated parameters
-  *     semicolon terminator character
-  *   o Heartbeat : y;
-  *   o Abort : z;
-  *   o Set speed : s, speed.;
-  *   o Move to home position : h;
-  *   o Move to max extension : x;
-  *   o Get position value : p;
-  *   o Move to position : m, pos as int [0 to 1023].;
-  *   o Nudge forward : f;
-  *   o Nudge reverse : r;
-  *   o Run forward for n ms : w,n.;
-  *   o Run reverse for n ms : v,n.;
+  *   Command character followed by one or more optional arguments.
+  *     command, [arg.arg.arg. ...];
+  *     
+  * Command set:
+  *   o Relay energise : a;
+  *   o Relay de-energise : b;
   *   o Free run forward : c;
   *   o Free run reverse : d;
   *   o Stop free run : e;
-  *   o Relay energise : a;
-  *   o Relay de-energise : b;
+  *   o Nudge forward : f;
+  *   o Move to home position : h;
+  *   o Move to position : m, pos as int [0 to 1023].;
+  *   o Get position value : p;
+  *   o Nudge reverse : r;
+  *   o Set speed : s, speed.;
+  *   o Run reverse for n ms : v,n.;
+  *   o Run forward for n ms : w,n.;
+  *   o Move to max extension : x;
+  *   o Heartbeat : y;
+  *   o Abort : z;
+  *
+  * Special commands:
+  * Heartbeat - this is not a user mode request. It should be executed
+  *   periodically in the command execution chain of the caller to ensure
+  *   we are still on-line. The response is 'y;'.
+  *
+  * Abort - this command can be sent at any time whilst there is a move
+  *   in progress to abort the move. If there is nothing in progress
+  *   it has null effect. There is no response to an Abort. The operation
+  *   being aborted will complete prematurely without error.
+  *
+  * Stop free run - The commands run forward and run reverse simply runs the
+  *   motor forward or reverse. During the run the stop command can be sent at
+  *   any time and will cause the current move to stop and complete. The stop
+  *   command itself has no response. The limits are also monitored and will
+  *   perform an auto-stop should one be detected.
+  *
+  * Responses take the form:
+  *   name; i.e. Speed;
+  *     or
+  *   name: value; i.e. Pos:feedback val;
+  * Autominous messages:
+  *   Status: feedback val;
+  *   Dbg:msg [arg/arg/arg/ ...]; (coded as required, msg and args are the message text)
+  *   e.g.
+  *     p[0] = fb_val;
+  *     p[1] = last_fb_val;
+  *     debug_print("Pass: ", 2, p);
+  *   Limit:h or x; (not implemented)
   */
+
+  // Extract single character command
   char cmd = data[0];
 
   // There is an issue with the compiler :-
-  // If you declare a variable with a case
+  // If you declare a variable inside a case
   // the code hangs and will never progress 
   // to later cases.
   int ms;
@@ -230,6 +298,8 @@ void process(String data) {
   }
 }
 
+// ******************************************************************
+// Utility functions
 // Parse an int starting at start_at until '.'
 int parse_int(String data, int start_at) {
   int val = 0;
@@ -245,6 +315,7 @@ int parse_int(String data, int start_at) {
   return val;
 }
 
+// Have we been sent an abort
 int check_abort() {
   if (Serial.available() > 0) {
     String data = Serial.readStringUntil(';');
@@ -255,6 +326,7 @@ int check_abort() {
   return FALSE;
 }
 
+// have we seen a stop command
 int check_stop() {
   if (Serial.available() > 0) {
     String data = Serial.readStringUntil(';');
@@ -265,6 +337,7 @@ int check_stop() {
   return FALSE;
 }
 
+// Have we triggered a limit switch
 int check_limit() {
   // Test for end of travel
   last_fb_val = fb_val;
@@ -279,6 +352,8 @@ int check_limit() {
   return FALSE;
 }
 
+// ******************************************************************
+// Execution functions
 // Get current feedback pot value (0-1023)
 int get_feedback_value() {
   return analogRead(POTENTIOMETER_PIN);
@@ -317,9 +392,6 @@ int go_home_or_max(int pos) {
       // Test for end of travel
       last_fb_val = fb_val;
       fb_val = get_feedback_value();
-      //p[0] = fb_val;
-      //p[1] = last_fb_val;
-      //debug_print("Pass: ", 2, p);
       if (((fb_val + 2) >= last_fb_val) && ((fb_val - 2) <= last_fb_val)) {
         // Possibly at end stop
         if (fb_counter-- <= 0) {
@@ -406,10 +478,6 @@ int move_to_feedback_value(int target) {
     md.setM1Speed(0);
     delay(500);
     int diff = abs(get_feedback_value() - target);
-    //p[0] = diff;
-    //p[1] = get_feedback_value();
-    //p[2] = target;
-    //debug_print("Diff1: ", 3, p);
     int l_speed = current_speed;
     if (diff > 1) {
       // More than about 0.2% deviation
@@ -432,10 +500,6 @@ int move_to_feedback_value(int target) {
         }
         move_ms(50, dir);
         diff = abs(get_feedback_value() - target);
-        //p[0] = diff;
-        //p[1] = get_feedback_value();
-        //p[2] = target;
-        //debug_print("Diff2: ", 3, p);
         if (attempts -- <= 0) {
           break;
         }
@@ -477,6 +541,7 @@ int move_ms(int ms, int pos) {
   return TRUE;
 }
 
+// Free move forward
 int move_fwd() {
   int counter = 5;
   // Set the limit switch counter
@@ -500,6 +565,7 @@ int move_fwd() {
   return TRUE;
 }
 
+// Free move reverse
 int move_rev() {
   int counter = 5;
   md.setM1Speed(-current_speed);
@@ -522,11 +588,13 @@ int move_rev() {
   return TRUE;
 }
 
+// Stop free move
 int stop_move() {
   md.setM1Speed(0);
   return TRUE;
 }
 
+// Format and send a debug message
 void debug_print(String msg, int num_args, int args[]) {
   int i;
   Serial.print("Dbg: ");

@@ -40,6 +40,12 @@ MAXIMUM = 'MAXIMUM'
 DEFAULT = 'DEFAULT'
 # Timeout section
 TIMEOUTS = 'TIMEOUTS'
+
+# Limits
+LIMITS = 'LIMITS'
+LIM_1 = 'LIM_1'
+LIM_2 = 'LIM_2'
+LIM_3 = 'LIM_3'
 # Calibration section
 CAL = 'CAL'
 HOME = 'HOME'

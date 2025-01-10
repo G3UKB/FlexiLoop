@@ -45,6 +45,13 @@ flexi_loop_model = {
             SHORT_TIMEOUT: 2,
         },
         CAL: {
+            # Frequency limits each loop
+            # [Low, High]
+            LIMITS: {
+                LIM_1: [None, None],
+                LIM_2: [None, None],
+                LIM_3: [None, None],
+            },
             # Calibration sets for each loop
             # {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
             SETS: {

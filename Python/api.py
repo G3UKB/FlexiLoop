@@ -130,9 +130,9 @@ class API:
     # required these are managed through callbacks to the UI.
     
     # Perform a configure for the feedback system    
-    def configure(self):
+    def configure(self, loop):
         self.logger.info("Configuring potentiometer limits. This may take a while...")
-        self.__c_q.put(('configure', []))
+        self.__c_q.put(('configure', [loop]))
         
     # Perform a calibration for the given loop    
     def calibrate(self, loop, man_cb):
@@ -216,6 +216,10 @@ class API:
     def abort_activity(self):
         self.__s_q.put(('abort', []))
     
+    # VNA
+    def get_resonance(self, start, end):
+        return self.__vna_api.get_vswr(start, end)
+        
     # =========================================================================    
     # Callbacks
     # In general the serial module will callback here when a function completes

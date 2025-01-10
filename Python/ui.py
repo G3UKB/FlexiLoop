@@ -827,7 +827,7 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         # Dispatches on separate thread
-        self.__api.configure()
+        self.__api.configure(self.__selected_loop, )
     
     def __do_pot_del(self):
         # Ask user if they really want to delete the calibration
@@ -1401,7 +1401,15 @@ class UI(QMainWindow):
             self.logger.warn ('In  update tracking pos is not a float [{}]'.format(pos))
             return
         apos = percent_pos_to_analog(self.__model, fpos)
-        r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
+        if self.__model[STATE][VNA][VNA_OPEN]:
+            # We have an active VNA so can ask it where we are
+            l = (LIM_1, LIM_2, LIM_3)
+            start = self.__model[CONGIG][CAL][LIMITS][[l[self.__selected_loop-1]][0]
+            end = self.__model[CONGIG][CAL][LIMITS][[l[self.__selected_loop-1]][1]
+            r, f, swr = get_resonance(start, end)
+        else:
+            # We can only get a good approximation if we are within a frequency set
+            r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
         if r:
             self.__freqval.setText(str(round(f, 4)))
             self.__swrres.setText(str(swr))
