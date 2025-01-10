@@ -116,6 +116,8 @@ class UI(QMainWindow):
         self.__deferred_activity = None
         self.__current_speed = self.__model[STATE][ARDUINO][SPEED]
         self.__aborting = False
+        self.__tracking_update = 8
+        self.__tracking_counter = self.__tracking_update
         # Of form for loops 1-3 [[added, removed, modified],[...],[...]]
         self.__cal_diff = [[],[],[]]
         
@@ -1459,28 +1461,33 @@ class UI(QMainWindow):
     
     def __update_tracking(self, loop, pos):
         # Get current absolute position
-        try:
-           fpos = float(pos)
-        except:
-            self.logger.warn ('In  update tracking pos is not a float [{}]'.format(pos))
-            return
-        apos = percent_pos_to_analog(self.__model, fpos)
-        if self.__model[STATE][VNA][VNA_OPEN]:
-            # We have an active VNA so can ask it where we are
-            l = (LIM_1, LIM_2, LIM_3)
-            start = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][0]
-            end = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][1]
-            if start != None and end != None:
-                r, f, swr = self.__api.get_resonance(start, end)
+        if self.__current_activity == NONE:
+            if self.__tracking_update <= 0:
+                self.__tracking_update = self.__tracking_counter
+                try:
+                   fpos = float(pos)
+                except:
+                    self.logger.warn ('In  update tracking pos is not a float [{}]'.format(pos))
+                    return
+                apos = percent_pos_to_analog(self.__model, fpos)
+                if self.__model[STATE][VNA][VNA_OPEN]:
+                    # We have an active VNA so can ask it where we are
+                    l = (LIM_1, LIM_2, LIM_3)
+                    start = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][0]
+                    end = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][1]
+                    if start != None and end != None:
+                        r, f, swr = self.__api.get_resonance(start, end)
+                    else:
+                        r = False
+                else:
+                    # We can only get a good approximation if we are within a frequency set
+                    r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
+                if r:
+                    self.__freqval.setText(str(round(f, 4)))
+                    self.__swrres.setText(str(swr))
+                else:
+                    self.__freqval.setText('?.?')
+                    self.__swrres.setText('?.?')
             else:
-                r = False
-        else:
-            # We can only get a good approximation if we are within a frequency set
-            r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
-        if r:
-            self.__freqval.setText(str(round(f, 4)))
-            self.__swrres.setText(str(swr))
-        else:
-            self.__freqval.setText('?.?')
-            self.__swrres.setText('?.?')
+                self.__tracking_update -= 1
         
