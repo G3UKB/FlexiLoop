@@ -12,6 +12,7 @@ import serial
 import numpy as np
 import struct
 from serial.tools import list_ports
+import logging
 
 VID = 0x0483 #1155
 PID = 0x5740 #22336
@@ -28,6 +29,9 @@ REF_LEVEL = (1<<9)
 
 class NanoVNA:
     def __init__(self):
+        
+        self.logger = logging.getLogger('root')
+        
         self.serial = None
         self._frequencies = None
         self.points = 101
@@ -45,11 +49,14 @@ class NanoVNA:
         if self.serial is None:
             r, self.dev =  getport()
             if r:
-                self.serial = serial.Serial(self.dev)
+                try:
+                    self.serial = serial.Serial(self.dev)
+                except err:
+                    self.logger.warn("Unable to open VNA {[]}".format(err))
+                    return False                                   
                 return True
             return False
         return True
-            
 
     def close(self):
         if self.serial:

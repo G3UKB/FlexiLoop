@@ -130,9 +130,9 @@ class API:
     # required these are managed through callbacks to the UI.
     
     # Perform a configure for the feedback system    
-    def configure(self, loop):
+    def configure(self):
         self.logger.info("Configuring potentiometer limits. This may take a while...")
-        self.__c_q.put(('configure', [loop]))
+        self.__c_q.put(('configure', []))
         
     # Perform a calibration for the given loop    
     def calibrate(self, loop, man_cb):
@@ -144,6 +144,10 @@ class API:
         self.logger.info("Syncing loop: {}. This may take a while...".format(loop))
         self.__c_q.put(('sync', [loop, man_cb, cal_diff]))
     
+    def set_limits(self, loop, man_cb):
+        self.logger.info("Setting loop limits: {}. This may take a while...".format(loop))
+        self.__c_q.put(('freqlimits', [loop, man_cb)
+        
     # Move to lowest SWR for loop on given frequency
     # This is threaded separately as its long running multiple calls
     def move_to_freq(self, loop, freq):

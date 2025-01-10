@@ -267,6 +267,9 @@ class UI(QMainWindow):
                             self.__loop_status[self.__selected_loop-1] = True
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
+                    elif name == FREQLIMITS:
+                        # Switch mode back to what is was before any change for long running activities
+                        self.__switch_mode = self.__saved_mode
                     elif name == TUNE:
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
@@ -503,6 +506,8 @@ class UI(QMainWindow):
     # Populate loop zone
     def pop_loop(self, grid):
         
+        # ====================================================================
+        # Select section
         looplabel = QLabel('Select Loop')
         grid.addWidget(looplabel, 0, 0)
         self.__loop_sel = QComboBox()
@@ -534,7 +539,23 @@ class UI(QMainWindow):
         s.setLayout(hbox)
         grid.addWidget(s, 0, 2, 1, 2)
         
-        # Calibration
+        self.__span = QPushButton("Set Span")
+        self.__span.setToolTip('Set the upper and lower frequency limits for this loop')
+        grid.addWidget(self.__span, 0, 4)
+        self.__span.clicked.connect(self.__do_span)
+        
+        self.__fminvalue = QLabel('-.-')
+        self.__fminvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__fminvalue.setObjectName("minmax")
+        grid.addWidget(self.__fminvalue, 0, 5)
+        
+        self.__fmaxvalue = QLabel('-.-')
+        self.__fmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
+        self.__fmaxvalue.setObjectName("minmax")
+        grid.addWidget(self.__fmaxvalue, 0, 6)
+        
+        # ====================================================================
+        # Calibration section
         self.__cal = QPushButton("Calibrate...")
         self.__cal.setToolTip('Calibrate for loop...')
         self.__loopgrid.addWidget(self.__cal, 1, 0)
@@ -583,6 +604,7 @@ class UI(QMainWindow):
         sps.setLayout(hbox1)
         grid.addWidget(sps, 2, 1, 1, 3)
         
+        # ====================================================================
         # Manual layout
         self.__manualcal = QGroupBox('Entry')
         manualgrid = QGridLayout()
@@ -654,7 +676,7 @@ class UI(QMainWindow):
         sg_track.setLayout(tracksubgrid)
         grid.addWidget(sg_track, 1,0,1,3)
         
-        tracklabel = QLabel('Tracking (approx)')
+        tracklabel = QLabel('Tracking')
         tracksubgrid.addWidget(tracklabel, 1, 0)
         
         res2label = QLabel('Freq')
@@ -827,7 +849,7 @@ class UI(QMainWindow):
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         # Dispatches on separate thread
-        self.__api.configure(self.__selected_loop, )
+        self.__api.configure()
     
     def __do_pot_del(self):
         # Ask user if they really want to delete the calibration
@@ -870,7 +892,6 @@ class UI(QMainWindow):
             self.__st_act.setText(CALIBRATE)
             self.__do_cal_deferred()
             
-    
     def __do_cal_deferred(self):
         # Do the calibrate sequence
         self.__current_activity = CALIBRATE
@@ -923,6 +944,26 @@ class UI(QMainWindow):
         # This allows setting and navigating setpoints.
         self.__sp_dialog.set_loop(self.__selected_loop)
         self.__sp_dialog.show()
+    
+    def __do_span(self):
+        
+        if self.__relay_state == RADIO:
+            # Switch to ANALYSER, switch back is done in the callback
+            self.__saved_mode = self.__last_switch_mode
+            self.__switch_mode = ANALYSER
+            
+            # This will kick off when the callback from the relay change arrives
+            self.__st_act.setText(FREQLIMITS)
+            self.__deferred_activity = self.__do_span_deferred
+        else:
+            # Already in analyser mode. Just start calibrate run
+            self.__st_act.setText(FREQLIMITS)
+            self.__do_span_deferred()
+            
+    def __do_span_deferred(self):
+        self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
+        self.__long_running = True
+        self.__api.set_limits(self.__selected_loop, self.man_cal_callback)
     
     #=======================================================
     # Manual calibration events
@@ -1404,8 +1445,8 @@ class UI(QMainWindow):
         if self.__model[STATE][VNA][VNA_OPEN]:
             # We have an active VNA so can ask it where we are
             l = (LIM_1, LIM_2, LIM_3)
-            start = self.__model[CONGIG][CAL][LIMITS][[l[self.__selected_loop-1]][0]
-            end = self.__model[CONGIG][CAL][LIMITS][[l[self.__selected_loop-1]][1]
+            start = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][0]
+            end = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][1]
             r, f, swr = get_resonance(start, end)
         else:
             # We can only get a good approximation if we are within a frequency set

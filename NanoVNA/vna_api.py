@@ -60,7 +60,7 @@ class VNAApi:
         if self.__app: self.__model[STATE][VNA][VNA_OPEN] = False
         
     def get_vswr(self, start, end):
-        if self.__app: self.__model[STATE][VNA][VNA_OPEN]:
+        if self.__model[STATE][VNA][VNA_OPEN]:
             # start/stop in MHz
             start_int = int(start*1.0e6)
             end_int = int(end*1.0e6)

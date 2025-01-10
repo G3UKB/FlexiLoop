@@ -41,12 +41,11 @@ DEFAULT = 'DEFAULT'
 # Timeout section
 TIMEOUTS = 'TIMEOUTS'
 
-# Limits
+# Calibration section
 LIMITS = 'LIMITS'
 LIM_1 = 'LIM_1'
 LIM_2 = 'LIM_2'
 LIM_3 = 'LIM_3'
-# Calibration section
 CAL = 'CAL'
 HOME = 'HOME'
 SETS = 'SETS'
@@ -102,6 +101,7 @@ LOOP_3 = 3
 NONE = 'None'
 CALIBRATE = 'Calibrate'
 CONFIGURE = 'Configure'
+FREQLIMITS = 'FreqLimits'
 SPEED = 'Speed'
 HOME = 'Home'
 MAX = 'Max'
