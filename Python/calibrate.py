@@ -242,7 +242,6 @@ class Calibrate(threading.Thread):
     # Set the frequency limits
     def __limits(self, args):
         loop, cb = args
-        print("Set ", loop)
         # If we have a VNA then set the frequency limits
         if self.__model[STATE][VNA][VNA_OPEN]:
             self.__set_limits(loop, 'home', HOME)
@@ -260,7 +259,7 @@ class Calibrate(threading.Thread):
         # Get the freq at this extent
         for x in range(0,3):
             r, f, swr = self.__vna_api.get_vswr(1.8, 30.0)
-            sleep(10)
+            sleep(0.01)
         sec = (LIM_1, LIM_2, LIM_3)
         if resp == HOME:
             self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = f
