@@ -124,7 +124,7 @@ class Calibrate(threading.Thread):
             'configure': self.__configure,
             'calibrate': self.__calibrate,
             'sync': self.__sync,
-            'setlimits': self.__limits,
+            'freqlimits': self.__limits,
         }
         # Execute and return response
         # We need to steal the callback for the comms thread
@@ -141,7 +141,7 @@ class Calibrate(threading.Thread):
         if not r:
             # Calibrate end points
             self.__msg_cb("Configuring potentiometer feedback end points...")
-            r, msg = self.cal_end_points(loop)
+            r, msg = self.cal_end_points()
             if not r:
                 if self.__abort:
                     self.__abort = False
@@ -241,7 +241,8 @@ class Calibrate(threading.Thread):
     
     # Set the frequency limits
     def __limits(self, args):
-        loop = args
+        loop, cb = args
+        print("Set ", loop)
         # If we have a VNA then set the frequency limits
         if self.__model[STATE][VNA][VNA_OPEN]:
             self.__set_limits(loop, 'home', HOME)
@@ -257,12 +258,14 @@ class Calibrate(threading.Thread):
             return False, "Operation aborted!"
         self.__event.clear()
         # Get the freq at this extent
-        r, f, swr = self.__vna_api.get_vswr(1.8, 30.0)
+        for x in range(0,3):
+            r, f, swr = self.__vna_api.get_vswr(1.8, 30.0)
+            sleep(10)
         sec = (LIM_1, LIM_2, LIM_3)
         if resp == HOME:
-            self.__model[CONGIG][CAL][LIMITS][sec[loop-1]][0] = f
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = f
         elif resp == MAX:
-            self.__model[CONGIG][CAL][LIMITS][sec[loop-1]][1] = f
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = f
                     
     # Retrieve feedback end points from model
     def retrieve_end_points(self):

@@ -544,12 +544,19 @@ class UI(QMainWindow):
         grid.addWidget(self.__span, 0, 4)
         self.__span.clicked.connect(self.__do_span)
         
-        self.__fminvalue = QLabel('-.-')
+        minf, maxf = self.__model[CONFIG][CAL][LIMITS][LIM_1]
+        if minf != None:
+            self.__fminvalue = QLabel(str(minf))
+        else:
+            self.__fminvalue = QLabel('-.-')
         self.__fminvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__fminvalue.setObjectName("minmax")
         grid.addWidget(self.__fminvalue, 0, 5)
         
-        self.__fmaxvalue = QLabel('-.-')
+        if maxf != None:
+            self.__fmaxvalue = QLabel(str(maxf))
+        else:
+            self.__fmaxvalue = QLabel('-.-')
         self.__fmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__fmaxvalue.setObjectName("minmax")
         grid.addWidget(self.__fmaxvalue, 0, 6)
@@ -876,6 +883,16 @@ class UI(QMainWindow):
         # Set loop selection needed by the callback as it cant access widgets
         # Index is zero based, loops are 1 based
         self.__selected_loop = index + 1
+        ls = (LIM_1, LIM_2, LIM_3)
+        minf, maxf = self.__model[CONFIG][CAL][LIMITS][ls[index]]
+        if minf != None:
+            self.__fminvalue = QLabel(str(minf))
+        else:
+            self.__fminvalue = QLabel('-.-')
+        if maxf != None:
+            self.__fmaxvalue = QLabel(str(maxf))
+        else:
+            self.__fmaxvalue = QLabel('-.-')
         
     def __do_cal(self):
         
@@ -1377,6 +1394,12 @@ class UI(QMainWindow):
                 self.__cal.setText('Sync...')
             else:
                 self.__cal.setEnabled(False)
+        
+        # Update span enable        
+        if self.__model[STATE][VNA][VNA_OPEN] and (state != W_OFF_LINE or state != W_NO_LIMITS):
+            self.__span.setEnabled(True)
+        else:
+            self.__span.setEnabled(False)
                 
     # All enabled (True) or disabled (False)
     def __enable_disable_feedback(self, state):
@@ -1447,7 +1470,10 @@ class UI(QMainWindow):
             l = (LIM_1, LIM_2, LIM_3)
             start = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][0]
             end = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][1]
-            r, f, swr = get_resonance(start, end)
+            if start != None and end != None:
+                r, f, swr = self.__api.get_resonance(start, end)
+            else:
+                r = False
         else:
             # We can only get a good approximation if we are within a frequency set
             r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
