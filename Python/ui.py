@@ -137,7 +137,7 @@ class UI(QMainWindow):
         # Last saved motor position
         self.__current_pos = self.__model[STATE][ARDUINO][MOTOR_POS]
         self.__fb_pos = self.__model[STATE][ARDUINO][MOTOR_FB]
-        # Flag to initiate a position refresh as SOD
+        # Flag to initiate a position refresh at SOD
         self.__init_pos = True
         # We must wait a little to make sure Arduino has initialised
         self.__init_pos_dly = 10
@@ -892,7 +892,7 @@ class UI(QMainWindow):
         else:
             self.__fminvalue = QLabel('-.-')
         if maxf != None:
-            self.__fmaxvalue = QLabel(str(round(maxf. 1)))
+            self.__fmaxvalue = QLabel(str(round(maxf, 1)))
         else:
             self.__fmaxvalue = QLabel('-.-')
         
@@ -980,6 +980,7 @@ class UI(QMainWindow):
             self.__do_span_deferred()
             
     def __do_span_deferred(self):
+        self.__current_activity = FREQLIMITS
         self.__activity_timer = self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT]*(1000/IDLE_TICKER)
         self.__long_running = True
         self.__api.set_limits(self.__selected_loop, self.man_cal_callback)
@@ -1127,16 +1128,17 @@ class UI(QMainWindow):
                 self.__currpos.setText(str(self.__current_pos) + '%')
                 self.__currposfb.setText(str(self.__fb_pos))
                 # and tracking
-                self.__update_tracking(self.__selected_loop, self.__current_pos)
+                self.__update_tracking(self.__selected_loop, self.__fb_pos)
             # Is this first run after feedback configuration   
             if self.__init_pos and fb_config:
                 self.__init_pos_dly -= 1
                 if self.__init_pos_dly <= 0:
                     self.__init_pos = False
                     # Initialte a get pos so current values reflected at startup
-                    self.__api.get_pos()
-                    self.__current_activity = POS
-                    self.__st_act.setText(POS)
+                    if self.__model[STATE][ARDUINO][MOTOR_POS] == -1:
+                        self.__api.get_pos()
+                        self.__current_activity = POS
+                        self.__st_act.setText(POS)
                  
             # Check activity state
             if self.__current_activity == NONE:
@@ -1464,24 +1466,18 @@ class UI(QMainWindow):
         if self.__current_activity == NONE:
             if self.__tracking_update <= 0:
                 self.__tracking_update = self.__tracking_counter
-                try:
-                   fpos = float(pos)
-                except:
-                    self.logger.warn ('In  update tracking pos is not a float [{}]'.format(pos))
-                    return
-                apos = percent_pos_to_analog(self.__model, fpos)
                 if self.__model[STATE][VNA][VNA_OPEN]:
                     # We have an active VNA so can ask it where we are
-                    l = (LIM_1, LIM_2, LIM_3)
-                    start = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][0]
-                    end = self.__model[CONFIG][CAL][LIMITS][l[self.__selected_loop-1]][1]
+                    lc = (LIM_1, LIM_2, LIM_3)
+                    start = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][0]
+                    end = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][1]
                     if start != None and end != None:
                         r, f, swr = self.__api.get_resonance(start, end)
                     else:
                         r = False
                 else:
                     # We can only get a good approximation if we are within a frequency set
-                    r, msg, (pos, f, swr) = find_from_position(self.__model, loop, apos)
+                    r, msg, (pos, f, swr) = find_from_position(self.__model, loop, pos)
                 if r:
                     self.__freqval.setText(str(round(f, 4)))
                     self.__swrres.setText(str(swr))

@@ -111,7 +111,7 @@ class Calibrate(threading.Thread):
                 # Something went wrong
                 self.__msg_cb('Exception in calibrate: [%s]' % str(e))
                 self.__cb((CONFIGURE, (False, 'Exception in calibrate: [%s]' % str(e), [])))
-                self.logger.fatal('Exception in calibrate: [{}]'.format(e))
+                self.logger.fatal('Exception in calibrate: {}, [{}]'.format(e, traceback.print_exc()))
                 break
         self.logger.info("Calibrate thread exiting...")
     
@@ -182,7 +182,7 @@ class Calibrate(threading.Thread):
                 try:
                     r, msg, cal_map = self.create_map(loop, sets, cal_map)
                 except Exception as e:
-                    print('Calibrate exception {}, [{}]'.format(e, traceback.print_exc()))
+                    self.logger.fatal('Exception in Calibrate {}, [{}]'.format(e, traceback.print_exc()))
                     exit()
                 if not r:
                     if self.__abort:
@@ -222,8 +222,8 @@ class Calibrate(threading.Thread):
             try:
                 r, msg, cal_map = self.create_synced_map(loop, sets, cal_map, cal_diff)
             except Exception as e:
-                print('Calibrate exception {}, [{}]'.format(e, traceback.print_exc()))
-                exit()
+                self.logger.fatal('Exception in Calibrate {}, [{}]'.format(e, traceback.print_exc()))
+                return (CALIBRATE, (False, 'Exception in Calibrate {}'.format(e), cal_map))
             if not r:
                 if self.__abort:
                     self.__abort = False
@@ -244,8 +244,14 @@ class Calibrate(threading.Thread):
         loop, cb = args
         # If we have a VNA then set the frequency limits
         if self.__model[STATE][VNA][VNA_OPEN]:
-            self.__set_limits(loop, 'home', HOME)
-            self.__set_limits(loop, 'max', MAX)
+            try:
+                self.__set_limits(loop, 'home', HOME)
+                self.__set_limits(loop, 'max', MAX)
+            except Exception as e:
+                self.logger.fatal('Exception in Calibrate {}, [{}]'.format(e, traceback.print_exc()))
+                return (FREQLIMITS, (False, 'Exception in Calibrate {}'.format(e), cal_map))
+            self.__msg_cb("Set limits complete", MSG_STATUS)
+            return (FREQLIMITS, (True, "", []))
         
     def __set_limits(self, loop, cmd, resp):
         self.__comms_q.put((cmd, []))
@@ -254,7 +260,7 @@ class Calibrate(threading.Thread):
         self.__event.wait()
         if self.__abort:
             self.__event.clear()
-            return False, "Operation aborted!"
+            return (FREQLIMITS, (False, "Operation aborted!", [])), 
         self.__event.clear()
         # Get the freq at this extent
         for x in range(0,3):

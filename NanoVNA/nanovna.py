@@ -51,8 +51,8 @@ class NanoVNA:
             if r:
                 try:
                     self.serial = serial.Serial(self.dev)
-                except err:
-                    self.logger.warn("Unable to open VNA {[]}".format(err))
+                except Exception as e:
+                    self.logger.warn("Unable to open VNA {}".format(e))
                     return False                                   
                 return True
             return False
