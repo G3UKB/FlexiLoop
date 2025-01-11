@@ -888,13 +888,13 @@ class UI(QMainWindow):
         ls = (LIM_1, LIM_2, LIM_3)
         minf, maxf = self.__model[CONFIG][CAL][LIMITS][ls[index]]
         if minf != None:
-            self.__fminvalue = QLabel(str(round(minf, 1)))
+            self.__fminvalue.setText(str(round(minf, 1)))
         else:
-            self.__fminvalue = QLabel('-.-')
+            self.__fminvalue.setText('-.-')
         if maxf != None:
-            self.__fmaxvalue = QLabel(str(round(maxf, 1)))
+            self.__fmaxvalue.setText(str(round(maxf, 1)))
         else:
-            self.__fmaxvalue = QLabel('-.-')
+            self.__fmaxvalue.setText('-.-')
         
     def __do_cal(self):
         
