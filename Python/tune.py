@@ -85,7 +85,8 @@ class Tune(threading.Thread):
             # Wait until told to execute
             while not self.one_pass:
                 sleep(0.1)
-                if self.term: return
+                if self.term: break
+            if self.term: break
             self.one_pass = False
             
             self.logger.info("Tuning -- this may take a while...")
@@ -98,10 +99,36 @@ class Tune(threading.Thread):
             # Find suitable candidate set
             candidate = find_freq_candidate(sets, self.__freq)
             if candidate == None:
+                # Not within our calibrated ranges
+                if not self.__model[STATE][VNA][VNA_OPEN]:
+                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
+                else:
+                    # We have a VNA so use that
+                    if self.__vna_tune():
+                        self.__cb((TUNE, (True, "", [])))
+                    else:
+                        # No other options
+                        self.__cb((TUNE, (False, "Unable to tune to frequency {} using VNA!".format(self.__freq, []))))
+            
+            # We have a candidate so use that to get close
+            if not self.__interpolate_tune(sets, candidate):
                 self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
-                self.__serial_comms.restore_callback()
-                continue
-            aset = sets[candidate]
+            if self.__model[STATE][VNA][VNA_OPEN]:
+                # Try and get closer
+                if self.__vna_tune():
+                    self.__cb((TUNE, (True, "", [])))
+                else:
+                    # No other options
+                    self.__cb((TUNE, (False, "Unable to get closer to frequency {} using VNA!".format(self.__freq, []))))
+            
+            # Give back callback
+            self.__serial_comms.restore_callback()
+            
+        print("Tune thread  exiting...")
+    
+    # Move to a position that should be close to the tune point
+    def __interpolate_tune(self, sets, candidate):
+        aset = sets[candidate]
             # Find the two points this frequency falls between
             index = 0
             idx_low = -1
@@ -118,7 +145,7 @@ class Tune(threading.Thread):
                 self.__cb((TUNE, (False, "Unable to find a tuning point for frequency %f" % self.__freq, [])))
                 # Give back callback
                 self.__serial_comms.restore_callback()
-                continue
+                return False
             
             # Calculate where between these points the frequency should be
             # Note high is the setting for higher frequency not higher feedback value
@@ -147,16 +174,11 @@ class Tune(threading.Thread):
             self.__wait_for = MOVETO
             self.__event.wait()
             self.__event.clear()
-            
-            # Stage 2 tweak SWR
-            # Its a manual tweak
-            # TBD what can we do here?
-            self.__cb((TUNE, (True, "", [])))
-            # Give back callback
-            self.__serial_comms.restore_callback()
-            
-        print("Tune thread  exiting...")
-              
+            return True
+     
+    def __vna_tune(self):
+        pass
+    
     #=======================================================
     # Stolen Callback for serial comms
     def t_tune_cb(self, data):
