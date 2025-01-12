@@ -2,7 +2,7 @@
 #
 # nano_api.py
 #
-# Specific API function to obtain VSWR
+# Specific API function to obtain frequency and VSWR
 # 
 # Copyright (C) 2025 by G3UKB Bob Cowdery
 # This program is free software; you can redistribute it and/or modify
@@ -38,12 +38,12 @@ except:
 import nanovna
 
 class VNAApi:
-    
     def __init__(self, model, app=True):
         # Get root logger
         self.__app = app
         if self.__app: self.logger = logging.getLogger('root')
         self.__model = model
+            
         # Instantiate driver
         self.__nv = nanovna.NanoVNA()
         
@@ -58,21 +58,16 @@ class VNAApi:
     def close(self):
         self.__nv.close()
         if self.__app: self.__model[STATE][VNA][VNA_OPEN] = False
-        
+    
+    # Get the frequency and VSWR at the resonant point    
     def get_vswr(self, start, end):
-        if self.__model[STATE][VNA][VNA_OPEN]:
-            # start/stop in MHz
-            start_int = int(start*1.0e6)
-            end_int = int(end*1.0e6)
-            # Set the sweep params
-            self.__nv.set_sweep(start_int,end_int)
-            # Ask VNA to fetch the frequency set for the sweep
-            self.__nv.fetch_frequencies()
-            # Get the frequency set
-            f = self.__nv.frequency
-            # Get the VSWR set for the frequency set
-            vswr = self.__nv.vswr(self.__nv.data(0))
-            
+        if self.__app:
+            isopen = self.__model[STATE][VNA][VNA_OPEN]
+        else:
+            isopen = True
+        if isopen:
+            # Get the sets
+            f, vswr = self.__get_sets(start, end)
             # Find lowest VSWR in the set
             low_vswr = 100.0
             low_idx = 0
@@ -87,17 +82,65 @@ class VNAApi:
         
         # Return a tuple of freq and VSWR
         return (True, round((float(f[low_idx]))/1.0e6,3), round(vswr[low_idx], 2))
-       
+    
+    # Get the VSWR as close to the given frequency as we have points
+    def get_freq(self, start, end, target):
+        if self.__app:
+            isopen = self.__model[STATE][VNA][VNA_OPEN]
+        else:
+            isopen = True
+        if isopen:
+            # Get the sets
+            freqs, vswr = self.__get_sets(start, end)
+            # Find the point closest to the given frequency
+            t = int(target*1.0e6)
+            f_diff = -1
+            first = True
+            idx = 0
+            for f in freqs:
+                f = int(f)
+                if first:
+                    first = False
+                    f_diff = f
+                else:
+                    # Better or worse
+                    if f_diff < 0:
+                        # Step too far
+                        break
+                    else:
+                        f_diff = t - f
+                idx += 1
+            return (True, round((float(freqs[idx-1]))/1.0e6,3), round(vswr[idx-1], 2))
+        else:
+            return (False, None, None)
+    
+    # Get the frequency and VSWR sets for the given range   
+    def __get_sets(self, start, end):
+        # start/end in MHz
+        start_int = int(start*1.0e6)
+        end_int = int(end*1.0e6)
+        # Set the sweep params
+        self.__nv.set_sweep(start_int,end_int)
+        # Ask VNA to fetch the frequency set for the sweep
+        self.__nv.fetch_frequencies()
+        # Get the frequency set
+        f = self.__nv.frequency
+        # Get the VSWR set for the frequency set
+        vswr = self.__nv.vswr(self.__nv.data(0))
+        return (f, vswr)
+            
 #======================================================================================================================
 # Test code
-def main(start, end):
+def main(start, end, target):
     api = VNAApi(None, False)
     api.open()
-    f, vswr = api.get_vswr(float(start), float(end))
-    print ('Freq: {}, VSWR: {}'.format(f, vswr))
+    r, f, vswr = api.get_vswr(float(start), float(end))
+    print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
+    r, f, vswr = api.get_freq(float(start), float(end), float(target))
+    print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
     api.close()
     
 # Entry point       
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])
     
