@@ -195,18 +195,39 @@ class Tune(threading.Thread):
             self.__move_to(frac*100.0)
             # See where that got us
             r, f, swr = self.__vna_api.get_vswr(low_f, high_f)
-            self.__get_best_vswr(f, swr)
+            self.__get_best_vswr(low_f, high_f, f, swr)
             return True
     
     # Perform move       
-    def __move_to(self, target):
-        self.__s_q.put(('move', [target]))
+    def __move_to(self, target_pos):
+        self.__s_q.put(('move', [target_pos]))
         self.__wait_for = MOVETO
         self.__event.wait()
         self.__event.clear()
     
     # Algorithm to approach best vswr for the given frequency
-    def __get_best_vswr(self, f, swr):
+    def __get_best_vswr(self, low_f, high_f, pos, f, swr):
+        # How far are we from the target
+        diff = f - self.__freq
+        new_f = f
+        new_pos = pos
+        attempts = 10
+        target_diff = 0.001
+        while math.abs(diff) > target_diff:
+            if diff < 0.0:
+                # Lower than target
+                new_pos -= 1
+                self.__move_to(new_pos)
+            else:
+                # Higher than target
+                new_pos += 1
+                self.__move_to(new_pos)
+            r, new_f, swr = self.__vna_api.get_vswr(low_f, high_f)
+            diff = new_f - self.__freq
+            if attempts <= 0:
+                break
+            else:
+                attempts -= 1
         return True
         
     #=======================================================
