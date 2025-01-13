@@ -47,7 +47,7 @@ VERB = False
 #===================================================== 
 class Tune(threading.Thread):
     
-    def __init__(self, model, serial, s_q, cb):
+    def __init__(self, model, serial, s_q, vna_api, cb):
         super(Tune, self).__init__()
         
         # Get root logger
@@ -57,6 +57,7 @@ class Tune(threading.Thread):
         self.__model = model
         self.__serial_comms = serial
         self.__s_q = s_q
+        self.__vna_api = vna_api
         self.__cb = cb
         
         # Instance vars
@@ -100,22 +101,22 @@ class Tune(threading.Thread):
             candidate = find_freq_candidate(sets, self.__freq)
             if candidate == None:
                 # Not within our calibrated ranges
-                if not self.__model[STATE][VNA][VNA_OPEN]:
-                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
-                else:
+                if self.__model[STATE][VNA][VNA_OPEN]:
                     # We have a VNA so use that
-                    if self.__vna_tune():
+                    if self.__vna_tune(WIDE_TUNE):
                         self.__cb((TUNE, (True, "", [])))
                     else:
                         # No other options
                         self.__cb((TUNE, (False, "Unable to tune to frequency {} using VNA!".format(self.__freq, []))))
+                else:
+                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
             
             # We have a candidate so use that to get close
             if not self.__interpolate_tune(sets, candidate):
                 self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
             if self.__model[STATE][VNA][VNA_OPEN]:
                 # Try and get closer
-                if self.__vna_tune():
+                if self.__vna_tune(CLOSE_TUNE):
                     self.__cb((TUNE, (True, "", [])))
                 else:
                     # No other options
@@ -129,56 +130,85 @@ class Tune(threading.Thread):
     # Move to a position that should be close to the tune point
     def __interpolate_tune(self, sets, candidate):
         aset = sets[candidate]
-            # Find the two points this frequency falls between
-            index = 0
-            idx_low = -1
-            idx_high = -1
-            for ft in aset:
-                if ft[1] <= self.__freq:
-                    # Lower than target
-                    idx_high = index+1 
-                    idx_low = index
-                elif ft[1] >= self.__freq:
-                    break
-                index+=1
-            if idx_high == -1 or idx_low == -1:
-                self.__cb((TUNE, (False, "Unable to find a tuning point for frequency %f" % self.__freq, [])))
-                # Give back callback
-                self.__serial_comms.restore_callback()
-                return False
-            
-            # Calculate where between these points the frequency should be
-            # Note high is the setting for higher frequency not higher feedback value
-            # Same for low
-            #
-            # The feedback values and frequencies above and below the required frequency
-            if idx_high == len(aset):
-                # We are on last entry
-                fb_low = aset[idx_low][0]
-                target_pos = fb_low
-            else:
-                fb_high = aset[idx_high][0]
-                fb_low = aset[idx_low][0]
-                frq_high = aset[idx_high][1]
-                frq_low = aset[idx_low][1]
-                # We now need to calculate the feedback value for the required frequency
-                frq_span = frq_high - frq_low
-                frq_inc = self.__freq - frq_low
-                frq_frac = frq_inc/frq_span
-                fb_span = fb_low - fb_high
-                fb_frac = frq_frac * fb_span
-                target_pos = fb_low - fb_frac
-            
-            # We now have a position to move to
-            self.__s_q.put(('move', [target_pos]))
-            self.__wait_for = MOVETO
-            self.__event.wait()
-            self.__event.clear()
-            return True
-     
-    def __vna_tune(self):
-        pass
+        # Find the two points this frequency falls between
+        index = 0
+        idx_low = -1
+        idx_high = -1
+        for ft in aset:
+            if ft[1] <= self.__freq:
+                # Lower than target
+                idx_high = index+1 
+                idx_low = index
+            elif ft[1] >= self.__freq:
+                break
+            index+=1
+        if idx_high == -1 or idx_low == -1:
+            self.__cb((TUNE, (False, "Unable to find a tuning point for frequency %f" % self.__freq, [])))
+            # Give back callback
+            self.__serial_comms.restore_callback()
+            return False
+        
+        # Calculate where between these points the frequency should be
+        # Note high is the setting for higher frequency not higher feedback value
+        # Same for low
+        #
+        # The feedback values and frequencies above and below the required frequency
+        if idx_high == len(aset):
+            # We are on last entry
+            fb_low = aset[idx_low][0]
+            target_pos = fb_low
+        else:
+            fb_high = aset[idx_high][0]
+            fb_low = aset[idx_low][0]
+            frq_high = aset[idx_high][1]
+            frq_low = aset[idx_low][1]
+            # We now need to calculate the feedback value for the required frequency
+            frq_span = frq_high - frq_low
+            frq_inc = self.__freq - frq_low
+            frq_frac = frq_inc/frq_span
+            fb_span = fb_low - fb_high
+            fb_frac = frq_frac * fb_span
+            target_pos = fb_low - fb_frac
+        
+        # We now have a position to move to
+        self.__move_to(target_pos)
+        return True
     
+    # Move to best position using VNA 
+    def __vna_tune(self, context):
+        # Get loop limits
+        sec = (LIM_1, LIM_2, LIM_3)
+        low_f, high_f = self.__model[CONFIG][CAL][LIMITS][sec[self.__loop-1]]
+        
+        if context == CLOSE_TUNE:
+            # We should be almost there
+            r, f, swr = self.__vna_api.get_vswr(low_f, high_f)
+            return self.__get_best_vswr(f, swr)
+        else:
+            # We could be anywhere in relation to the frequency.
+            # Assume the freq distribution is approx linear.
+            span = high_f - low_f
+            frac = (self.__freq - low_f)/ span
+            if frac < 0.0 or frac > 1.0:
+                # Not within this loop
+                return False
+            self.__move_to(frac*100.0)
+            # See where that got us
+            r, f, swr = self.__vna_api.get_vswr(low_f, high_f)
+            self.__get_best_vswr(f, swr)
+            return True
+    
+    # Perform move       
+    def __move_to(self, target):
+        self.__s_q.put(('move', [target]))
+        self.__wait_for = MOVETO
+        self.__event.wait()
+        self.__event.clear()
+    
+    # Algorithm to approach best vswr for the given frequency
+    def __get_best_vswr(self, f, swr):
+        return True
+        
     #=======================================================
     # Stolen Callback for serial comms
     def t_tune_cb(self, data):

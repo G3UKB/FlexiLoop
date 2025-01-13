@@ -80,6 +80,8 @@ MOTOR_FB = 'MOTOR_FB'
 VNA = 'VNA'
 VNA_ENABLED = 'VNA_ENABLED'
 VNA_OPEN = 'VNA_OPEN'
+WIDE_TUNE = 'WIDE_TUNE'
+CLOSE_TUNE = 'CLOSE_TUNE'
 
 #=======================================================================
 # User Interface, Calibrate and Tuning
