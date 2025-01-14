@@ -137,6 +137,7 @@ class UI(QMainWindow):
         # Last saved motor position
         self.__current_pos = self.__model[STATE][ARDUINO][MOTOR_POS]
         self.__fb_pos = self.__model[STATE][ARDUINO][MOTOR_FB]
+        self.__moved = True
         # Flag to initiate a position refresh at SOD
         self.__init_pos = True
         # We must wait a little to make sure Arduino has initialised
@@ -261,6 +262,7 @@ class UI(QMainWindow):
                         # Update position
                         self.__current_pos = args[0]
                         self.__fb_pos = args[1]
+                        self.__moved = True
                     elif name == CONFIGURE:
                         pass
                     elif name == CALIBRATE:
@@ -289,6 +291,7 @@ class UI(QMainWindow):
                 # We expect status at any time
                 self.__current_pos = args[0]
                 self.__fb_pos = args[1]
+                self.__moved = True
                 self.__model[STATE][ARDUINO][MOTOR_POS] = float(self.__current_pos)
                 self.__model[STATE][ARDUINO][MOTOR_FB] = float(self.__fb_pos)
             elif name == LIMIT:
@@ -1128,7 +1131,13 @@ class UI(QMainWindow):
                 self.__currpos.setText(str(self.__current_pos) + '%')
                 self.__currposfb.setText(str(self.__fb_pos))
                 # and tracking
-                self.__update_tracking(self.__selected_loop, self.__fb_pos)
+                if self.__moved and self.__current_activity == NONE:
+                    if self.__tracking_update <= 0:
+                        self.__tracking_update = self.__tracking_counter
+                        self.__moved = False
+                        self.__update_tracking(self.__selected_loop, self.__fb_pos)
+                    else:
+                        self.__tracking_update -= 1
             # Is this first run after feedback configuration   
             if self.__init_pos and fb_config:
                 self.__init_pos_dly -= 1
@@ -1331,7 +1340,10 @@ class UI(QMainWindow):
                 self.__enable_disable_loop(False)
                 self.__cal.setEnabled(True)
                 self.__loop_sel.setEnabled(True)
-                self.__enable_disable_auto(False)
+                if self.__model[STATE][VNA][VNA_OPEN]:
+                    self.__enable_disable_auto(True)
+                else:
+                    self.__enable_disable_auto(False)
                 self.__enable_disable_manual(True)
                 self.__stopact.setEnabled(False)
             elif state == W_CALIBRATED:
@@ -1463,27 +1475,23 @@ class UI(QMainWindow):
     
     def __update_tracking(self, loop, pos):
         # Get current absolute position
-        if self.__current_activity == NONE:
-            if self.__tracking_update <= 0:
-                self.__tracking_update = self.__tracking_counter
-                if self.__model[STATE][VNA][VNA_OPEN]:
-                    # We have an active VNA so can ask it where we are
-                    lc = (LIM_1, LIM_2, LIM_3)
-                    start = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][0]
-                    end = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][1]
-                    if start != None and end != None:
-                        r, f, swr = self.__api.get_resonance(start, end)
-                    else:
-                        r = False
-                else:
-                    # We can only get a good approximation if we are within a frequency set
-                    r, msg, (pos, f, swr) = find_from_position(self.__model, loop, pos)
-                if r:
-                    self.__freqval.setText(str(round(f, 4)))
-                    self.__swrres.setText(str(swr))
-                else:
-                    self.__freqval.setText('?.?')
-                    self.__swrres.setText('?.?')
+        if self.__model[STATE][VNA][VNA_OPEN]:
+            # We have an active VNA so can ask it where we are
+            lc = (LIM_1, LIM_2, LIM_3)
+            start = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][0]
+            end = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][1]
+            if start != None and end != None:
+                r, f, swr = self.__api.get_resonance(start, end)
             else:
-                self.__tracking_update -= 1
+                r = False
+        else:
+            # We can only get a good approximation if we are within a frequency set
+            r, msg, (pos, f, swr) = find_from_position(self.__model, loop, pos)
+        if r:
+            self.__freqval.setText(str(round(f, 4)))
+            self.__swrres.setText(str(swr))
+        else:
+            self.__freqval.setText('?.?')
+            self.__swrres.setText('?.?')
+
         

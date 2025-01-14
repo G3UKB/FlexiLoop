@@ -39,7 +39,7 @@ from defs import *
 VERB = True
 
 # Pause at end of processing SLEEP_TIMER secs
-SLEEP_TIMER = 0.02
+SLEEP_TIMER = 0.1
 
 #=====================================================
 # Manage all serial comms to the Arduino
@@ -100,7 +100,6 @@ class SerialComms(threading.Thread):
         global VERB
         self.logger.info("Running...")
         while not self.term:
-            
             # Heartbeat
             self.__heartbeat -= 1
             if self.__heartbeat <= 0:

@@ -30,6 +30,7 @@ import queue
 import threading
 import traceback
 import logging
+import math
 
 # Application imports
 from defs import *
@@ -103,25 +104,26 @@ class Tune(threading.Thread):
                 # Not within our calibrated ranges
                 if self.__model[STATE][VNA][VNA_OPEN]:
                     # We have a VNA so use that
-                    if self.__vna_tune(WIDE_TUNE):
+                    if self.__vna_tune(WIDE_TUNE, None):
                         self.__cb((TUNE, (True, "", [])))
                     else:
                         # No other options
-                        self.__cb((TUNE, (False, "Unable to tune to frequency {} using VNA!".format(self.__freq, []))))
+                        self.__cb((TUNE, (False, "Unable to tune to frequency {} using VNA!".format(self.__freq), [])))
                 else:
-                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
-            
-            # We have a candidate so use that to get close
-            if not self.__interpolate_tune(sets, candidate):
-                self.__cb((TUNE, (False, "Unable to find a candidate set for frequency %f" % self.__freq, [])))
-            if self.__model[STATE][VNA][VNA_OPEN]:
-                # Try and get closer
-                if self.__vna_tune(CLOSE_TUNE):
-                    self.__cb((TUNE, (True, "", [])))
-                else:
-                    # No other options
-                    self.__cb((TUNE, (False, "Unable to get closer to frequency {} using VNA!".format(self.__freq, []))))
-            
+                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency {}".format(self.__freq), [])))
+            else:
+                # We have a candidate so use that to get close
+                r, pos = self.__interpolate_tune(sets, candidate)
+                if not r:
+                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency {}".format(self.__freq), [])))
+                if self.__model[STATE][VNA][VNA_OPEN]:
+                    # Try and get closer
+                    if self.__vna_tune(CLOSE_TUNE, pos):
+                        self.__cb((TUNE, (True, "", [])))
+                    else:
+                        # No other options
+                        self.__cb((TUNE, (False, "Unable to get closer to frequency {} using VNA!".format(self.__freq), [])))
+                
             # Give back callback
             self.__serial_comms.restore_callback()
             
@@ -146,7 +148,7 @@ class Tune(threading.Thread):
             self.__cb((TUNE, (False, "Unable to find a tuning point for frequency %f" % self.__freq, [])))
             # Give back callback
             self.__serial_comms.restore_callback()
-            return False
+            return False, None
         
         # Calculate where between these points the frequency should be
         # Note high is the setting for higher frequency not higher feedback value
@@ -172,10 +174,10 @@ class Tune(threading.Thread):
         
         # We now have a position to move to
         self.__move_to(target_pos)
-        return True
+        return True, target_pos
     
     # Move to best position using VNA 
-    def __vna_tune(self, context):
+    def __vna_tune(self, context, pos):
         # Get loop limits
         sec = (LIM_1, LIM_2, LIM_3)
         low_f, high_f = self.__model[CONFIG][CAL][LIMITS][sec[self.__loop-1]]
@@ -183,7 +185,7 @@ class Tune(threading.Thread):
         if context == CLOSE_TUNE:
             # We should be almost there
             r, f, swr = self.__vna_api.get_vswr(low_f, high_f)
-            return self.__get_best_vswr(f, swr)
+            return self.__get_best_vswr(low_f, high_f, pos, f, swr)
         else:
             # We could be anywhere in relation to the frequency.
             # Assume the freq distribution is approx linear.
@@ -192,10 +194,11 @@ class Tune(threading.Thread):
             if frac < 0.0 or frac > 1.0:
                 # Not within this loop
                 return False
-            self.__move_to(frac*100.0)
+            new_pos = percent_pos_to_analog(self.__model, round(frac*100.0, 3))
+            self.__move_to(new_pos)
             # See where that got us
             r, f, swr = self.__vna_api.get_vswr(low_f, high_f)
-            self.__get_best_vswr(low_f, high_f, f, swr)
+            self.__get_best_vswr(low_f, high_f, new_pos, f, swr)
             return True
     
     # Perform move       
@@ -213,7 +216,7 @@ class Tune(threading.Thread):
         new_pos = pos
         attempts = 10
         target_diff = 0.001
-        while math.abs(diff) > target_diff:
+        while abs(diff) > target_diff:
             if diff < 0.0:
                 # Lower than target
                 new_pos -= 1
