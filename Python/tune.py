@@ -211,23 +211,27 @@ class Tune(threading.Thread):
     # Algorithm to approach best vswr for the given frequency
     def __get_best_vswr(self, low_f, high_f, pos, f, swr):
         # How far are we from the target
-        diff = f - self.__freq
+        diff = round(f - self.__freq, 3)
         new_f = f
         new_pos = pos
         attempts = 10
-        target_diff = 0.001
+        target_diff = 0.01
+        inc = int(abs(diff)*10)
         while abs(diff) > target_diff:
             if diff < 0.0:
                 # Lower than target
-                new_pos -= 1
+                new_pos -= inc
                 self.__move_to(new_pos)
             else:
                 # Higher than target
-                new_pos += 1
+                new_pos += inc
                 self.__move_to(new_pos)
             r, new_f, swr = self.__vna_api.get_vswr(low_f, high_f)
-            diff = new_f - self.__freq
-            if attempts <= 0:
+            diff = round(new_f - self.__freq, 3)
+            inc = int(abs(diff)*10)
+            
+            # Check termination conditions
+            if inc == 0 or abs(diff) <= target_diff or attempts <= 0:
                 break
             else:
                 attempts -= 1
