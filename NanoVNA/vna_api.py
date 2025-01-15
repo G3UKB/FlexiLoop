@@ -134,9 +134,13 @@ class VNAApi:
 def main(start, end, target):
     api = VNAApi(None, False)
     api.open()
-    r, f, vswr = api.get_vswr(float(start), float(end))
+    for n in range (3): 
+        r, f, vswr = api.get_vswr(float(start), float(end))
+        sleep(0.1)
     print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
-    r, f, vswr = api.get_freq(float(start), float(end), float(target))
+    for n in range (3): 
+        r, f, vswr = api.get_freq(float(start), float(end), float(target))
+        sleep(0.1)
     print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
     api.close()
     
