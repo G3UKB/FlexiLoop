@@ -66,22 +66,36 @@ class VNAApi:
         else:
             isopen = True
         if isopen:
-            # Get the sets
-            f, vswr = self.__get_sets(start, end)
-            # Find lowest VSWR in the set
-            low_vswr = 100.0
-            low_idx = 0
-            idx = 0
-            for pt in vswr:
-                if pt < low_vswr:
-                    low_vswr = pt
-                    low_idx = idx
-                idx += 1
+            last_f = 0.0
+            count = 2
+            while True:
+                # Get the sets
+                f, vswr = self.__get_sets(start, end)
+                # Find lowest VSWR in the set
+                low_vswr = 100.0
+                low_idx = 0
+                idx = 0
+                for pt in vswr:
+                    if pt < low_vswr:
+                        low_vswr = pt
+                        low_idx = idx
+                    idx += 1
+                new_f = round((float(f[low_idx]))/1.0e6,3)
+                new_swr =  round(vswr[low_idx], 2)
+            
+                if last_f == 0.0:
+                    last_f = new_f
+                else:
+                    if new_f == last_f:
+                        if count <= 0:
+                            return (True, new_f, new_swr)
+                        else:
+                            count -= 1
+                    else:
+                        last_f = new_f
+                        sleep(0.1)
         else:
             return (False, None, None)
-        
-        # Return a tuple of freq and VSWR
-        return (True, round((float(f[low_idx]))/1.0e6,3), round(vswr[low_idx], 2))
     
     # Get the VSWR as close to the given frequency as we have points
     def get_freq(self, start, end, target):
@@ -90,28 +104,37 @@ class VNAApi:
         else:
             isopen = True
         if isopen:
-            # Get the sets
-            freqs, vswr = self.__get_sets(start, end)
-            print(freqs, vswr )
-            # Find the point closest to the given frequency
-            t = int(target*1.0e6)
-            f_diff = -1
-            first = True
-            idx = 0
-            for f in freqs:
-                f = int(f)
-                if first:
-                    first = False
-                    f_diff = f
-                else:
-                    # Better or worse
-                    if f_diff < 0:
-                        # Step too far
-                        break
+            last_f = 0.0
+            while True:
+                # Get the sets
+                freqs, vswr = self.__get_sets(start, end)
+                # Find the point closest to the given frequency
+                t = int(target*1.0e6)
+                f_diff = -1
+                first = True
+                idx = 0
+                for f in freqs:
+                    f = int(f)
+                    if first:
+                        first = False
+                        f_diff = f
                     else:
-                        f_diff = t - f
-                idx += 1
-            return (True, round((float(freqs[idx-1]))/1.0e6,3), round(vswr[idx-1], 2))
+                        # Better or worse
+                        if f_diff < 0:
+                            # Step too far
+                            break
+                        else:
+                            f_diff = t - f
+                    idx += 1
+                new_f = round((float(freqs[idx-1]))/1.0e6,3)
+                new_swr =  round(vswr[idx-1], 2)
+                if last_f == 0.0:
+                    last_f = new_f
+                else:
+                    if new_f == last_f:
+                       return (True, new_f, new_swr)
+                    else:
+                       last_f = new_f
         else:
             return (False, None, None)
     
@@ -134,16 +157,15 @@ class VNAApi:
 # Test code
 def main(start, end, target):
     api = VNAApi(None, False)
-    api.open()
-    for n in range (3): 
+    if api.open():
+        sleep(0.5)
         r, f, vswr = api.get_vswr(float(start), float(end))
-        sleep(0.1)
-    print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
-    for n in range (3): 
-        r, f, vswr = api.get_freq(float(start), float(end), float(target))
-        sleep(0.1)
-    print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
-    api.close()
+        print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
+        #r, f, vswr = api.get_freq(float(start), float(end), float(target))
+        #print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
+        api.close()
+    else:
+        print('Open error!')
     
 # Entry point       
 if __name__ == '__main__':

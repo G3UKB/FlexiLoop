@@ -263,12 +263,9 @@ class Calibrate(threading.Thread):
             return (FREQLIMITS, (False, "Operation aborted!", [])), 
         self.__event.clear()
         # Get the freq at this extent
-        for x in range(0,3):
-            # We don't kn ow what this loop covers so wide scan
-            r, f, swr = self.__vna_api.get_vswr(3.5, 30.0)
-            sleep(0.2)
+        # We don't kn ow what this loop covers so wide scan
+        r, f, swr = self.__vna_api.get_vswr(3.5, 30.0)
         sec = (LIM_1, LIM_2, LIM_3)
-        
         # Give it a little breathing space each side on max and min
         if resp == HOME:
             self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = f + 1.0

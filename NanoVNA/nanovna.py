@@ -64,7 +64,6 @@ class NanoVNA:
         self.serial = None
 
     def send_command(self, cmd):
-        self.open()
         self.serial.write(cmd.encode())
         self.serial.readline() # discard empty line
 
