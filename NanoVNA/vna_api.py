@@ -92,6 +92,7 @@ class VNAApi:
         if isopen:
             # Get the sets
             freqs, vswr = self.__get_sets(start, end)
+            print(freqs, vswr )
             # Find the point closest to the given frequency
             t = int(target*1.0e6)
             f_diff = -1

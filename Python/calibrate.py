@@ -249,7 +249,7 @@ class Calibrate(threading.Thread):
                 self.__set_limits(loop, 'max', MAX)
             except Exception as e:
                 self.logger.fatal('Exception in Calibrate {}, [{}]'.format(e, traceback.print_exc()))
-                return (FREQLIMITS, (False, 'Exception in Calibrate {}'.format(e), cal_map))
+                return (FREQLIMITS, (False, 'Exception in Calibrate {}'.format(e), []))
             self.__msg_cb("Set limits complete", MSG_STATUS)
             return (FREQLIMITS, (True, "", []))
         

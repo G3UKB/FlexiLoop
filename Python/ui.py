@@ -1218,6 +1218,18 @@ class UI(QMainWindow):
             self.__potminvalue.setText('-')
             self.__potmaxvalue.setText('-')
         
+        # Update freq limits
+        ls = (LIM_1, LIM_2, LIM_3)
+        minf, maxf = self.__model[CONFIG][CAL][LIMITS][ls[self.__selected_loop-1]]
+        if minf != None:
+            self.__fminvalue.setText(str(round(minf, 1)))
+        else:
+            self.__fminvalue.setText('-.-')
+        if maxf != None:
+            self.__fmaxvalue.setText(str(round(maxf, 1)))
+        else:
+            self.__fmaxvalue.setText('-.-')
+        
         # Update VNA flag
         if self.__model[CONFIG][VNA][VNA_ENABLED]:
             if not self.__model[STATE][VNA][VNA_OPEN]:
