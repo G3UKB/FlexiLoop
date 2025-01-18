@@ -66,8 +66,6 @@ class VNAApi:
         else:
             isopen = True
         if isopen:
-            last_f = 0.0
-            count = 2
             while True:
                 # Get the sets
                 f, vswr = self.__get_sets(start, end)
@@ -82,18 +80,7 @@ class VNAApi:
                     idx += 1
                 new_f = round((float(f[low_idx]))/1.0e6,3)
                 new_swr =  round(vswr[low_idx], 2)
-            
-                if last_f == 0.0:
-                    last_f = new_f
-                else:
-                    if new_f == last_f:
-                        if count <= 0:
-                            return (True, new_f, new_swr)
-                        else:
-                            count -= 1
-                    else:
-                        last_f = new_f
-                        sleep(0.1)
+                return (True, new_f, new_swr)
         else:
             return (False, None, None)
     
@@ -104,7 +91,6 @@ class VNAApi:
         else:
             isopen = True
         if isopen:
-            last_f = 0.0
             while True:
                 # Get the sets
                 freqs, vswr = self.__get_sets(start, end)
@@ -128,13 +114,7 @@ class VNAApi:
                     idx += 1
                 new_f = round((float(freqs[idx-1]))/1.0e6,3)
                 new_swr =  round(vswr[idx-1], 2)
-                if last_f == 0.0:
-                    last_f = new_f
-                else:
-                    if new_f == last_f:
-                       return (True, new_f, new_swr)
-                    else:
-                       last_f = new_f
+                return (True, new_f, new_swr)
         else:
             return (False, None, None)
     
@@ -143,8 +123,9 @@ class VNAApi:
         # start/end in MHz
         start_int = int(start*1.0e6)
         end_int = int(end*1.0e6)
+        
         # Set the sweep params
-        self.__nv.set_sweep(start_int,end_int)
+        self.__nv.send_scan(start_int,end_int,101)
         # Ask VNA to fetch the frequency set for the sweep
         self.__nv.fetch_frequencies()
         # Get the frequency set
@@ -158,14 +139,11 @@ class VNAApi:
 def main(start, end, target):
     api = VNAApi(None, False)
     if api.open():
-        sleep(0.5)
         r, f, vswr = api.get_vswr(float(start), float(end))
         print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
-        #r, f, vswr = api.get_freq(float(start), float(end), float(target))
-        #print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
+        r, f, vswr = api.get_freq(float(start), float(end), float(target))
+        print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
         api.close()
-    else:
-        print('Open error!')
     
 # Entry point       
 if __name__ == '__main__':
