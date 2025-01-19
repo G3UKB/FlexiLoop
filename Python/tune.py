@@ -212,17 +212,23 @@ class Tune(threading.Thread):
     def __get_best_vswr(self, low_f, high_f, pos, f, swr):
         # How far are we from the target
         # We wnat to limit the span to around the required frequency
-        new_low_f = f - 1.0
-        new_high_f = f + 1.0
+        # modified by how far away we are
+        diff = round(f - self.__freq, 3)
+        if diff < 0.0:
+            new_low_f = f - diff - 1.0
+        else:
+            new_high_f = f + diff + 1.0
         if new_low_f < low_f: new_low_f = low_f
         if new_high_f > high_f: new_high_f = high_f
-        diff = round(f - self.__freq, 3)
         new_f = f
         new_pos = pos
         attempts = 10
+        # We really want to get within 10KHz
         target_diff = 0.01
+        # Move increment depending on how far away we are
         inc = int(abs(diff)*10)
-        while abs(diff) > target_diff:
+        # Loop until exit condition is met
+        while True:
             if diff < 0.0:
                 # Lower than target
                 new_pos -= inc
@@ -231,9 +237,16 @@ class Tune(threading.Thread):
                 # Higher than target
                 new_pos += inc
                 self.__move_to(new_pos)
-            r, new_f, swr = self.__vna_api.get_vswr(low_f, high_f)
+            # Test again
+            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f)
             diff = round(new_f - self.__freq, 3)
             inc = int(abs(diff)*10)
+            
+            # See if we can close up the scan
+            if diff < 0.0:
+                new_low_f = new_f - diff - 1.0
+            else:
+                new_high_f = new_f + diff + 1.0
             
             # Check termination conditions
             if inc == 0 or abs(diff) <= target_diff or attempts <= 0:
