@@ -60,7 +60,7 @@ class VNAApi:
         if self.__app: self.__model[STATE][VNA][VNA_OPEN] = False
     
     # Get the frequency and VSWR at the resonant point    
-    def get_vswr(self, start, end):
+    def get_vswr(self, start, end, steps = 101):
         if self.__app:
             isopen = self.__model[STATE][VNA][VNA_OPEN]
         else:
@@ -68,7 +68,7 @@ class VNAApi:
         if isopen:
             while True:
                 # Get the sets
-                f, vswr = self.__get_sets(start, end)
+                f, vswr = self.__get_sets(start, end, steps)
                 # Find lowest VSWR in the set
                 low_vswr = 100.0
                 low_idx = 0
@@ -85,7 +85,7 @@ class VNAApi:
             return (False, None, None)
     
     # Get the VSWR as close to the given frequency as we have points
-    def get_freq(self, start, end, target):
+    def get_freq(self, start, end, target, steps = 101):
         if self.__app:
             isopen = self.__model[STATE][VNA][VNA_OPEN]
         else:
@@ -93,7 +93,7 @@ class VNAApi:
         if isopen:
             while True:
                 # Get the sets
-                freqs, vswr = self.__get_sets(start, end)
+                freqs, vswr = self.__get_sets(start, end, steps)
                 # Find the point closest to the given frequency
                 t = int(target*1.0e6)
                 f_diff = -1
@@ -119,13 +119,13 @@ class VNAApi:
             return (False, None, None)
     
     # Get the frequency and VSWR sets for the given range   
-    def __get_sets(self, start, end):
+    def __get_sets(self, start, end, steps):
         # start/end in MHz
         start_int = int(start*1.0e6)
         end_int = int(end*1.0e6)
         
         # Set the sweep params
-        self.__nv.send_scan(start_int,end_int,101)
+        self.__nv.send_scan(start_int,end_int,steps)
         # Ask VNA to fetch the frequency set for the sweep
         self.__nv.fetch_frequencies()
         # Get the frequency set

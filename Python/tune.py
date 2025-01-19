@@ -211,6 +211,11 @@ class Tune(threading.Thread):
     # Algorithm to approach best vswr for the given frequency
     def __get_best_vswr(self, low_f, high_f, pos, f, swr):
         # How far are we from the target
+        # We wnat to limit the span to around the required frequency
+        new_low_f = f - 1.0
+        new_high_f = f + 1.0
+        if new_low_f < low_f: new_low_f = low_f
+        if new_high_f > high_f: new_high_f = high_f
         diff = round(f - self.__freq, 3)
         new_f = f
         new_pos = pos
