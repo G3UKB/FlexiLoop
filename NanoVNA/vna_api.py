@@ -125,7 +125,7 @@ class VNAApi:
         end_int = int(end*1.0e6)
         
         # Set the sweep params
-        self.__nv.send_scan(start_int,end_int,steps)
+        self.__nv.send_scan(start_int, end_int, steps)
         # Ask VNA to fetch the frequency set for the sweep
         self.__nv.fetch_frequencies()
         # Get the frequency set

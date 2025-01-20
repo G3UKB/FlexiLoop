@@ -190,7 +190,8 @@ class Tune(threading.Thread):
             # We could be anywhere in relation to the frequency.
             # Assume the freq distribution is approx linear.
             span = high_f - low_f
-            frac = (self.__freq - low_f)/ span
+            #frac = (self.__freq - low_f)/ span
+            frac = (high_f - self.__freq)/ span
             if frac < 0.0 or frac > 1.0:
                 # Not within this loop
                 return False
@@ -213,11 +214,13 @@ class Tune(threading.Thread):
         # How far are we from the target
         # We wnat to limit the span to around the required frequency
         # modified by how far away we are
+        new_low_f = low_f
+        new_high_f = high_f
         diff = round(f - self.__freq, 3)
         if diff < 0.0:
-            new_low_f = f - diff - 1.0
+            new_low_f = self.__freq - diff - 1.0
         else:
-            new_high_f = f + diff + 1.0
+            new_high_f = self.__freq + diff + 1.0
         if new_low_f < low_f: new_low_f = low_f
         if new_high_f > high_f: new_high_f = high_f
         new_f = f
@@ -244,9 +247,9 @@ class Tune(threading.Thread):
             
             # See if we can close up the scan
             if diff < 0.0:
-                new_low_f = new_f - diff - 1.0
+                new_low_f = self.__freq - diff - 1.0
             else:
-                new_high_f = new_f + diff + 1.0
+                new_high_f = self.__freq + diff + 1.0
             
             # Check termination conditions
             if inc == 0 or abs(diff) <= target_diff or attempts <= 0:

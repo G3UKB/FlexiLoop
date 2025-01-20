@@ -558,14 +558,20 @@ class UI(QMainWindow):
         self.__fminvalue.setObjectName("minmax")
         grid.addWidget(self.__fminvalue, 0, 5)
         
+        mhz = QLabel('MHz - ')
+        grid.addWidget(mhz, 0, 6)
+        
         if maxf != None:
             self.__fmaxvalue = QLabel(str(round(maxf, 1)))
         else:
             self.__fmaxvalue = QLabel('-.-')
         self.__fmaxvalue.setAlignment(QtCore.Qt.AlignCenter)
         self.__fmaxvalue.setObjectName("minmax")
-        grid.addWidget(self.__fmaxvalue, 0, 6)
+        grid.addWidget(self.__fmaxvalue, 0, 7)
         
+        mhz1 = QLabel('MHz')
+        grid.addWidget(mhz1, 0, 8)
+            
         # ====================================================================
         # Calibration section
         self.__cal = QPushButton("Calibrate...")
