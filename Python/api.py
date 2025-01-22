@@ -222,6 +222,7 @@ class API:
     
     # VNA
     def get_resonance(self, start, end):
+        return self.__vna_api.get_vswr(start, end)
         for x in range(0,3):
           r = self.__vna_api.get_vswr(start, end)
           sleep(0.01)

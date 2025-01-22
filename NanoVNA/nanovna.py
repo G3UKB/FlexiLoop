@@ -67,6 +67,12 @@ class NanoVNA:
         self.serial.write(cmd.encode())
         self.serial.readline() # discard empty line
 
+    def resume(self):
+        self.send_command("resume\r")
+    
+    def pause(self):
+        self.send_command("pause\r")
+        
     def set_sweep(self, start, stop):
         if start is not None:
             self.send_command("sweep start %d\r" % start)
@@ -133,4 +139,22 @@ class NanoVNA:
             self.send_command("scan %d %d %d\r"%(start, stop, points))
         else:
             self.send_command("scan %d %d\r"%(start, stop))
-            
+    
+    def scan(self):
+        segment_length = 101
+        array0 = []
+        array1 = []
+        if self._frequencies is None:
+            self.fetch_frequencies()
+        freqs = self._frequencies
+        while len(freqs) > 0:
+            seg_start = freqs[0]
+            seg_stop = freqs[segment_length-1] if len(freqs) >= segment_length else freqs[-1]
+            length = segment_length if len(freqs) >= segment_length else len(freqs)
+            self.send_scan(seg_start, seg_stop, length)
+            array0.extend(self.data(0))
+            array1.extend(self.data(1))
+            freqs = freqs[segment_length:]
+        self.resume()
+        return (array0, array1)
+    

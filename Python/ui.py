@@ -271,12 +271,15 @@ class UI(QMainWindow):
                             self.__loop_status[self.__selected_loop-1] = True
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
+                        self.__moved = True
                     elif name == FREQLIMITS:
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
+                        self.__moved = True
                     elif name == TUNE:
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
+                        self.__moved = True
                     self.logger.info ('Activity {} completed successfully'.format(self.__current_activity))
                     # Do we have a deferred activity
                     if self.__deferred_activity != None:
@@ -1496,8 +1499,7 @@ class UI(QMainWindow):
         if self.__model[STATE][VNA][VNA_OPEN]:
             # We have an active VNA so can ask it where we are
             lc = (LIM_1, LIM_2, LIM_3)
-            start = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][0]
-            end = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]][1]
+            start, end = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]]
             if start != None and end != None:
                 r, f, swr = self.__api.get_resonance(start, end)
             else:

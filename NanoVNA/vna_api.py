@@ -60,7 +60,7 @@ class VNAApi:
         if self.__app: self.__model[STATE][VNA][VNA_OPEN] = False
     
     # Get the frequency and VSWR at the resonant point    
-    def get_vswr(self, start, end, steps = 101):
+    def get_vswr(self, start, end, points = 101):
         if self.__app:
             isopen = self.__model[STATE][VNA][VNA_OPEN]
         else:
@@ -68,7 +68,7 @@ class VNAApi:
         if isopen:
             while True:
                 # Get the sets
-                f, vswr = self.__get_sets(start, end, steps)
+                f, vswr = self.__get_sets(start, end, points)
                 # Find lowest VSWR in the set
                 low_vswr = 100.0
                 low_idx = 0
@@ -85,7 +85,7 @@ class VNAApi:
             return (False, None, None)
     
     # Get the VSWR as close to the given frequency as we have points
-    def get_freq(self, start, end, target, steps = 101):
+    def get_freq(self, start, end, target, points = 101):
         if self.__app:
             isopen = self.__model[STATE][VNA][VNA_OPEN]
         else:
@@ -93,7 +93,7 @@ class VNAApi:
         if isopen:
             while True:
                 # Get the sets
-                freqs, vswr = self.__get_sets(start, end, steps)
+                freqs, vswr = self.__get_sets(start, end, points)
                 # Find the point closest to the given frequency
                 t = int(target*1.0e6)
                 f_diff = -1
@@ -119,33 +119,35 @@ class VNAApi:
             return (False, None, None)
     
     # Get the frequency and VSWR sets for the given range   
-    def __get_sets(self, start, end, steps):
+    def __get_sets(self, start, end, points):
         # start/end in MHz
         start_int = int(start*1.0e6)
         end_int = int(end*1.0e6)
         
-        # Set the sweep params
-        self.__nv.send_scan(start_int, end_int, steps)
-        # Ask VNA to fetch the frequency set for the sweep
-        self.__nv.fetch_frequencies()
-        # Get the frequency set
+        # Set the fequency range and number of points
+        self.__nv.set_frequencies(start_int, end_int, points)
+        # Get the frequency array
         f = self.__nv.frequency
-        # Get the VSWR set for the frequency set
-        vswr = self.__nv.vswr(self.__nv.data(0))
+        # Perform a scan() which will stitch 101 length segments together
+        a0, a1 = self.__nv.scan()
+        # Get the vswr array
+        vswr = self.__nv.vswr(a0)
+
         return (f, vswr)
-            
+        
 #======================================================================================================================
 # Test code
-def main(start, end, target):
+def main(start, end, target, points):
     api = VNAApi(None, False)
     if api.open():
-        r, f, vswr = api.get_vswr(float(start), float(end))
+        r, f, vswr = api.get_vswr(float(start), float(end), int(points))
         print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
-        r, f, vswr = api.get_freq(float(start), float(end), float(target))
+        r, f, vswr = api.get_freq(float(start), float(end), float(target), int(points))
         print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
         api.close()
     
 # Entry point       
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    # start, end, f_at, points
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     
