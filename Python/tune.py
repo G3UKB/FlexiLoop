@@ -218,16 +218,19 @@ class Tune(threading.Thread):
         new_low_f = low_f
         new_high_f = high_f
         diff = round(f - self.__freq, 3)
-        
-        print(f, swr, diff)
-        return True
-    
-        if diff < 0.0:
-            new_low_f = self.__freq - diff - 1.0
+        #print('1: ', low_f, high_f, f, diff)
+        if diff > 0.0:
+            # Current f if higher in freq than wanted
+            # We go 1MHz above and below to incorporate wanted and diff
+            new_low_f = self.__freq - 1.0
+            new_high_f = self.__freq + abs(diff) + 1.0
         else:
-            new_high_f = self.__freq + diff + 1.0
+            # Current f is lower in freq than wanted
+            new_low_f = self.__freq - abs(diff) - 1.0
+            new_high_f = self.__freq + 1.0
         if new_low_f < low_f: new_low_f = low_f
         if new_high_f > high_f: new_high_f = high_f
+        #print('2: ',new_low_f, new_high_f, f, diff)
         new_f = f
         new_pos = pos
         attempts = 10
@@ -246,16 +249,12 @@ class Tune(threading.Thread):
                 # Higher than target
                 new_pos += inc
                 self.__move_to(new_pos)
-            # Test again
-            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f)
+            # Test again with higher resolution
+            
+            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, 300)
             diff = round(new_f - self.__freq, 3)
             inc = int(abs(diff)*inc_mult)
-            
-            # See if we can close up the scan
-            if diff < 0.0:
-                new_low_f = self.__freq - diff - 1.0
-            else:
-                new_high_f = self.__freq + diff + 1.0
+            #print('3: ',new_low_f, new_high_f, new_f, diff)
             
             # Check termination conditions
             if inc == 0 or abs(diff) <= target_diff or attempts <= 0:
