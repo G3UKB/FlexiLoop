@@ -248,7 +248,6 @@ class UI(QMainWindow):
         # Callbacks are on the thread of the caller and cannot directly call UI methods
         # which must be called on the main thread. Therefore flags are set which are
         # interpreted by the idle time function to manage the UI state.
-        
         # Are we waiting for an activity to complete
         if self.__current_activity == NONE:
             self.__activity_timer = self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT]*(1000/IDLE_TICKER)
