@@ -841,6 +841,8 @@ class UI(QMainWindow):
         self.__close()
     
     def __close(self):
+        self.__track.terminate()
+        self.__track.join()
         self.__api.terminate()
 
     def resizeEvent(self, event):

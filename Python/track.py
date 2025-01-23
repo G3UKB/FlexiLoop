@@ -32,6 +32,7 @@ import logging
 
 # Application imports
 from defs import *
+from utils import *
 
 #=====================================================
 # Tune to a given frequency
@@ -92,7 +93,7 @@ class Track(threading.Thread):
             if r:
                 self.__cb (((str(round(f, 4))), str(swr)))
             else:
-                self.__cb ('?.?', '?.?')
+                self.__cb (('?.?', '?.?'))
                 
         print("Track thread  exiting...")
     

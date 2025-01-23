@@ -100,6 +100,8 @@ class Tune(threading.Thread):
             # Stage 1: move as close to frequency as possible
             # Find suitable candidate set
             candidate = find_freq_candidate(sets, self.__freq)
+            # Low speed for better accuracy
+            self.__speed(100)
             if candidate == None:
                 # Not within our calibrated ranges
                 if self.__model[STATE][VNA][VNA_OPEN]:
@@ -123,7 +125,10 @@ class Tune(threading.Thread):
                     else:
                         # No other options
                         self.__cb((TUNE, (False, "Unable to get closer to frequency {} using VNA!".format(self.__freq), [])))
-                
+             
+            # Restore speed
+            self.__speed(self.__model[STATE][ARDUINO][SPEED])
+            
             # Give back callback
             self.__serial_comms.restore_callback()
             
@@ -202,6 +207,13 @@ class Tune(threading.Thread):
             self.__get_best_vswr(low_f, high_f, new_pos, f, swr)
             return True
     
+    # Set speed
+    def __speed(self, speed):
+        self.__s_q.put(('speed', [speed]))
+        self.__wait_for = SPEED
+        self.__event.wait()
+        self.__event.clear() 
+        
     # Perform move       
     def __move_to(self, target_pos):
         self.__s_q.put(('move', [target_pos]))
