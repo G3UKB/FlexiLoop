@@ -77,17 +77,21 @@ class Track(threading.Thread):
             self.one_pass = False
             
             # Get current absolute position
-            if self.__model[STATE][VNA][VNA_OPEN]:
-                # We have an active VNA so can ask it where we are
-                lc = (LIM_1, LIM_2, LIM_3)
-                start, end = self.__model[CONFIG][CAL][LIMITS][lc[self.__loop-1]]
-                if start != None and end != None:
-                    r, f, swr = self.__vna_api.get_vswr(start, end, 300)
+            try:
+                if self.__model[CONFIG][VNA][VNA_ENABLED] and self.__model[STATE][VNA][VNA_OPEN]:
+                    # We have an active VNA so can ask it where we are
+                    lc = (LIM_1, LIM_2, LIM_3)
+                    start, end = self.__model[CONFIG][CAL][LIMITS][lc[self.__loop-1]]
+                    if start != None and end != None:
+                        r, f, swr = self.__vna_api.get_vswr(start, end, 300)
+                    else:
+                        r = False
                 else:
-                    r = False
-            else:
-                # We can only get a good approximation if we are within a frequency set
-                r, msg, (pos, f, swr) = find_from_position(self.__model, self.__loop, self.__pos)
+                    # We can only get a good approximation if we are within a frequency set
+                    r, msg, (pos, f, swr) = find_from_position(self.__model, self.__loop, self.__pos)
+            except Exception as e:
+                self.logger.info("Failed operation on VNA, could be timing when disabled ...")
+                r = False
                 
             # Return response
             if r:

@@ -1373,10 +1373,7 @@ class UI(QMainWindow):
                 self.__enable_disable_loop(False)
                 self.__cal.setEnabled(True)
                 self.__loop_sel.setEnabled(True)
-                if self.__model[STATE][VNA][VNA_OPEN]:
-                    self.__enable_disable_auto(True)
-                else:
-                    self.__enable_disable_auto(False)
+                self.__enable_disable_auto(False)
                 self.__enable_disable_manual(True)
                 self.__stopact.setEnabled(False)
             elif state == W_CALIBRATED:
@@ -1449,7 +1446,13 @@ class UI(QMainWindow):
             self.__span.setEnabled(True)
         else:
             self.__span.setEnabled(False)
-                
+        
+        # Adjust the auto for VNA
+        if self.__model[STATE][VNA][VNA_OPEN]:
+            self.__enable_disable_auto(True)
+        else:
+            self.__enable_disable_auto(False)
+            
     # All enabled (True) or disabled (False)
     def __enable_disable_feedback(self, state):
         # Feedback sectiom

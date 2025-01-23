@@ -230,7 +230,7 @@ class Tune(threading.Thread):
         new_low_f = low_f
         new_high_f = high_f
         diff = round(f - self.__freq, 3)
-        #print('1: ', low_f, high_f, f, diff)
+        print('1: ', low_f, high_f, f, diff)
         if diff > 0.0:
             # Current f if higher in freq than wanted
             # We go 1MHz above and below to incorporate wanted and diff
@@ -242,7 +242,6 @@ class Tune(threading.Thread):
             new_high_f = self.__freq + 1.0
         if new_low_f < low_f: new_low_f = low_f
         if new_high_f > high_f: new_high_f = high_f
-        #print('2: ',new_low_f, new_high_f, f, diff)
         new_f = f
         new_pos = pos
         attempts = 10
@@ -251,6 +250,7 @@ class Tune(threading.Thread):
         target_diff = 0.01
         # Move increment depending on how far away we are
         inc = int(abs(diff)*inc_mult)
+        print('2: ',new_low_f, new_high_f, f, inc, diff)
         # Loop until exit condition is met
         while True:
             if diff < 0.0:
@@ -266,15 +266,21 @@ class Tune(threading.Thread):
             r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, 300)
             diff = round(new_f - self.__freq, 3)
             inc = int(abs(diff)*inc_mult)
-            #print('3: ',new_low_f, new_high_f, new_f, diff)
+            print('3: ',new_low_f, new_high_f, new_f, inc, diff)
             
+            if inc == 0:
+                if diff < 0.0:
+                    self.__move_to(new_pos - 10)
+                else:
+                    self.__move_to(new_pos + 10)
+                    
             # Check termination conditions
             if inc == 0 or abs(diff) <= target_diff or attempts <= 0:
                 break
             else:
                 attempts -= 1
         return True
-        
+    
     #=======================================================
     # Stolen Callback for serial comms
     def t_tune_cb(self, data):
