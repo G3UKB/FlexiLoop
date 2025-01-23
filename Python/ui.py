@@ -39,6 +39,7 @@ import api
 import config
 import setpoints
 import calview
+import track
 sys.path.append('../NanoVNA')
 import vna_api
 
@@ -75,6 +76,10 @@ class UI(QMainWindow):
         # Create the API instance
         self.__api = api.API(model, self.__vna_api, self.callback, self.msg_callback)
         self.__api.init_comms()
+        
+        # Create and run the track instance
+        self.__track = track.Track(model, self.__vna_api, self.track_callback)
+        self.__track.start()
         
         # Create the config dialog
         self.__config_dialog = config.Config(self.__model, self.__diff_callback, self.msg_callback)
@@ -116,8 +121,6 @@ class UI(QMainWindow):
         self.__deferred_activity = None
         self.__current_speed = self.__model[STATE][ARDUINO][SPEED]
         self.__aborting = False
-        self.__tracking_update = 8
-        self.__tracking_counter = self.__tracking_update
         # Of form for loops 1-3 [[added, removed, modified],[...],[...]]
         self.__cal_diff = [[],[],[]]
         
@@ -137,7 +140,6 @@ class UI(QMainWindow):
         # Last saved motor position
         self.__current_pos = self.__model[STATE][ARDUINO][MOTOR_POS]
         self.__fb_pos = self.__model[STATE][ARDUINO][MOTOR_FB]
-        self.__moved = True
         # Flag to initiate a position refresh at SOD
         self.__init_pos = True
         # We must wait a little to make sure Arduino has initialised
@@ -151,6 +153,12 @@ class UI(QMainWindow):
         self.__man_cal_state = MANUAL_IDLE
         self.__man_cal_freq = 0.0
         self.__man_cal_swr = 1.0
+        
+        # Tracking
+        self.__tracking_update = 8
+        self.__tracking_counter = self.__tracking_update
+        self.__freq_track = '?.?'
+        self.__swr_track = '?.?'
         
         # Initialise the GUI
         self.__initUI()
@@ -222,6 +230,10 @@ class UI(QMainWindow):
             self.__man_cal_state = MANUAL_DATA_REQD
             return CAL_RETRY, (None, None, None)
     
+    # This is called when a tracking pass is completed
+    def track_callback(self, data):
+        self.__freq_track, self.__swr_track = data
+        
     # Main callback    
     def callback(self, data):
         # We get callbacks here from calibration, tuning and serial comms
@@ -262,7 +274,6 @@ class UI(QMainWindow):
                         # Update position
                         self.__current_pos = args[0]
                         self.__fb_pos = args[1]
-                        self.__moved = True
                     elif name == CONFIGURE:
                         pass
                     elif name == CALIBRATE:
@@ -271,15 +282,12 @@ class UI(QMainWindow):
                             self.__loop_status[self.__selected_loop-1] = True
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
-                        self.__moved = True
                     elif name == FREQLIMITS:
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
-                        self.__moved = True
                     elif name == TUNE:
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
-                        self.__moved = True
                     self.logger.info ('Activity {} completed successfully'.format(self.__current_activity))
                     # Do we have a deferred activity
                     if self.__deferred_activity != None:
@@ -294,7 +302,6 @@ class UI(QMainWindow):
                 # We expect status at any time
                 self.__current_pos = args[0]
                 self.__fb_pos = args[1]
-                self.__moved = True
                 self.__model[STATE][ARDUINO][MOTOR_POS] = float(self.__current_pos)
                 self.__model[STATE][ARDUINO][MOTOR_FB] = float(self.__fb_pos)
             elif name == LIMIT:
@@ -1140,13 +1147,16 @@ class UI(QMainWindow):
                 self.__currpos.setText(str(self.__current_pos) + '%')
                 self.__currposfb.setText(str(self.__fb_pos))
                 # and tracking
-                if self.__moved and self.__current_activity == NONE:
+                if self.__current_activity == NONE:
                     if self.__tracking_update <= 0:
                         self.__tracking_update = self.__tracking_counter
-                        self.__moved = False
-                        self.__update_tracking(self.__selected_loop, self.__fb_pos)
+                        self.__track.do_one_pass(self.__selected_loop, self.__fb_pos)
                     else:
                         self.__tracking_update -= 1
+                # and update the tracking UI
+                self.__freqval.setText(self.__freq_track)
+                self.__swrres.setText(self.__swr_track)
+            
             # Is this first run after feedback configuration   
             if self.__init_pos and fb_config:
                 self.__init_pos_dly -= 1
@@ -1494,24 +1504,5 @@ class UI(QMainWindow):
             self.__save.setEnabled(False)
             self.__next.setEnabled(True)
     
-    def __update_tracking(self, loop, pos):
-        # Get current absolute position
-        if self.__model[STATE][VNA][VNA_OPEN]:
-            # We have an active VNA so can ask it where we are
-            lc = (LIM_1, LIM_2, LIM_3)
-            start, end = self.__model[CONFIG][CAL][LIMITS][lc[self.__selected_loop-1]]
-            if start != None and end != None:
-                r, f, swr = self.__api.get_resonance(start, end)
-            else:
-                r = False
-        else:
-            # We can only get a good approximation if we are within a frequency set
-            r, msg, (pos, f, swr) = find_from_position(self.__model, loop, pos)
-        if r:
-            self.__freqval.setText(str(round(f, 4)))
-            self.__swrres.setText(str(swr))
-        else:
-            self.__freqval.setText('?.?')
-            self.__swrres.setText('?.?')
 
         

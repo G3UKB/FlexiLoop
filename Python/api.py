@@ -221,12 +221,8 @@ class API:
         self.__s_q.put(('abort', []))
     
     # VNA
-    def get_resonance(self, start, end):
-        return self.__vna_api.get_vswr(start, end)
-        for x in range(0,3):
-          r = self.__vna_api.get_vswr(start, end)
-          sleep(0.01)
-        return r
+    def get_resonance(self, start, end, points=101):
+        return self.__vna_api.get_vswr(start, end, points)
         
     # =========================================================================    
     # Callbacks

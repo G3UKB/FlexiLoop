@@ -28,6 +28,7 @@ import os,sys
 from time import sleep
 import traceback
 import logging
+import argparse
 
 # Application imports
 try:
@@ -137,7 +138,24 @@ class VNAApi:
         
 #======================================================================================================================
 # Test code
-def main(start, end, target, points):
+def main():
+     # Manage command line arguments
+    parser = argparse.ArgumentParser(
+        prog='VNA-API',
+        description='Interface to NanoVNA',
+        epilog='G3UKB')
+
+    parser.add_argument('-s', '--start', action='store', required=True, help='Scan start freq in MHz')
+    parser.add_argument('-e', '--end', action='store', required=True, help='Scan end freq in MHz')
+    parser.add_argument('-t', '--target', action='store', required=True, help='Get VSWR at Target MHz freq')
+    parser.add_argument('-p', '--points', action='store', required=False, default = 101, help='Number of scan points, default 101')
+    args = parser.parse_args()
+    start = args.start
+    end = args.end
+    target = args.target
+    points = args.points
+
+    # Instantiate VNAApi as stand alone
     api = VNAApi(None, False)
     if api.open():
         r, f, vswr = api.get_vswr(float(start), float(end), int(points))
@@ -145,9 +163,11 @@ def main(start, end, target, points):
         r, f, vswr = api.get_freq(float(start), float(end), float(target), int(points))
         print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
         api.close()
+    else:
+        print('Failed to open device!')
     
 # Entry point       
 if __name__ == '__main__':
     # start, end, f_at, points
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    main()
     

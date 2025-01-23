@@ -160,6 +160,9 @@ MAN_STEP = 'MAN_STEP'
 HINT_MOVETO = 'MOVETO'
 HINT_STEP = 'STEP'
 
+# Tracking
+TRACK = 'TRACK'
+
 # Motor related
 FWD = 'FWD'
 REV = 'REV'
