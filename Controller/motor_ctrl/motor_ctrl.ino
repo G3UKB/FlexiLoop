@@ -428,6 +428,7 @@ int move_to_feedback_value(int target) {
   int current_val = get_feedback_value();
   int speed = 0;
   int dir = FORWARD;
+  int end = FALSE;
   if (target > current_val) {
     // Moving forward
     speed = current_speed;
@@ -452,9 +453,9 @@ int move_to_feedback_value(int target) {
           Serial.print("Status: ");
           Serial.print(get_feedback_value());
           Serial.print(";");
-          if (check_abort()) {
-            md.setM1Speed(0);
-            return TRUE;
+          if (check_abort() || check_limit()) {
+            end = TRUE;
+            break;
           }
         }
         delay(100);
@@ -466,7 +467,7 @@ int move_to_feedback_value(int target) {
           Serial.print("Status: ");
           Serial.print(get_feedback_value());
           Serial.print(";");
-          if (check_abort()) {
+          if (check_abort() || check_limit()) {
             md.setM1Speed(0);
             return TRUE;
           }
@@ -474,34 +475,46 @@ int move_to_feedback_value(int target) {
         delay(100);
       }
     }
-    // See how close we got
-    md.setM1Speed(0);
-    delay(500);
-    int diff = abs(get_feedback_value() - target);
+
     int l_speed = current_speed;
-    if (diff > 1) {
-      // More than about 0.2% deviation
-      // See if we can do better
-      current_speed = 100;  // slow it down
-      int attempts = 10;    // Limit this at 10 correction attempts
-      int dir;
+    if (end == FALSE) {
+      // See how close we got
+      md.setM1Speed(0);
+      delay(500);
+      int diff = abs(get_feedback_value() - target);
+      if (diff > 1) {
+        // More than about 0.2% deviation
+        // See if we can do better
+        current_speed = 100;  // slow it down
+        int attempts = 10;    // Limit this at 10 correction attempts
+        int dir;
 
-      // Ensure we take up gear slack in the same direction on every move.
-      // If necessary move reverse so adjustment is always moving forward.
-      while(get_feedback_value() > target) {
-        move_ms(100, REVERSE);
-      }
-
-      while (diff > 1) {
-        if (get_feedback_value() > target) {
-          dir = REVERSE;
-        } else {
-          dir = FORWARD;
+        // Ensure we take up gear slack in the same direction on every move.
+        // If necessary move reverse so adjustment is always moving forward.
+        while(get_feedback_value() > target) {
+          move_ms(100, REVERSE);
+          if (check_abort() || check_limit()) {
+            end = TRUE;
+            break;
+          }
         }
-        move_ms(50, dir);
-        diff = abs(get_feedback_value() - target);
-        if (attempts -- <= 0) {
-          break;
+
+        if (end == FALSE) {
+          while (diff > 1) {
+            if (get_feedback_value() > target) {
+              dir = REVERSE;
+            } else {
+              dir = FORWARD;
+            }
+            move_ms(50, dir);
+            if (check_abort() || check_limit()) {
+              break;
+            }
+            diff = abs(get_feedback_value() - target);
+            if (attempts -- <= 0) {
+              break;
+            }
+          }
         }
       }
     }
@@ -512,8 +525,8 @@ int move_to_feedback_value(int target) {
     // Final position update
     delay(500);
     Serial.print("Status: ");
-          Serial.print(get_feedback_value());
-          Serial.print(";");
+    Serial.print(get_feedback_value());
+    Serial.print(";");
   }
   return TRUE;
 }

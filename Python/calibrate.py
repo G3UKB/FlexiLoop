@@ -516,9 +516,12 @@ class Calibrate(threading.Thread):
             op = CAL_AUTO
         if CAL_AUTO:
             # Get current from VNA
-            f, swr = self.__vna_api.get_vswr(start, stop)
-            pos = self.__model[STATE][ARDUINO][MOTOR_FB]
-            return True, (f, swr, pos)
+            r, f, swr = self.__vna_api.get_vswr(start, stop)
+            if r:
+                pos = self.__model[STATE][ARDUINO][MOTOR_FB]
+                return True, (f, swr, pos)
+            else:
+                return False, (None, None, None)
         else:
             # Get current from user
             self.__msg_cb(msg, msg_type)

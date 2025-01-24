@@ -100,8 +100,6 @@ class Tune(threading.Thread):
             # Stage 1: move as close to frequency as possible
             # Find suitable candidate set
             candidate = find_freq_candidate(sets, self.__freq)
-            # Low speed for better accuracy
-            self.__speed(100)
             if candidate == None:
                 # Not within our calibrated ranges
                 if self.__model[STATE][VNA][VNA_OPEN]:
@@ -126,9 +124,6 @@ class Tune(threading.Thread):
                         # No other options
                         self.__cb((TUNE, (False, "Unable to get closer to frequency {} using VNA!".format(self.__freq), [])))
              
-            # Restore speed
-            self.__speed(self.__model[STATE][ARDUINO][SPEED])
-            
             # Give back callback
             self.__serial_comms.restore_callback()
             
@@ -221,8 +216,104 @@ class Tune(threading.Thread):
         self.__event.wait()
         self.__event.clear()
     
+    # Perform move       
+    def __run_ms(self, dir, ms):
+        if dir == FWD:
+            self.__s_q.put(('run_fwd', [ms]))
+            self.__wait_for = MSFWD
+        else:
+            self.__s_q.put(('run_rev', [ms]))
+            self.__wait_for = MSREV
+        self.__event.wait()
+        self.__event.clear()
+        
     # Algorithm to approach best vswr for the given frequency
     def __get_best_vswr(self, low_f, high_f, pos, f, swr):
+        # How far are we from the target
+        # We wnat to limit the span to around the required frequency
+        # modified by how far away we are
+        
+        # To hold modified span
+        new_low_f = low_f
+        new_high_f = high_f
+        # Difference between actual and wanted frequency
+        diff = round(f - self.__freq, 3)
+        #print('1: ', low_f, high_f, f, diff)
+        
+        # Find minimal frequency span
+        if diff > 0.0:
+            # Current f if higher in freq than wanted
+            # We go 1MHz above and below to incorporate wanted and diff
+            new_low_f = self.__freq - 1.0
+            new_high_f = self.__freq + abs(diff) + 1.0
+        else:
+            # Current f is lower in freq than wanted
+            new_low_f = self.__freq - abs(diff) - 1.0
+            new_high_f = self.__freq + 1.0
+        # Make sure inside loop bounds
+        if new_low_f < low_f: new_low_f = low_f
+        if new_high_f > high_f: new_high_f = high_f
+        # Holds latest resonant frequency
+        new_f = f
+        # Run for this number of ms
+        run_ms = 100
+        # Initial speed = slowish
+        run_speed = 75
+        # Set this run speed
+        self.__speed(run_speed)
+        # Try to get within 100KHz (not good enough)
+        target_diff = 0.1
+        # Can't try forever so limit to 10 tries
+        attempts = 15
+        result = False
+        # The run_ms is reduced the closer we get to target
+        modifiers = (
+            (4.0, 2000),
+            (3.0, 1000),
+            (2.0, 750),
+            (1.0, 500),
+            (0.5, 250),
+            (0.4, 200),
+            (0.3, 150),
+            (0.2, 80),
+            (0.15, 60),
+            (0.1, 40),
+            (0.05, 20),
+        )
+        
+        # Loop until exit condition is reached
+        while True:
+            # Determin which way to go
+            if diff < 0.0:
+                dir = REV
+            else:
+                dir = FWD
+            # Find the modifier
+            for mod in modifiers:
+                if abs(diff) > mod[0]:
+                    run_ms = mod[1]
+                    break
+            # Move to new position
+            self.__run_ms(dir, run_ms)
+            # See where we are
+            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, 300)
+            if r:
+                diff = round(new_f - self.__freq, 3)
+            else:
+                break
+            # Check termination conditions
+            if abs(diff) <= target_diff or attempts <= 0:
+                result = True
+                break
+            else:
+                attempts -= 1
+                
+        # Restore speed
+        self.__speed(self.__model[STATE][ARDUINO][SPEED])
+            
+        return result
+    
+    def __get_best_vswr_sav(self, low_f, high_f, pos, f, swr):
         # How far are we from the target
         # We wnat to limit the span to around the required frequency
         # modified by how far away we are
