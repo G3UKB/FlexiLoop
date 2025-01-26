@@ -408,29 +408,17 @@ class Calibrate(threading.Thread):
         span = low_pos_abs - high_pos_abs
         fb_inc = float(span)/float(steps)
         
+        # VNA span
+        f_low = round(low_freq - 1.0)
+        f_high = round(high_freq + 1.0)
+        
         # Do low pos
         if not self.__move_wait(low_pos_abs):
             self.logger.warning("Failed to move to low frequency position!")
             return False, "Failed to move to low frequency position!", cal_map
         
-        r, (f, swr, pos) = self.__manage_vals(round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
-        """
-        op = CAL_MANUAL
-        if self.__model[CONFIG][VNA][VNA_ENABLED]:
-            if self.__model[STATE][VNA][VNA_OPEN]:
-                op = CAL_AUTO
-            else:
-                if self.__vna_api.open():
-                    op = CAL_AUTO
-                    # Oops, still cant open
-                    self.__msg_cb("VNA enabled but unable to open port! Reverting to manual")
-        if CAL_AUTO:
-            f, vswr = self.__vna_api.get_vswr(start, stop)
-        else:
-            self.__msg_cb("Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
-            r, (f, swr, pos) = self.__get_current()
-        """
-        
+        r, (f, swr, pos) = self.__manage_vals(f_low, f_high, "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
+        print('Low: pos, pos_fb, f, swr:', low_pos_abs, pos, f, swr)
         if not r:
             self.logger.warning("Failed to get params for low frequency position!")
             return False, "Failed to get params for low frequency position!", cal_map
@@ -446,7 +434,8 @@ class Calibrate(threading.Thread):
             if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
-            r, (f, swr, pos) = self.__manage_vals(round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
+            r, (f, swr, pos) = self.__manage_vals(f_low, f_high, "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
+            print('Mid: pos, pos_fb, f, swr:', int(next_inc), pos, f, swr)
             #self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
             #r, (f, swr, pos) = self.__get_current()
             if not r:
@@ -461,7 +450,8 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high frequency position!")
             return False, "Failed to move to high frequency position!", cal_map
-        r, (f, swr, pos) = self.__manage_vals(round(low_freq, 2), round(high_freq, 2), "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
+        r, (f, swr, pos) = self.__manage_vals(f_low, f_high, "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
+        print('High: pos, pos_fb, f, swr:', high_pos_abs, pos, f, swr)
         #self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
         #r, (f, swr, pos) = self.__get_current()
         if not r:
@@ -481,7 +471,7 @@ class Calibrate(threading.Thread):
     def __move_wait(self, move_to):
         self.__comms_q.put(('move', [move_to]))
         # Wait response
-        self.__wait_for = 'MoveTo'
+        self.__wait_for = MOVETO
         if VERB: self.logger.info("Waiting for: MoveTo")
         self.__event.wait()
         if VERB: self.logger.info("Out of wait")
@@ -516,10 +506,12 @@ class Calibrate(threading.Thread):
             op = CAL_AUTO
         if CAL_AUTO:
             # Get current from VNA
+            sleep(0.5)
+            r, f, swr = self.__vna_api.get_vswr(start, stop)
+            r, f, swr = self.__vna_api.get_vswr(start, stop)
             r, f, swr = self.__vna_api.get_vswr(start, stop)
             if r:
-                pos = self.__model[STATE][ARDUINO][MOTOR_FB]
-                return True, (f, swr, pos)
+                return True, (f, swr, self.__args[0])
             else:
                 return False, (None, None, None)
         else:
