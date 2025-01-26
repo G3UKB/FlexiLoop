@@ -48,16 +48,17 @@ class SerialComms(threading.Thread):
 
     # =============================================================== 
     # Initialise class
-    def __init__(self, model, q, main_callback):
+    def __init__(self, model, q, main_callback, app = True):
         super(SerialComms, self).__init__()
         
         # Get root logger
-        self.logger = logging.getLogger('root')
+        if app: self.logger = logging.getLogger('root')
 
         # Parameters
         self.__model = model
         self.__q = q
         self.__cb = main_callback
+        self.__app = app
         
         # Instance vars
         self.__originalcb = main_callback
@@ -68,15 +69,18 @@ class SerialComms(threading.Thread):
         self.__heartbeat = self.__ticks
 
     # Attempt connect to Arduino
-    def connect(self):
-        self.__port = self.__model[CONFIG][ARDUINO][PORT]
+    def connect(self, port = None):
+        if self.__app:
+            self.__port = self.__model[CONFIG][ARDUINO][PORT]
+        else:
+            self.__port = port
         try:
             self.__ser = serial.Serial(self.__port, 9600, timeout=1)
         except Exception as e:
-            self.__model[STATE][ARDUINO][ONLINE] = False
+            if self.__app: self.__model[STATE][ARDUINO][ONLINE] = False
             return False
         
-        self.__model[STATE][ARDUINO][ONLINE] = True
+        if self.__app: self.__model[STATE][ARDUINO][ONLINE] = True
         self.__ser.reset_input_buffer()
         return True
     
@@ -117,18 +121,18 @@ class SerialComms(threading.Thread):
                     heartbeat = False
                 if not heartbeat:
                     # This will get picked up and a reconnect attempted
-                    self.__model[STATE][ARDUINO][ONLINE] = False
+                    if self.__app:  self.__model[STATE][ARDUINO][ONLINE] = False
                     self.__ser.close()
-                    self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
+                    if self.__app:  self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
                     break
             
             # Process messages
             try:
                 if self.__q.qsize() > 0:
-                    if VERB: self.logger.info("Q sz: {}, ".format(self.__q.qsize()))
+                    if self.__app and VERB: self.logger.info("Q sz: {}, ".format(self.__q.qsize()))
                     while self.__q.qsize() > 0:
                         name, args = self.__q.get()
-                        if VERB: self.logger.info("Name: {}, Args: {}".format(name, args))
+                        if self.__app and VERB: self.logger.info("Name: {}, Args: {}".format(name, args))
                         # Execute command, responses are by callback
                         self.__dispatch(name, args)
                         # Here after command/response sequence
@@ -137,7 +141,7 @@ class SerialComms(threading.Thread):
                     sleep(SLEEP_TIMER)
             except Exception as e:
                 # Something went wrong
-                self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. {}, [{}]'.format(e, traceback.print_exc()))
+                if self.__app: self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. {}, [{}]'.format(e, traceback.print_exc()))
                 break
                 
         self.logger.info("Comms thread exiting...")
@@ -240,7 +244,7 @@ class SerialComms(threading.Thread):
         msg = ""
         retries = 5
         while(1):
-            if VERB: self.logger.info("Sending {}".format(cmd))
+            if self.__app and VERB: self.logger.info("Sending {}".format(cmd))
             self.__ser.write(cmd)
             self.__ser.flush()
             retries -= 1
@@ -248,7 +252,7 @@ class SerialComms(threading.Thread):
             resp = self.read_resp(timeout)
             if resp[1][0] == False:
                 sleep(0.2)
-                if VERB: self.logger.info("Command failed, retrying...")
+                if self.__app and VERB: self.logger.info("Command failed, retrying...")
                 if retries <= 0:
                     msg = "Command failed after 5 retries" 
                     return (resp[0], (False, msg, []))
@@ -278,14 +282,14 @@ class SerialComms(threading.Thread):
                 # We return an abort instead of the given command
                 return (ABORT, (True, "User abort!", val))
             elif r == STOP:
-                self.logger.info("Stop motor after forward or reverse command.")
+                if self.__app: self.logger.info("Stop motor after forward or reverse command.")
             # Read a single character
             chr = self.__ser.read().decode('utf-8')
             if chr == '':
                 # Timeout on read
                 if resp_timeout <= 0:
                     # Timeout on waiting for a response
-                    if VERB: self.logger.info("Response timeout!")
+                    if self.__app and VERB: self.logger.info("Response timeout!")
                     msg = "Response timeout!"
                     break
                 else:
@@ -312,11 +316,11 @@ class SerialComms(threading.Thread):
                     acc = ""
                     continue
                 # Otherwise its a response to the command
-                if VERB: self.logger.info("Response: {}".format(acc))
+                if self.__app and VERB: self.logger.info("Response: {}".format(acc))
                 if self.__ser.in_waiting > 0:
                     # Still data in buffer, probably should not happen!
                     # Dump response and use this data
-                    if VERB: self.logger.info("More data available {} - collecting... ".format(self.__ser.in_waiting))
+                    if self.__app and VERB: self.logger.info("More data available {} - collecting... ".format(self.__ser.in_waiting))
                     acc = ""
                     continue
                 success = True
