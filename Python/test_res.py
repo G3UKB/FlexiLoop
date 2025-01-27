@@ -27,6 +27,7 @@
 import sys
 import traceback
 import queue
+import threading
 
 # PyQt5 imports
 from qt_inc import *
@@ -62,6 +63,10 @@ class TestRes(QMainWindow):
         self.__serial_comms.connect('COM3')
         self.__serial_comms.start()
 
+        # Create the tracker
+        self.__track = Track(self.__vna_api, self.track_cb)
+        self.__track.start()
+        
         # Local vars
         self.__name = ''
         self.__args = []
@@ -122,6 +127,7 @@ class TestRes(QMainWindow):
         
         #self.__serial_comms.close()
         self.__serial_comms.terminate()
+        self.__track.terminate()
     
     def __do_move(self):
         self.__s_q.put(('move', [int(self.__fbtxt.text())]))
@@ -136,21 +142,42 @@ class TestRes(QMainWindow):
             if name == STATUS:
                 self.__name = name
                 self.__args = args
-    
+                
+    def track_cb(self, f, swr):
+        self.__freqval.setText(str(round(f, 3)))
+        self.__swrval.setText(str(round(swr, 2)))
+            
     #=======================================================
     # Idle processing called every IDLE_TICKER secs when no UI activity
     def __idleProcessing(self):
         
         if self.__name == STATUS:
             self.__posval.setText(str(self.__args[0]))
-        # Get the freq and swr
-        r, f, vswr = self.__vna_api.get_vswr(7.5, 30.0, 101)
-        self.__freqval.setText(str(round(f, 3)))
-        self.__swrval.setText(str(round(vswr, 2)))
         
         # =======================================================
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
+ 
+# Track the VNA
+class Track(threading.Thread):
+    
+    def __init__(self, vna_api, cb):
+        super(Track, self).__init__()
+        
+        self.__vna_api = vna_api
+        self.__cb = cb
+        self.__term = False
+     
+    # Terminate instance
+    def terminate(self):
+        self.__term = True
+        
+    def run(self):
+        while not self.__term:
+            r, f, vswr = self.__vna_api.get_vswr(7.5, 30.0, 300)
+            self.__cb(f, vswr)
+            sleep(0.5)
+        
         
 #======================================================================================================================
 # Main code
