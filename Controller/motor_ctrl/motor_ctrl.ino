@@ -64,6 +64,7 @@
 #define DEFAULT_SPEED 200
 // Loop iteration rate in ms
 #define TICK 100
+#define FB_COUNT 10
 
 // Instance of motor driver
 DualMC33926MotorShield md;
@@ -75,7 +76,7 @@ int p[10];
 int fb_val = -1;
 int last_fb_val = -1;
 // Wait time
-int fb_counter = 5;
+int fb_counter = FB_COUNT;
 
 // ******************************************************************
 // Entry point, runs once on power-on
@@ -346,6 +347,7 @@ int check_limit() {
     // Possibly at end stop
     if (fb_counter-- <= 0) {
       // Feedback stationary ish for 5 counts
+      fb_counter = FB_COUNT;
       return TRUE; 
     }
   }
@@ -392,24 +394,13 @@ int go_home_or_max(int pos) {
       // Test for end of travel
       last_fb_val = fb_val;
       fb_val = get_feedback_value();
-      if (((fb_val + 2) >= last_fb_val) && ((fb_val - 2) <= last_fb_val)) {
-        // Possibly at end stop
-        if (fb_counter-- <= 0) {
-          // Feedback stationary ish for 5 counts
-          break; 
-        }
+      if (check_abort() || check_limit()) {
+        break;
       }
       // Time for a status report?
       if (st_counter-- <= 0) {
         st_counter = 5;
-        Serial.print("Status: ");
-        Serial.print(get_feedback_value());
-        Serial.print(";");
-      }
-      // Check for user abort
-      if (check_abort()) {
-        md.setM1Speed(0);
-        break;
+        send_status();
       }
       // If we spin too fast the feedback may not change enough and give a false positive
       delay (500);   
@@ -443,16 +434,12 @@ int move_to_feedback_value(int target) {
     md.setM1Speed(0);
     return FALSE;
   } else {
-    Serial.print("Status: ");
-    Serial.print(get_feedback_value());
-    Serial.print(";");
+    send_status();
     if (dir == FORWARD) {
       while(get_feedback_value() < target) {
         if (counter-- <= 0) {
           counter = 5;
-          Serial.print("Status: ");
-          Serial.print(get_feedback_value());
-          Serial.print(";");
+          send_status();
           if (check_abort() || check_limit()) {
             end = TRUE;
             break;
@@ -464,12 +451,11 @@ int move_to_feedback_value(int target) {
       while(get_feedback_value() > target){
         if (counter-- <= 0) {
           counter = 5;
-          Serial.print("Status: ");
-          Serial.print(get_feedback_value());
-          Serial.print(";");
+          send_status();
           if (check_abort() || check_limit()) {
             md.setM1Speed(0);
-            return TRUE;
+            end = TRUE;
+            break;
           }
         }
         delay(100);
@@ -485,7 +471,7 @@ int move_to_feedback_value(int target) {
       if (diff > 1) {
         // More than about 0.2% deviation
         // See if we can do better
-        current_speed = 100;  // slow it down
+        current_speed = 50;  // slow it down
         int attempts = 10;    // Limit this at 10 correction attempts
         int dir;
 
@@ -500,6 +486,7 @@ int move_to_feedback_value(int target) {
         }
 
         if (end == FALSE) {
+          diff = abs(get_feedback_value() - target);
           while (diff > 1) {
             if (get_feedback_value() > target) {
               dir = REVERSE;
@@ -510,6 +497,7 @@ int move_to_feedback_value(int target) {
             if (check_abort() || check_limit()) {
               break;
             }
+            delay(100);
             diff = abs(get_feedback_value() - target);
             if (attempts -- <= 0) {
               break;
@@ -524,9 +512,7 @@ int move_to_feedback_value(int target) {
     md.setM1Speed(0);
     // Final position update
     delay(500);
-    Serial.print("Status: ");
-    Serial.print(get_feedback_value());
-    Serial.print(";");
+    send_status();
   }
   return TRUE;
 }
@@ -547,9 +533,7 @@ int move_ms(int ms, int pos) {
   } else {
     delay (ms);
     md.setM1Speed(0);
-    Serial.print("Status: ");
-    Serial.print(get_feedback_value());
-    Serial.print(";");
+    send_status();
   }
   return TRUE;
 }
@@ -568,9 +552,7 @@ int move_fwd() {
       delay (100);
       if (counter-- <= 0) {
         counter = 5;
-        Serial.print("Status: ");
-        Serial.print(get_feedback_value());
-        Serial.print(";");
+        send_status();
       }
     }
   }
@@ -591,9 +573,7 @@ int move_rev() {
       delay (100);
       if (counter-- <= 0) {
         counter = 5;
-        Serial.print("Status: ");
-        Serial.print(get_feedback_value());
-        Serial.print(";");
+        send_status();
       }
     }
   }
@@ -605,6 +585,13 @@ int move_rev() {
 int stop_move() {
   md.setM1Speed(0);
   return TRUE;
+}
+
+// Status report
+void send_status() {
+  Serial.print("Status: ");
+  Serial.print(get_feedback_value());
+  Serial.print(";");
 }
 
 // Format and send a debug message
