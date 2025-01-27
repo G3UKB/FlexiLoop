@@ -28,6 +28,7 @@ import sys
 import traceback
 import queue
 import threading
+import argparse
 
 # PyQt5 imports
 from qt_inc import *
@@ -45,7 +46,7 @@ import vna_api
 # Main window        
 class TestRes(QMainWindow):
     
-    def __init__(self, qt_app):
+    def __init__(self, qt_app, start, end, points):
         super(TestRes, self).__init__()
         
         self.__qt_app = qt_app
@@ -64,12 +65,14 @@ class TestRes(QMainWindow):
         self.__serial_comms.start()
 
         # Create the tracker
-        self.__track = Track(self.__vna_api, self.track_cb)
+        self.__track = Track(self.__vna_api, start, end, points, self.track_cb)
         self.__track.start()
         
         # Local vars
         self.__name = ''
         self.__args = []
+        self.__freq = 0.0
+        self.__swr = 1.0
             
     def run(self):
         
@@ -144,8 +147,8 @@ class TestRes(QMainWindow):
                 self.__args = args
                 
     def track_cb(self, f, swr):
-        self.__freqval.setText(str(round(f, 3)))
-        self.__swrval.setText(str(round(swr, 2)))
+        self.__freq = f
+        self.__swr = swr
             
     #=======================================================
     # Idle processing called every IDLE_TICKER secs when no UI activity
@@ -154,6 +157,9 @@ class TestRes(QMainWindow):
         if self.__name == STATUS:
             self.__posval.setText(str(self.__args[0]))
         
+        self.__freqval.setText(str(round(self.__freq, 3)))
+        self.__swrval.setText(str(round(self.__swr, 2)))
+        
         # =======================================================
         # Reset timer
         QtCore.QTimer.singleShot(IDLE_TICKER, self.__idleProcessing)
@@ -161,12 +167,15 @@ class TestRes(QMainWindow):
 # Track the VNA
 class Track(threading.Thread):
     
-    def __init__(self, vna_api, cb):
+    def __init__(self, vna_api, start, end, points, cb):
         super(Track, self).__init__()
         
         self.__vna_api = vna_api
         self.__cb = cb
         self.__term = False
+        self.__start = float(start)
+        self.__end = float(end)
+        self.__points = int(points)
      
     # Terminate instance
     def terminate(self):
@@ -174,7 +183,7 @@ class Track(threading.Thread):
         
     def run(self):
         while not self.__term:
-            r, f, vswr = self.__vna_api.get_vswr(7.5, 30.0, 300)
+            r, f, vswr = self.__vna_api.get_vswr(self.__start, self.__end, self.__points)
             self.__cb(f, vswr)
             sleep(0.5)
         
@@ -183,10 +192,23 @@ class Track(threading.Thread):
 # Main code
 def main():
     
+     # Manage command line arguments
+    parser = argparse.ArgumentParser(
+        prog='TEST_RES',
+        description='Positioning and VNA',
+        epilog='G3UKB')
+
+    parser.add_argument('-s', '--start', action='store', required=True, help='Scan start freq in MHz')
+    parser.add_argument('-e', '--end', action='store', required=True, help='Scan end freq in MHz')
+    parser.add_argument('-p', '--points', action='store', required=False, default = 101, help='Number of scan points, default 101')
+    args = parser.parse_args()
+    start = args.start
+    end = args.end
+    points = args.points
     # Start application
     try:
         qt_app = QApplication(sys.argv)
-        app = TestRes(qt_app)
+        app = TestRes(qt_app, start, end, points)
         sys.exit(app.run()) 
     except Exception as e:
         print ('Exception {}, [{}]'.format(e, traceback.format_exc()))
