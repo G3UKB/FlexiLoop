@@ -59,14 +59,15 @@ class TestRes(QMainWindow):
         # Create a SerialComms instance
         self.__s_q = queue.Queue(10)
         self.__serial_comms = serialcomms.SerialComms(None, self.__s_q, self.callback, False)
-        self.__serial_comms.connect('COM4')
+        self.__serial_comms.connect('COM3')
+        self.__serial_comms.start()
 
         # Local vars
         self.__name = ''
         self.__args = []
             
     def run(self):
-        # Set up a minimal UI for testing
+        
         #=======================================================
         # Set main layout
         self.__central_widget = QWidget()
@@ -109,33 +110,39 @@ class TestRes(QMainWindow):
         self.show()
         self.repaint()
         
+         # Set up a minimal UI for testing
+        #self.setGeometry(300,300,300,200)
+        
         # Start idle processing
         QtCore.QTimer.singleShot(1000, self.__idleProcessing)
         
         # Enter event loop
         # Returns when GUI exits
-        return self.__qt_app.exec_()
+        self.__qt_app.exec_()
+        
+        #self.__serial_comms.close()
+        self.__serial_comms.terminate()
     
     def __do_move(self):
         self.__s_q.put(('move', [int(self.__fbtxt.text())]))
         
     def callback(self, data):
-        
         # Get current event data
         (name, (success, msg, args)) = data
         if not success:
             print('Failure: ', msg)
             sys.exit()
         else:
-            self.__name = name
-            self.__args = args
+            if name == STATUS:
+                self.__name = name
+                self.__args = args
     
     #=======================================================
     # Idle processing called every IDLE_TICKER secs when no UI activity
     def __idleProcessing(self):
         
         if self.__name == STATUS:
-            self.__posval.setText(str(self.__args[1]))
+            self.__posval.setText(str(self.__args[0]))
         # Get the freq and swr
         r, f, vswr = self.__vna_api.get_vswr(7.5, 30.0, 101)
         self.__freqval.setText(str(round(f, 3)))

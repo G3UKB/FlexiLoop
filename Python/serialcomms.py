@@ -102,7 +102,7 @@ class SerialComms(threading.Thread):
     # Thread entry point
     def run(self):
         global VERB
-        self.logger.info("Running...")
+        if self.__app:  self.logger.info("Running...")
         while not self.term:
             # Heartbeat
             self.__heartbeat -= 1
@@ -123,7 +123,10 @@ class SerialComms(threading.Thread):
                     # This will get picked up and a reconnect attempted
                     if self.__app:  self.__model[STATE][ARDUINO][ONLINE] = False
                     self.__ser.close()
-                    if self.__app:  self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
+                    if self.__app:
+                        self.logger.warn("Exiting serial comms as no heartbeat detected. It will be restarted but any current activity will fail.")
+                    else:
+                        print('No heartbeat!')
                     break
             
             # Process messages
@@ -144,7 +147,7 @@ class SerialComms(threading.Thread):
                 if self.__app: self.logger.warn('Exception processing serial command! Serial comms will restart but any current activity will fail. {}, [{}]'.format(e, traceback.print_exc()))
                 break
                 
-        self.logger.info("Comms thread exiting...")
+        if self.__app: self.logger.info("Comms thread exiting...")
     
     # ===============================================================
     # PRIVATE
