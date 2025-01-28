@@ -498,10 +498,6 @@ int move_to_feedback_value(int target) {
         // If necessary move reverse so adjustment is always moving forward.
         while(get_feedback_value() > target) {
           move_ms(100, REVERSE);
-          if (check_abort() || check_limit()) {
-            end = TRUE;
-            break;
-          }
         }
 
         if (end == FALSE) {
@@ -513,12 +509,12 @@ int move_to_feedback_value(int target) {
               dir = FORWARD;
             }
             move_ms(50, dir);
-            if (check_abort() || check_limit()) {
-              break;
-            }
             delay(100);
             diff = abs(get_feedback_value() - target);
             if (attempts -- <= 0) {
+              break;
+            }
+            if (check_abort()) {
               break;
             }
           }
