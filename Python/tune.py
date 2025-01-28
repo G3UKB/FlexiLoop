@@ -191,7 +191,7 @@ class Tune(threading.Thread):
             # Assume the freq distribution is approx linear.
             span = high_f - low_f
             #frac = (self.__freq - low_f)/ span
-            frac = (high_f - self.__freq)/ span
+            frac = 1.0 - ((self.__freq - low_f)/ span)
             if frac < 0.0 or frac > 1.0:
                 # Not within this loop
                 return False

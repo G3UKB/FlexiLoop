@@ -71,12 +71,8 @@ DualMC33926MotorShield md;
 int current_speed = DEFAULT_SPEED; // Current speed in range 0 to +-400
 // Param stack for debug messages
 int p[10];
-// Limit switch check
 // Track feedback values
 int fb_val = -1;
-int last_fb_val = -1;
-// Wait time
-int fb_counter = FB_COUNT;
 
 // ******************************************************************
 // Entry point, runs once on power-on
@@ -341,17 +337,45 @@ int check_stop() {
 // Have we triggered a limit switch
 int check_limit() {
   // Test for end of travel
-  last_fb_val = fb_val;
-  fb_val = get_feedback_value();
-  if (((fb_val + 2) >= last_fb_val) && ((fb_val - 2) <= last_fb_val)) {
-    // Possibly at end stop
-    if (fb_counter-- <= 0) {
-      // Feedback stationary ish for 5 counts
-      fb_counter = FB_COUNT;
-      return TRUE; 
+  int last_fbval, fb_val, i;
+  int fb_counter = FB_COUNT;
+  int limit = TRUE;
+
+  last_fbval = get_feedback_value();
+  while( fb_counter >= 0 ) {
+    fb_val = get_feedback_value();
+    if ((fb_val > last_fbval + 2) || (fb_val < last_fbval - 2)) {
+      // Still moving
+      limit = FALSE;
+      break;
+    } else {
+      delay(20);
+      fb_val = get_feedback_value();
+      fb_counter --;
     }
   }
-  return FALSE;
+  return limit;
+}
+
+// Status report
+void send_status() {
+  Serial.print("Status: ");
+  Serial.print(get_feedback_value());
+  Serial.print(";");
+}
+
+// Format and send a debug message
+void debug_print(String msg, int num_args, int args[]) {
+  int i;
+  Serial.print("Dbg: ");
+  Serial.print(msg);
+  if (num_args > 0) {
+    for(i=0; i<num_args; i++) {
+      Serial.print(String(args[i]));
+      Serial.print("/");
+    }
+  }
+  Serial.print(";");
 }
 
 // ******************************************************************
@@ -366,9 +390,6 @@ int go_home_or_max(int pos) {
   // Assume home is reverse
 
   // Local vars
-  int fb_val = -1;
-  int last_fb_val = -1;
-  int fb_counter = 5;
   int st_counter = 5;
   int speed;
 
@@ -391,9 +412,7 @@ int go_home_or_max(int pos) {
     delay(100);
     // Loop until success or abort
     while(TRUE) {
-      // Test for end of travel
-      last_fb_val = fb_val;
-      fb_val = get_feedback_value();
+      // Test for end conditions
       if (check_abort() || check_limit()) {
         break;
       }
@@ -541,8 +560,6 @@ int move_ms(int ms, int pos) {
 // Free move forward
 int move_fwd() {
   int counter = 5;
-  // Set the limit switch counter
-  fb_counter = 5;
   md.setM1Speed(current_speed);
   if (md.getFault()) {
     md.setM1Speed(0);
@@ -587,23 +604,3 @@ int stop_move() {
   return TRUE;
 }
 
-// Status report
-void send_status() {
-  Serial.print("Status: ");
-  Serial.print(get_feedback_value());
-  Serial.print(";");
-}
-
-// Format and send a debug message
-void debug_print(String msg, int num_args, int args[]) {
-  int i;
-  Serial.print("Dbg: ");
-  Serial.print(msg);
-  if (num_args > 0) {
-    for(i=0; i<num_args; i++) {
-      Serial.print(String(args[i]));
-      Serial.print("/");
-    }
-  }
-  Serial.print(";");
-}
