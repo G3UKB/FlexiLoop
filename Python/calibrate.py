@@ -264,14 +264,14 @@ class Calibrate(threading.Thread):
         self.__event.clear()
         # Get the freq at this extent
         # We don't know what this loop covers so wide scan
-        # We only need to be approximate
-        r, f, swr = self.__vna_api.get_vswr(3.5, 30.0, POINTS)
+        # We only need to be approximate as its just scan limits
+        r, f, swr = self.__vna_api.get_vswr(1.8, 30.0, POINTS)
         sec = (LIM_1, LIM_2, LIM_3)
         # Give it a little breathing space each side on max and min
         if where == HOME:
-            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = round(f)
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = round(f) - 2.0
         elif where == MAX:
-            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = round(f)
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = round(f) + 2.0
                     
     # Retrieve feedback end points from model
     def retrieve_end_points(self):
@@ -399,6 +399,10 @@ class Calibrate(threading.Thread):
         # Holds current data
         temp_map = []
         
+        # Get loop limits
+        sec = (LIM_1, LIM_2, LIM_3)
+        low_f_vna, high_f_vna = self.__model[CONFIG][CAL][LIMITS][sec[loop-1]]
+        
         # Move incrementally and take readings
         # We move from high to low for the given number of steps
         # Interval is a %age of the difference between feedback readings for low and high
@@ -408,16 +412,12 @@ class Calibrate(threading.Thread):
         span = low_pos_abs - high_pos_abs
         fb_inc = float(span)/float(steps)
         
-        # VNA span
-        f_low = round(low_freq - 5.0)
-        f_high = round(high_freq + 5.0)
-        
         # Do low pos
         if not self.__move_wait(low_pos_abs):
             self.logger.warning("Failed to move to low frequency position!")
             return False, "Failed to move to low frequency position!", cal_map
         
-        r, (f, swr, pos) = self.__manage_vals(f_low, f_high, "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
+        r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
         #print('Low: pos, pos_fb, f, swr:', low_pos_abs, pos, f, swr)
         if not r:
             self.logger.warning("Failed to get params for low frequency position!")
@@ -434,7 +434,7 @@ class Calibrate(threading.Thread):
             if not self.__move_wait(int(next_inc)):
                 self.logger.warning("Failed to move to intermediate position!")
                 return False, "Failed to move to intermediate position!", cal_map
-            r, (f, swr, pos) = self.__manage_vals(f_low, f_high, "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
+            r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
             #print('Mid: pos, pos_fb, f, swr:', int(next_inc), pos, f, swr)
             #self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
             #r, (f, swr, pos) = self.__get_current()
@@ -450,7 +450,7 @@ class Calibrate(threading.Thread):
         if not self.__move_wait(high_pos_abs):
             self.logger.warning("Failed to move to high frequency position!")
             return False, "Failed to move to high frequency position!", cal_map
-        r, (f, swr, pos) = self.__manage_vals(f_low, f_high, "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
+        r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
         #print('High: pos, pos_fb, f, swr:', high_pos_abs, pos, f, swr)
         #self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
         #r, (f, swr, pos) = self.__get_current()

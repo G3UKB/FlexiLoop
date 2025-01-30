@@ -233,26 +233,9 @@ class Tune(threading.Thread):
         # We wnat to limit the span to around the required frequency
         # modified by how far away we are
         
-        # To hold modified span
-        new_low_f = low_f
-        new_high_f = high_f
         # Difference between actual and wanted frequency
         diff = round(f - self.__freq, 3)
         #print('1: ', low_f, high_f, f, diff)
-        
-        # Find minimal frequency span
-        if diff > 0.0:
-            # Current f if higher in freq than wanted
-            # We go 1MHz above and below to incorporate wanted and diff
-            new_low_f = self.__freq - 1.0
-            new_high_f = self.__freq + abs(diff) + 1.0
-        else:
-            # Current f is lower in freq than wanted
-            new_low_f = self.__freq - abs(diff) - 1.0
-            new_high_f = self.__freq + 1.0
-        # Make sure inside loop bounds
-        if new_low_f < low_f: new_low_f = low_f
-        if new_high_f > high_f: new_high_f = high_f
         # Holds latest resonant frequency
         new_f = f
         # Run for this number of ms
@@ -296,7 +279,7 @@ class Tune(threading.Thread):
             # Move to new position
             self.__run_ms(dir, run_ms)
             # See where we are
-            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, POINTS)
+            r, new_f, swr = self.__vna_api.get_vswr(low_f, high_f, POINTS)
             if r:
                 diff = round(new_f - self.__freq, 3)
             else:
@@ -313,6 +296,7 @@ class Tune(threading.Thread):
             
         return result
     
+    """
     def __get_best_vswr_sav(self, low_f, high_f, pos, f, swr):
         # How far are we from the target
         # We wnat to limit the span to around the required frequency
@@ -365,6 +349,7 @@ class Tune(threading.Thread):
             else:
                 attempts -= 1
         return True
+    """
     
     #=======================================================
     # Stolen Callback for serial comms
