@@ -264,14 +264,14 @@ class Calibrate(threading.Thread):
         self.__event.clear()
         # Get the freq at this extent
         # We don't know what this loop covers so wide scan
-        # Use 400 points to get a better resolution
-        r, f, swr = self.__vna_api.get_vswr(3.5, 30.0, 400)
+        # We only need to be approximate
+        r, f, swr = self.__vna_api.get_vswr(3.5, 30.0, POINTS)
         sec = (LIM_1, LIM_2, LIM_3)
         # Give it a little breathing space each side on max and min
         if where == HOME:
-            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = f
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = round(f)
         elif where == MAX:
-            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = f
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = round(f)
                     
     # Retrieve feedback end points from model
     def retrieve_end_points(self):
@@ -504,7 +504,7 @@ class Calibrate(threading.Thread):
         if self.__model[STATE][VNA][VNA_OPEN]:
             # Get current from VNA
             sleep(0.5)
-            r, f, swr = self.__vna_api.get_vswr(start, stop, 401)
+            r, f, swr = self.__vna_api.get_vswr(start, stop, POINTS)
             if r:
                 return True, (f, swr, self.__args[0])
             else:

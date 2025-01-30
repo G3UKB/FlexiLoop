@@ -163,6 +163,9 @@ HINT_STEP = 'STEP'
 # Tracking
 TRACK = 'TRACK'
 
+# VNA
+POINTS = 401
+
 # Motor related
 FWD = 'FWD'
 REV = 'REV'

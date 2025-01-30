@@ -83,7 +83,7 @@ class Track(threading.Thread):
                     lc = (LIM_1, LIM_2, LIM_3)
                     start, end = self.__model[CONFIG][CAL][LIMITS][lc[self.__loop-1]]
                     if start != None and end != None:
-                        r, f, swr = self.__vna_api.get_vswr(start, end, 401)
+                        r, f, swr = self.__vna_api.get_vswr(start, end, POINTS)
                     else:
                         r = False
                 else:

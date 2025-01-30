@@ -184,7 +184,7 @@ class Tune(threading.Thread):
         
         if context == CLOSE_TUNE:
             # We should be almost there
-            r, f, swr = self.__vna_api.get_vswr(low_f, high_f)
+            r, f, swr = self.__vna_api.get_vswr(low_f, high_f, POINTS)
             return self.__get_best_vswr(low_f, high_f, pos, f, swr)
         else:
             # We could be anywhere in relation to the frequency.
@@ -198,7 +198,7 @@ class Tune(threading.Thread):
             new_pos = percent_pos_to_analog(self.__model, round(frac*100.0, 3))
             self.__move_to(new_pos)
             # See where that got us
-            r, f, swr = self.__vna_api.get_vswr(low_f, high_f)
+            r, f, swr = self.__vna_api.get_vswr(low_f, high_f, POINTS)
             self.__get_best_vswr(low_f, high_f, new_pos, f, swr)
             return True
     
@@ -296,7 +296,7 @@ class Tune(threading.Thread):
             # Move to new position
             self.__run_ms(dir, run_ms)
             # See where we are
-            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, 300)
+            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, POINTS)
             if r:
                 diff = round(new_f - self.__freq, 3)
             else:
@@ -354,7 +354,7 @@ class Tune(threading.Thread):
                 self.__move_to(new_pos)
             # Test again with higher resolution
             
-            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, 300)
+            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, POINTS)
             diff = round(new_f - self.__freq, 3)
             inc = int(abs(diff)*inc_mult)
             #print('3: ',new_low_f, new_high_f, new_f, inc, diff)
