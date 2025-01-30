@@ -504,7 +504,7 @@ class Calibrate(threading.Thread):
         if self.__model[STATE][VNA][VNA_OPEN]:
             # Get current from VNA
             sleep(0.5)
-            r, f, swr = self.__vna_api.get_vswr(start, stop, 300)
+            r, f, swr = self.__vna_api.get_vswr(start, stop, 401)
             if r:
                 return True, (f, swr, self.__args[0])
             else:
