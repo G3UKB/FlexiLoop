@@ -55,19 +55,17 @@ flexi_loop_model = {
                 LIM_2: [None, None],
                 LIM_3: [None, None],
             },
-            # Calibration sets for each loop
-            # {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
-            # Remove
-            SETS: {
-                CAL_S1: {},
-                CAL_S2: {},
-                CAL_S3: {},
-            },
             # Number of steps for calibration of whole loop
             STEPS: {
                 STEPS_1: 20,
                 STEPS_2: 20,
                 STEPS_3: 20,
+            },
+            
+            NAMES: {
+                NAME_1: 'Loop-1',
+                NAME_2: 'Loop-2',
+                NAME_3: 'Loop-3',
             },
             
             # Loop 1-3 {name: [[abs feedback value, f, swr], [...], ...], name: [...]]

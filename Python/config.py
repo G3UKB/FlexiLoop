@@ -41,7 +41,7 @@ import persist
 # Main config dialog        
 class Config(QDialog):
     
-    def __init__(self, model, cb, msgs):
+    def __init__(self, model, msgs):
         super(Config, self).__init__()
 
         # Get root logger
@@ -49,14 +49,10 @@ class Config(QDialog):
         
         # Parameters
         self.__model = model
-        self.__cb = cb
         self.__msgs = msgs
         
         # Instance vars
         self.__selected_loop = 1
-        
-        # Start idle processing
-        QtCore.QTimer.singleShot(IDLE_LONG_TICKER, self.__idleProcessing)
         
         # Set the back colour
         palette = QPalette()
@@ -76,18 +72,6 @@ class Config(QDialog):
         
         # Populate
         self.__populate_ui()
-        
-    # Init for each pass and at startup to set local context and tell UI of any differences
-    def cal_init(self):
-        # Local sets synced back to model on save
-        # Sets are [[name, low_freq, high_freq, steps, position], [...], ...]
-        self.__sets = {
-            CAL_S1: copy.deepcopy(self.__model[CONFIG][CAL][SETS][CAL_S1]),
-            CAL_S2: copy.deepcopy(self.__model[CONFIG][CAL][SETS][CAL_S2]),
-            CAL_S3: copy.deepcopy(self.__model[CONFIG][CAL][SETS][CAL_S3]),
-        }
-        self.__populate_table()
-        self.__cal_diff()
         
     #=======================================================
     # PRIVATE
@@ -216,124 +200,64 @@ class Config(QDialog):
         grid.setColumnStretch(4, 1)
 
     def __populate_calibration(self, grid):
-        # Calibration data for each band covered by 
-        # Loop select
-        looplabel = QLabel('Select Loop')
-        grid.addWidget(looplabel, 0, 0)
-        self.__loop_sel = QComboBox()
-        self.__loop_sel.addItem("1")
-        self.__loop_sel.addItem("2")
-        self.__loop_sel.addItem("3")
-        self.__loop_sel.setMinimumHeight(20)
-        grid.addWidget(self.__loop_sel, 0,1)
-        self.__loop_sel.currentIndexChanged.connect(self.__loop_change)
+        # Calibration data for each band covered by
+        callabel = QLabel('Loops 1-3 calibration settings: ')
+        grid.addWidget(callabel, 0, 0, 1,4)
         
-        # Table area
-        self.__table = QTableWidget()
-        self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.__table.setColumnCount(6)
-        self.__table.setHorizontalHeaderLabels(('Name', 'LowFreq', 'PosLow', 'HighFreq', 'PosHigh', 'Steps'))
-        self.__table.itemClicked.connect(self.__row_changed)
-        grid.addWidget(self.__table, 1, 0, 1, 2)
+        loop1label = QLabel('Name')
+        grid.addWidget(loop1label, 1, 0)
+        self.__loop1txt = QLineEdit(self.__model[CONFIG][CAL][NAMES][NAME_1])
+        self.__loop1txt.setObjectName("dialog")
+        self.__loop1txt.setToolTip('Loop 1 calibration name')
+        self.__loop1txt.setMaximumWidth(80)
+        grid.addWidget(self.__loop1txt, 1, 1)
+        step1label = QLabel('Steps')
+        grid.addWidget(step1label, 1, 2)
+        self.__step1txt = QSpinBox()
+        self.__step1txt.setObjectName("dialog")
+        self.__step1txt.setToolTip('Loop 1 number of calibration steps')
+        self.__step1txt.setRange(5,50)
+        self.__step1txt.setMinimumWidth(80)
+        self.__step1txt.setValue(self.__model[CONFIG][CAL][STEPS][STEPS_1])
+        grid.addWidget(self.__step1txt, 1, 3)
         
-        # Sub grid
-        subgrid = QGridLayout()
-        gb = QGroupBox()
-        gb.setLayout(subgrid)
-        grid.addWidget(gb, 2,0,1,2)
-
-        # Name for band
-        namelabel = QLabel('Name')
-        subgrid.addWidget(namelabel, 0, 0)
-        self.__nametxt = QLineEdit()
-        self.__nametxt.setObjectName("dialog")
-        self.__nametxt.setToolTip('Band bame')
-        self.__nametxt.setMaximumWidth(80)
-        subgrid.addWidget(self.__nametxt, 0, 1)
+        loop2label = QLabel('Name')
+        grid.addWidget(loop2label, 2, 0)
+        self.__loop2txt = QLineEdit(self.__model[CONFIG][CAL][NAMES][NAME_2])
+        self.__loop2txt.setObjectName("dialog")
+        self.__loop2txt.setToolTip('Loop 2 calibration name')
+        self.__loop2txt.setMaximumWidth(80)
+        grid.addWidget(self.__loop2txt, 2, 1)
+        step2label = QLabel('Steps')
+        grid.addWidget(step2label, 2, 2)
+        self.__step2txt = QSpinBox()
+        self.__step2txt.setObjectName("dialog")
+        self.__step2txt.setToolTip('Loop 2 number of calibration steps')
+        self.__step2txt.setRange(5,50)
+        self.__step2txt.setMinimumWidth(80)
+        self.__step2txt.setValue(self.__model[CONFIG][CAL][STEPS][STEPS_2])
+        grid.addWidget(self.__step2txt, 2, 3)
         
-        # Lower/upper freq limit
-        lowfreqlabel = QLabel('Low Freq')
-        subgrid.addWidget(lowfreqlabel, 0, 2)
-        self.__lowfreqtxt = QLineEdit()
-        self.__lowfreqtxt.setObjectName("dialog")
-        self.__lowfreqtxt.setInputMask('09.9000')
-        self.__lowfreqtxt.setToolTip('Low band frequency')
-        self.__lowfreqtxt.setMaximumWidth(80)
-        subgrid.addWidget(self.__lowfreqtxt, 0, 3)
+        loop3label = QLabel('Name')
+        grid.addWidget(loop3label, 3, 0)
+        self.__loop3txt = QLineEdit(self.__model[CONFIG][CAL][NAMES][NAME_3])
+        self.__loop3txt.setObjectName("dialog")
+        self.__loop3txt.setToolTip('Loop 3 calibration name')
+        self.__loop3txt.setMaximumWidth(80)
+        grid.addWidget(self.__loop3txt, 3, 1)
+        step3label = QLabel('Steps')
+        grid.addWidget(step3label, 3, 2)
+        self.__step3txt = QSpinBox()
+        self.__step3txt.setObjectName("dialog")
+        self.__step3txt.setToolTip('Loop 3 number of calibration steps')
+        self.__step3txt.setRange(5,50)
+        self.__step3txt.setMinimumWidth(80)
+        self.__step3txt.setValue(self.__model[CONFIG][CAL][STEPS][STEPS_3])
+        grid.addWidget(self.__step3txt, 3, 3)
         
-        highfreqlabel = QLabel('High Freq')
-        subgrid.addWidget(highfreqlabel, 0, 4)
-        self.__highfreqtxt = QLineEdit()
-        self.__highfreqtxt.setObjectName("dialog")
-        self.__highfreqtxt.setInputMask('09.9000')
-        self.__highfreqtxt.setToolTip('High band frequency')
-        self.__highfreqtxt.setMaximumWidth(80)
-        subgrid.addWidget(self.__highfreqtxt, 0, 5)
-        
-        # Number of steps
-        steplabel = QLabel('Steps')
-        subgrid.addWidget(steplabel, 1, 0)
-        self.__steptxt = QSpinBox()
-        self.__steptxt.setObjectName("dialog")
-        self.__steptxt.setToolTip('Set number of calibration steps')
-        self.__steptxt.setRange(0,50)
-        self.__steptxt.setMinimumWidth(80)
-        self.__steptxt.setValue(10)
-        subgrid.addWidget(self.__steptxt, 1, 1)
-        
-        # Position
-        poslowlabel = QLabel('PosLow%')
-        subgrid.addWidget(poslowlabel, 1, 2)
-        self.__poslowtxt = QLineEdit()
-        self.__poslowtxt.setInputMask('09.90')
-        self.__poslowtxt.setObjectName("dialog")
-        self.__poslowtxt.setToolTip('Set actuator position for low frequency')
-        self.__poslowtxt.setMaximumWidth(80)
-        subgrid.addWidget(self.__poslowtxt, 1, 3)
-        
-        poshilabel = QLabel('PosHigh%')
-        subgrid.addWidget(poshilabel, 1, 4)
-        self.__poshitxt = QLineEdit()
-        self.__poshitxt.setInputMask('09.90')
-        self.__poshitxt.setObjectName("dialog")
-        self.__poshitxt.setToolTip('Set actuator position for high frequency')
-        self.__poshitxt.setMaximumWidth(80)
-        subgrid.addWidget(self.__poshitxt, 1, 5)
-        
-        # Button area
-        # Sub grid
-        subgrid1 = QGridLayout()
-        gb1 = QGroupBox()
-        gb1.setLayout(subgrid1)
-        grid.addWidget(gb1, 3,0,1,2)
-
-        self.__new = QPushButton("New")
-        self.__new.setToolTip('Clear data')
-        self.__new.clicked.connect(self.__do_new)
-        self.__new.setMinimumHeight(20)
-        subgrid1.addWidget(self.__new, 0, 0)
-        
-        self.__add = QPushButton("Add")
-        self.__add.setToolTip('Add a new calibration item')
-        self.__add.clicked.connect(self.__do_add)
-        self.__add.setMinimumHeight(20)
-        subgrid1.addWidget(self.__add, 0, 1)
-
-        self.__remove = QPushButton("Remove")
-        self.__remove.setToolTip('Remove calibration item')
-        self.__remove.clicked.connect(self.__do_remove)
-        self.__remove.setMinimumHeight(20)
-        subgrid1.addWidget(self.__remove, 0, 2)
-        
-        # Close gaps
-        grid.setRowStretch(1, 1)
-        grid.setColumnStretch(2, 1)
-        
-        if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
-            self.__add.setEnabled(False)
-            self.__new.setEnabled(False)
-        if self.__table.currentRow() == -1:
-            self.__remove.setEnabled(False)
+         # Close gaps
+        grid.setRowStretch(4, 1)
+        grid.setColumnStretch(4, 1)
         
     def __populate_timeouts(self, grid):
         # Defaults for timeouts
@@ -510,14 +434,20 @@ class Config(QDialog):
         self.__model[CONFIG][ARDUINO][MOTOR_SPEED][MINIMUM] = self.__mintxt.value()
         self.__model[CONFIG][ARDUINO][MOTOR_SPEED][MAXIMUM] = self.__maxtxt.value()
         self.__model[CONFIG][ARDUINO][MOTOR_SPEED][DEFAULT] = self.__deftxt.value()
-        self.__model[CONFIG][CAL][SETS][CAL_S1] = self.__sets[CAL_S1]
-        self.__model[CONFIG][CAL][SETS][CAL_S2] = self.__sets[CAL_S2]
-        self.__model[CONFIG][CAL][SETS][CAL_S3] = self.__sets[CAL_S3]
+        
+        self.__model[CONFIG][CAL][NAMES][NAME_1] = self.__loop1txt.text()
+        self.__model[CONFIG][CAL][NAMES][NAME_2] = self.__loop2txt.text()
+        self.__model[CONFIG][CAL][NAMES][NAME_3] = self.__loop3txt.text()
+        self.__model[CONFIG][CAL][STEPS][STEPS_1] = self.__step1txt.value()
+        self.__model[CONFIG][CAL][STEPS][STEPS_2] = self.__step2txt.value()
+        self.__model[CONFIG][CAL][STEPS][STEPS_3] = self.__step3txt.value()
+                                         
         self.__model[CONFIG][TIMEOUTS][CALIBRATE_TIMEOUT] = self.__caltotxt.value()
         self.__model[CONFIG][TIMEOUTS][TUNE_TIMEOUT] = self.__tunetotxt.value()
         self.__model[CONFIG][TIMEOUTS][RES_TIMEOUT] = self.__restotxt.value()
         self.__model[CONFIG][TIMEOUTS][MOVE_TIMEOUT] = self.__movetotxt.value()
         self.__model[CONFIG][TIMEOUTS][SHORT_TIMEOUT] = self.__shorttotxt.value()
+        
         if self.__vnacb.isChecked():
             self.__model[CONFIG][VNA][VNA_ENABLED] = True
         else:
@@ -525,9 +455,6 @@ class Config(QDialog):
         
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)
-        
-        # Must redo after a save as we could have multiple saves
-        self.cal_init()
     
     # Cancel changes    
     def __do_cancel(self):
@@ -537,102 +464,4 @@ class Config(QDialog):
     def __do_close(self):
         self.close()
         
-    #=======================================================
-    # Helpers
-    # Populate table from model
-    def __populate_table(self):
-        # Clear table
-        row = 0
-        while self.__table.rowCount() > 0:
-            self.__table.removeRow(0);
-        # Populate
-        # Sets are {name: [low_freq, pos_low, high_freq, pos_high, steps], name:[...], ...}
-        key = self.__get_loop_item()
-        sets = self.__sets[key]
-        if len(sets) > 0:
-            for key, values in sets.items():
-                self.__table.insertRow(row)
-                self.__table.setItem(row, 0, QTableWidgetItem(str(key)))
-                self.__table.setItem(row, 1, QTableWidgetItem(str(values[0])))
-                self.__table.setItem(row, 2, QTableWidgetItem(str(values[1])))
-                self.__table.setItem(row, 3, QTableWidgetItem(str(values[2])))
-                self.__table.setItem(row, 4, QTableWidgetItem(str(values[3])))
-                self.__table.setItem(row, 5, QTableWidgetItem(str(values[4])))
-                row += 1
-            if self.__table.rowCount() > 0:
-                self.__table.selectRow(0)
-    
-    # Key for loop    
-    def __get_loop_item(self):
-        if self.__selected_loop == 1:
-           item = CAL_S1
-        elif self.__selected_loop == 2:
-           item = CAL_S2
-        elif self.__selected_loop == 3:
-           item = CAL_S3
-        else:
-            # Should not happen
-            self.logger.warn("Invalid loop id {}".format(self.__loop))
-            item = CAL_S1
-        return item
-    
-    # Map differences between config sets and calibrated sets
-    def __cal_diff(self):
-        diff = [[[],[],[]],[[],[],[]],[[],[],[]]]
-        if len(self.__model[CONFIG][CAL][CAL_L1]) > 0:
-            diff[0] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L1], self.__sets[CAL_S1])
-        if len(self.__model[CONFIG][CAL][CAL_L2]) > 0:
-            diff[1] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L2], self.__sets[CAL_S2])
-        if len(self.__model[CONFIG][CAL][CAL_L3]) > 0:
-            diff[2] = self.__dict_compare(self.__model[CONFIG][CAL][CAL_L3], self.__sets[CAL_S3])
-        # Tell Ui differences
-        self.logger.info("Difference in calibration state {}".format(diff))
-        self.__cb(diff)
-        
-    def __dict_compare(self, cal_l, cal_s):
-        # cal_l is the result of calibration of cal_s
-        # cal_l : {'40m': [[abs pos, freq, swr], [...], ...]], name: [...]}
-        # cal_s : {'40m': [low freq, low pos%, high freq, high pos%, steps], name: [...]}
-        # In order to know if this has changed we need to compare the low and high freq an pos.
-        # Note - this is the first and last entries in cal_l.
-        # Note - cal_l has abs pos and cal_s %pos.
-        # Note - and change in freq is a change whereas the pos has a range due to poitioning
-        # accuracy and conversion.
-        cal_l_keys = set(cal_l.keys())
-        cal_s_keys = set(cal_s.keys())
-        shared_keys = cal_l_keys.intersection(cal_s_keys)
-        removed = cal_l_keys - cal_s_keys
-        added = cal_s_keys - cal_l_keys
-        # The relevent set is in cal_s
-        modified = []
-        VAR = 10
-        for key, value in cal_s.items():
-            if key in cal_l:
-                # The start and end freq must be within a small margin of the corresponding values
-                if (value[0] >= cal_l[key][0][1] + 0.05) or (value[0] <= cal_l[key][0][1] - 0.05):
-                    modified.append(key)
-                    break
-                if (value[2] >= cal_l[key][-1][1] + 0.05) or (value[2] <= cal_l[key][-1][1] - 0.05):
-                    modified.append(key)
-                    break
-        return [list(added), list(removed), modified]
-        
-    #=======================================================
-    # Idle loop processing
-    def __idleProcessing(self):
-    
-        # Adjust buttons
-        if self.__model[CONFIG][CAL][HOME] == -1 or self.__model[CONFIG][CAL][MAX] == -1:
-            self.__add.setEnabled(False)
-            self.__new.setEnabled(False)
-        else:
-            self.__new.setEnabled(True)
-            if len(self.__nametxt.text()) > 0 and len(self.__lowfreqtxt.text()) > 0 and len(self.__highfreqtxt.text()) > 0 and len(self.__poslowtxt.text()) > 0 and len(self.__poshitxt.text()) > 0 and self.__steptxt.value() > 0:
-                self.__add.setEnabled(True)
-                
-        if self.__table.currentRow() == -1:
-            self.__remove.setEnabled(False)
-        
-        # Reset timer    
-        QtCore.QTimer.singleShot(IDLE_LONG_TICKER, self.__idleProcessing)
         

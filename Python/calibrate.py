@@ -44,15 +44,9 @@ VERB = True
 
 # This is a relatively slow process.
 # 1.    Establish the travel end points as feedback analogue values from the Arduino.
-#       The analogue limits are 0-1023 but the 10 turn pot will have travel at each end
-#       so actual values could be e.g. 200 - 800.These end points stay the same so this
-#       is a one off calibration until a recalibration is requested.
-# 2.    We need to know which loop is connected. This will be a UI function as is calling
-#       calibration.
-# 3.    Calibration is done according to the configuration where multiple spans can be
-#       set for each loop. The actuator is positioned manually for the config limits on
-#       each span and then automatically during configuration. However the frequency and
-#       swr has to be entered manually.
+#       The analogue limits are 0-1023 but depends on the pot sweep.These end points stay 
+#       the same so this is a one off calibration until a recalibration is requested.
+# 2.    Calibration is done for the entire loop with number of steps in the config.
 
 #=====================================================
 # The main calibration class
@@ -124,7 +118,6 @@ class Calibrate(threading.Thread):
         disp_tab = {
             'configure': self.__configure,
             'calibrate': self.__calibrate,
-            'sync': self.__sync,
             'freqlimits': self.__limits,
         }
         # Execute and return response
@@ -137,19 +130,19 @@ class Calibrate(threading.Thread):
     # Configure the feedback end points
     def __configure(self, args):
         # Retrieve the end points
-        r, self.__end_points = self.retrieve_end_points()
+        r, self.__end_points = self.__retrieve_end_points()
         sleep(0.1)
         if not r:
             # Calibrate end points
             self.__msg_cb("Configuring potentiometer feedback end points...")
-            r, msg = self.cal_end_points()
+            r, msg = self.__cal_end_points()
             if not r:
                 if self.__abort:
                     self.__abort = False
                     return (ABORT, (False, "Operation aborted!", [self.__end_points]))
                 else:
                     return (CONFIGURE, (False, msg, []))
-            r, self.__end_points = self.retrieve_end_points()
+            r, self.__end_points = self.__retrieve_end_points()
             if not r:
                 # We have a problem
                 return (CONFIGURE, (False, "Unable to retrieve or create end points!", self.__end_points))
@@ -170,7 +163,7 @@ class Calibrate(threading.Thread):
         acc = []
         
         # Retrieve the end points
-        r, [home, maximum] = self.retrieve_end_points()
+        r, [home, maximum] = self.__retrieve_end_points()
         sleep(0.1)
         if not r:
             # We have a problem
@@ -192,106 +185,30 @@ class Calibrate(threading.Thread):
         new_pos = home
         # Move to each increment from home to max and get the resonant freq vswr
         for step in range(steps):
+            if self.__abort:
+                self.__abort = False
+                return (ABORT, (False, "Configuration operation aborted!"))
             if not self.__move_wait(new_pos):
-                self.logger.warning("Failed to move to low frequency position!")
+                self.logger.warning("Failed to move to feedback position!")
                 return False, "Failed to move to position!", cal_map
             
             r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for step {}, offset {}".format(n, fb_inc), MSG_ALERT)
             self.__msg_cb("Step {}, pos: actual {}, wanted {}, f {}, swr {}".format(step, pos, new_pos, f, swr))
             #print('Low: pos, pos_fb, f, swr:', low_pos_abs, pos, f, swr)
             if not r:
-                self.logger.warning("Failed to get params for low frequency position!")
-                return False, "Failed to get params for low frequency position!", cal_map
+                self.logger.warning("Failed to get params for position!")
+                return False, "Failed to get params for position!", cal_map
             
-
-            # Add the low position
+            # Add the position
             acc.append([new_pos, f, swr])
             new_pos = new_pos + fb_inc
-         
-        cal_map['Loop-1'] = acc   
+        
+        l = ('Loop-1', 'Loop_2', 'Loop-3') 
+        cal_map[l[loop-1]] = acc   
         self.__msg_cb("Calibration complete", MSG_STATUS)
-        self.save_context(loop, cal_map)
+        self.__save_context(loop, cal_map)
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)
-        return ('Calibrate', (True, "", cal_map))
-        
-        
-    # Do calibration sequence for given loop
-    def __calibrate_old(self, args):
-        # Get args
-        loop, self.__man_cb = args
-        cal_map = {}
-        # Retrieve the end points
-        r, self.__end_points = self.retrieve_end_points()
-        sleep(0.1)
-        if not r:
-            # We have a problem
-            return (CALIBRATE, (False, "Unable to retrieve end points!", cal_map))
-        # Create a calibration map for loop
-        # Get descriptor and map for the loop
-        r, sets, cal_map = self.retrieve_context(loop)
-        if len(sets) == 0:
-            return (CALIBRATE, (False, "Calibration sets are empty for loop: {}!".format(loop), cal_map))
-        if r:
-            if len(cal_map) == 0:
-                try:
-                    r, msg, cal_map = self.create_map(loop, sets, cal_map)
-                except Exception as e:
-                    self.logger.fatal('Exception in Calibrate {}, [{}]'.format(e, traceback.print_exc()))
-                    exit()
-                if not r:
-                    if self.__abort:
-                        self.__abort = False
-                        return (ABORT, (False, "Operation aborted!", []))
-                    else:
-                        # We have a problem
-                        return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
-        else:
-            self.logger.warning ("Error in retrieving calibration map!: {}".format(cal_map))
-            return (CALIBRATE, (False, "Error in retrieving calibration map!", cal_map))
-        
-        self.__msg_cb("Calibration complete", MSG_STATUS)
-        self.save_context(loop, cal_map)
-        # Save model
-        persist.saveCfg(CONFIG_PATH, self.__model)
-        return ('Calibrate', (True, "", cal_map))
-    
-    # Do calibration sequence for given loop according to the calibration differences
-    # [added, removed, changed]
-    def __sync(self, args):
-        # Get args
-        loop, self.__man_cb, cal_diff = args
-        
-        cal_map = []
-        # Retrieve the end points
-        r, self.__end_points = self.retrieve_end_points()
-        if not r:
-            # We have a problem
-            return (CALIBRATE, (False, "Unable to retrieve end points for sync!", cal_map))
-        # Create a calibration map for loop
-        # Get descriptor and map for the loop
-        r, sets, cal_map = self.retrieve_context(loop)
-        if len(sets) == 0:
-            return (CALIBRATE, (False, "Calibration sets are empty for loop: {}!".format(loop), cal_map))
-        if r:
-            try:
-                r, msg, cal_map = self.create_synced_map(loop, sets, cal_map, cal_diff)
-            except Exception as e:
-                self.logger.fatal('Exception in Calibrate {}, [{}]'.format(e, traceback.print_exc()))
-                return (CALIBRATE, (False, 'Exception in Calibrate {}'.format(e), cal_map))
-            if not r:
-                if self.__abort:
-                    self.__abort = False
-                    return (ABORT, (False, "Operation aborted!", []))
-                else:
-                    # We have a problem
-                    return (CALIBRATE, (False, "Unable to create a calibration map for loop: {}!".format(loop), cal_map))
-        else:
-            self.logger.warning ("Error in retrieving calibration map!: {}".format(cal_map))
-            return (CALIBRATE, (False, "Error in retrieving calibration map!", cal_map))
-        
-        self.__msg_cb("Calibration complete", MSG_STATUS)
-        self.save_context(loop, cal_map)
         return ('Calibrate', (True, "", cal_map))
     
     # Set the frequency limits
@@ -329,7 +246,7 @@ class Calibrate(threading.Thread):
             self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = round(f) - 2.0
                     
     # Retrieve feedback end points from model
-    def retrieve_end_points(self):
+    def __retrieve_end_points(self):
         
         h = self.__model[CONFIG][CAL][HOME]
         m = self.__model[CONFIG][CAL][MAX]
@@ -340,7 +257,7 @@ class Calibrate(threading.Thread):
             return True, [h, m]
     
     # Set the feedback end points    
-    def cal_end_points(self):
+    def __cal_end_points(self):
         
         extents = [0, 0]    # home, max
         # Note we do max first as that positions us at home for next phase
@@ -366,161 +283,18 @@ class Calibrate(threading.Thread):
         self.__model[CONFIG][CAL][MAX] = extents[1]
         
         return True, ""
-    
-    # Retrieve the calibration definition and execution maps from the model 
-    def retrieve_context(self, loop):
-        if loop == 1:
-            return True, self.__model[CONFIG][CAL][SETS][CAL_S1], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L1])
-        elif loop == 2:
-            return True, self.__model[CONFIG][CAL][SETS][CAL_S2], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L2])
-        elif loop == 3:
-            return True, self.__model[CONFIG][CAL][SETS][CAL_S3], copy.deepcopy(self.__model[CONFIG][CAL][CAL_L3])
-        else:
-            return False, (), {}
 
+    # =========================================================================
+    # Utility methods
+    
     # Save the configured/updated calibration for the loop
-    def save_context(self, loop, cal_map):
+    def __save_context(self, loop, cal_map):
         if loop == 1:
             self.__model[CONFIG][CAL][CAL_L1] = cal_map
         elif loop == 2:
             self.__model[CONFIG][CAL][CAL_L2] = cal_map
         elif loop == 3:
             self.__model[CONFIG][CAL][CAL_L3] = cal_map
-    
-    # Perform calibration and create the calibration map    
-    def create_map(self, loop, sets, cal_map):
-        
-        # Just in case
-        cal_map.clear()
-        
-        # Sets are {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
-        # Each set is treated as a calibration but combined in cal_map
-        # For each set we step between low and high positions.
-        
-        # Current low/high pos
-        current = None
-        
-        # Iterate the sets dictionary
-        for key, values in sets.items():
-            # Calibrating set n of sets
-            self.__msg_cb("Calibrating set %s..." % key)
-            
-            # Run steps and build the cal-map
-            r, msg, cal_map = self.__do_steps(loop, cal_map, key, values)
-            if not r:
-                return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
-        return True, '', cal_map
-    
-    # As above but for the map changes only
-    def create_synced_map(self, loop, sets, cal_map, cal_diff):
-        
-        # See what we have to deal with
-        added, removed, changed = cal_diff
-        
-        # Delete sets that have been removed
-        for name in removed:
-            del cal_map[name]
-            
-        # Sets that have been added or modified need to be re-calibrated
-        # Remove sets that have changed
-        for name in changed:
-            del cal_map[name]
-            
-        # Merge the sets we need to add
-        merged = added + changed
-        
-        # Sets are {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
-        # Each set is treated as a calibration but combined in cal_map
-        # For each set we step between low and high positions.
-        
-        # Current low/high pos
-        current = None
-        
-        # Iterate the sets dictionary
-        for key, values in sets.items():
-            # Only add merged items
-            if key in merged:
-                # Calibrating set n of sets
-                self.__msg_cb("Calibrating set %s..." % key)
-                
-                # Run steps and build the cal-map
-                r, msg, cal_map = self.__do_steps(loop, cal_map, key, values)
-                if not r:
-                    return False, "Failed to generate calibration map for %s [%f]!" % (key, float(values[1])), []
-        return True, '', cal_map
-    
-    # Step through the given calibration set and save the points to the map    
-    def __do_steps(self, loop, cal_map, name, cal_set):
-        # Holds current data
-        temp_map = []
-        
-        # Get loop limits
-        sec = (LIM_1, LIM_2, LIM_3)
-        low_f_vna, high_f_vna = self.__model[CONFIG][CAL][LIMITS][sec[loop-1]]
-        
-        # Move incrementally and take readings
-        # We move from high to low for the given number of steps
-        # Interval is a %age of the difference between feedback readings for low and high
-        [low_freq, low_pos, high_freq, high_pos, steps] = cal_set
-        low_pos_abs = percent_pos_to_analog(self.__model, low_pos)
-        high_pos_abs = percent_pos_to_analog(self.__model, high_pos)
-        span = low_pos_abs - high_pos_abs
-        fb_inc = float(span)/float(steps)
-        
-        # Do low pos
-        if not self.__move_wait(low_pos_abs):
-            self.logger.warning("Failed to move to low frequency position!")
-            return False, "Failed to move to low frequency position!", cal_map
-        
-        r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for low limit [%s]" % str(round(low_freq, 2)), MSG_ALERT)
-        #print('Low: pos, pos_fb, f, swr:', low_pos_abs, pos, f, swr)
-        if not r:
-            self.logger.warning("Failed to get params for low frequency position!")
-            return False, "Failed to get params for low frequency position!", cal_map
-        self.__msg_cb("Target: %d, Actual %d" % (low_pos_abs, pos))
-        # Add the low position
-        temp_map.append([pos, f, swr])
-        
-        # Do intermediate steps
-        self.__msg_cb("Calibrating intermediate frequencies...")
-        next_inc = round(float(low_pos_abs) - fb_inc, 0)
-        counter = 0
-        while next_inc > high_pos_abs:
-            if not self.__move_wait(int(next_inc)):
-                self.logger.warning("Failed to move to intermediate position!")
-                return False, "Failed to move to intermediate position!", cal_map
-            r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
-            #print('Mid: pos, pos_fb, f, swr:', int(next_inc), pos, f, swr)
-            #self.__msg_cb("Please enter frequency and SWR for step %d" % (counter+1), MSG_ALERT)
-            #r, (f, swr, pos) = self.__get_current()
-            if not r:
-                self.logger.warning("Failed to get params for step position!")
-                return False, "Failed to get params for step position!", cal_map
-            self.__msg_cb("Step: %d, Target: %d, Actual %d" % (counter, next_inc, pos)) 
-            temp_map.append([pos, f, swr])
-            next_inc -= fb_inc
-            counter += 1
-        
-        # Do high pos
-        if not self.__move_wait(high_pos_abs):
-            self.logger.warning("Failed to move to high frequency position!")
-            return False, "Failed to move to high frequency position!", cal_map
-        r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
-        #print('High: pos, pos_fb, f, swr:', high_pos_abs, pos, f, swr)
-        #self.__msg_cb("Please enter frequency and SWR for high frequency limit [%s]" % str(round(high_freq, 2)), MSG_ALERT)
-        #r, (f, swr, pos) = self.__get_current()
-        if not r:
-            self.logger.warning("Failed to get params for high frequency position!")
-            return False, "Failed to get params for high frequency position!", cal_map
-        self.__msg_cb("Target: %d, Actual %d" % (high_pos_abs, pos))
-        # Add the high position
-        temp_map.append([pos, f, swr])
-        
-        # Assign this set to the set name
-        cal_map[name] = temp_map
-        
-        # Return the map
-        return True, "", cal_map
     
     # Move to a position and wait for the response
     def __move_wait(self, move_to):
