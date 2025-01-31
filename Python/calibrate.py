@@ -192,8 +192,8 @@ class Calibrate(threading.Thread):
                 self.logger.warning("Failed to move to feedback position!")
                 return False, "Failed to move to position!", cal_map
             
-            r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for step {}, offset {}".format(n, fb_inc), MSG_ALERT)
-            self.__msg_cb("Step {}, pos: actual {}, wanted {}, f {}, swr {}".format(step, pos, new_pos, f, swr))
+            r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for step {}, offset {}".format(step+1, fb_inc), MSG_ALERT)
+            self.__msg_cb("Step {}, pos: actual {}, wanted {}, f {}, swr {}".format(step+1, pos, new_pos, f, swr))
             #print('Low: pos, pos_fb, f, swr:', low_pos_abs, pos, f, swr)
             if not r:
                 self.logger.warning("Failed to get params for position!")
