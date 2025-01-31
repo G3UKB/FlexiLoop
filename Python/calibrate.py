@@ -88,6 +88,7 @@ class Calibrate(threading.Thread):
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
+        self.__pos = 0
     
     # Terminate
     def terminate(self):
@@ -163,6 +164,60 @@ class Calibrate(threading.Thread):
     
     # Do calibration sequence for given loop
     def __calibrate(self, args):
+        # Get args
+        loop, self.__man_cb = args
+        cal_map = {}
+        acc = []
+        
+        # Retrieve the end points
+        r, [home, maximum] = self.retrieve_end_points()
+        sleep(0.1)
+        if not r:
+            # We have a problem
+            return (CALIBRATE, (False, "Unable to retrieve end points!", cal_map))
+        
+        # Get loop limits
+        sec = (LIM_1, LIM_2, LIM_3)
+        low_f_vna, high_f_vna = self.__model[CONFIG][CAL][LIMITS][sec[loop-1]]
+        
+        # Create a calibration map for loop
+        # Get number of steps for loop
+        steps_for_loop = (STEPS_1, STEPS_2, STEPS_3)
+        steps = self.__model[CONFIG][CAL][STEPS][steps_for_loop[loop - 1]]
+        
+        # We have end points and steps so work out the increment.
+        fb_points =  maximum - home
+        fb_inc = int(fb_points/steps)
+        # Start at the home position
+        new_pos = home
+        # Move to each increment from home to max and get the resonant freq vswr
+        for step in range(steps):
+            if not self.__move_wait(new_pos):
+                self.logger.warning("Failed to move to low frequency position!")
+                return False, "Failed to move to position!", cal_map
+            
+            r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for step {}, offset {}".format(n, fb_inc), MSG_ALERT)
+            self.__msg_cb("Step {}, pos: actual {}, wanted {}, f {}, swr {}".format(step, pos, new_pos, f, swr))
+            #print('Low: pos, pos_fb, f, swr:', low_pos_abs, pos, f, swr)
+            if not r:
+                self.logger.warning("Failed to get params for low frequency position!")
+                return False, "Failed to get params for low frequency position!", cal_map
+            
+
+            # Add the low position
+            acc.append([new_pos, f, swr])
+            new_pos = new_pos + fb_inc
+         
+        cal_map['Loop-1'] = acc   
+        self.__msg_cb("Calibration complete", MSG_STATUS)
+        self.save_context(loop, cal_map)
+        # Save model
+        persist.saveCfg(CONFIG_PATH, self.__model)
+        return ('Calibrate', (True, "", cal_map))
+        
+        
+    # Do calibration sequence for given loop
+    def __calibrate_old(self, args):
         # Get args
         loop, self.__man_cb = args
         cal_map = {}
@@ -269,9 +324,9 @@ class Calibrate(threading.Thread):
         sec = (LIM_1, LIM_2, LIM_3)
         # Give it a little breathing space each side on max and min
         if where == HOME:
-            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = round(f) - 2.0
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][1] = round(f) + 2.0
         elif where == MAX:
-            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = round(f) + 2.0
+            self.__model[CONFIG][CAL][LIMITS][sec[loop-1]][0] = round(f) - 2.0
                     
     # Retrieve feedback end points from model
     def retrieve_end_points(self):
@@ -506,7 +561,7 @@ class Calibrate(threading.Thread):
             sleep(0.5)
             r, f, swr = self.__vna_api.get_vswr(start, stop, POINTS)
             if r:
-                return True, (f, swr, self.__args[0])
+                return True, (f, swr, self.__pos)
             else:
                 return False, (None, None, None)
         else:
@@ -526,6 +581,7 @@ class Calibrate(threading.Thread):
             self.__event.set() 
         elif name == STATUS:
             # Calculate position and directly event to API which has a pass-through to UI
+            self.__pos = val[0]
             ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
                 self.__cb((name, (True, "", [str(ppos), val[0]])))

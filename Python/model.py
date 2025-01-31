@@ -45,6 +45,9 @@ flexi_loop_model = {
             SHORT_TIMEOUT: 2,
         },
         CAL: {
+            # Feedback values for min and max
+            HOME: -1,
+            MAX: -1,
             # Frequency limits each loop
             # [Low, High]
             LIMITS: {
@@ -54,14 +57,19 @@ flexi_loop_model = {
             },
             # Calibration sets for each loop
             # {name: [low_freq, low_pos, high_freq, high_pos, steps], name:[...], ...}
+            # Remove
             SETS: {
                 CAL_S1: {},
                 CAL_S2: {},
                 CAL_S3: {},
             },
-            # Feedback values for min and max
-            HOME: -1,
-            MAX: -1,
+            # Number of steps for calibration of whole loop
+            STEPS: {
+                STEPS_1: 20,
+                STEPS_2: 20,
+                STEPS_3: 20,
+            },
+            
             # Loop 1-3 {name: [[abs feedback value, f, swr], [...], ...], name: [...]]
             CAL_L1: {},
             CAL_L2: {},
