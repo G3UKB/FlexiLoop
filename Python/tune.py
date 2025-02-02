@@ -95,67 +95,51 @@ class Tune(threading.Thread):
             # Need to steal the serial comms callback
             self.__serial_comms.steal_callback(self.t_tune_cb)
             
-            # Get calibration
-            sets = model_for_loop(self.__model, self.__loop)
+            # Get calibration map
+            cal_map = model_for_loop(self.__model, self.__loop)
             # Stage 1: move as close to frequency as possible
-            # Find suitable candidate set
-            candidate = find_freq_candidate(sets, self.__freq)
-            if candidate == None:
-                # Not within our calibrated ranges
-                if self.__model[STATE][VNA][VNA_OPEN]:
-                    # We have a VNA so use that
-                    if self.__vna_tune(WIDE_TUNE, None):
-                        self.__cb((TUNE, (True, "", [])))
-                    else:
-                        # No other options
-                        self.__cb((TUNE, (False, "Unable to tune to frequency {} using VNA!".format(self.__freq), [])))
+            r, pos = self.__interpolate_tune(cal_map)
+            if not r:
+                #self.__cb((TUNE, (False, "Unable to find a candidate set for frequency {}".format(self.__freq), [])))
+                self.logger.info("Tuning -- failed to interpolate tune!")
+            if self.__model[STATE][VNA][VNA_OPEN]:
+                # Try and get closer
+                if self.__vna_tune(CLOSE_TUNE, pos):
+                    self.__cb((TUNE, (True, "", [])))
                 else:
-                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency {}".format(self.__freq), [])))
+                    # No other options
+                    self.__cb((TUNE, (False, "Unable to get closer to frequency {} using VNA!".format(self.__freq), [])))
             else:
-                # We have a candidate so use that to get close
-                r, pos = self.__interpolate_tune(sets, candidate)
-                if not r:
-                    self.__cb((TUNE, (False, "Unable to find a candidate set for frequency {}".format(self.__freq), [])))
-                if self.__model[STATE][VNA][VNA_OPEN]:
-                    # Try and get closer
-                    if self.__vna_tune(CLOSE_TUNE, pos):
-                        self.__cb((TUNE, (True, "", [])))
-                    else:
-                        # No other options
-                        self.__cb((TUNE, (False, "Unable to get closer to frequency {} using VNA!".format(self.__freq), [])))
-             
+                self.__cb((TUNE, (True, "Please complete tuning using manual controls.", [])))
+         
             # Give back callback
             self.__serial_comms.restore_callback()
             
         print("Tune thread  exiting...")
     
     # Move to a position that should be close to the tune point
-    def __interpolate_tune(self, sets, candidate):
-        aset = sets[candidate]
+    def __interpolate_tune(self, cal_map):
         # Find the two points this frequency falls between
         index = 0
         idx_low = -1
         idx_high = -1
-        for ft in aset:
-            if ft[1] <= self.__freq:
+        for pt in cal_map:
+            if pt[1] <= self.__freq:
                 # Lower than target
                 idx_high = index+1 
                 idx_low = index
-            elif ft[1] >= self.__freq:
+            elif pt[1] >= self.__freq:
                 break
             index+=1
         if idx_high == -1 or idx_low == -1:
-            self.__cb((TUNE, (False, "Unable to find a tuning point for frequency %f" % self.__freq, [])))
-            # Give back callback
-            self.__serial_comms.restore_callback()
             return False, None
-        
+    
         # Calculate where between these points the frequency should be
         # Note high is the setting for higher frequency not higher feedback value
         # Same for low
         #
         # The feedback values and frequencies above and below the required frequency
-        if idx_high == len(aset):
+        if idx_high == len(vals):
             # We are on last entry
             fb_low = aset[idx_low][0]
             target_pos = fb_low
@@ -295,61 +279,6 @@ class Tune(threading.Thread):
         self.__speed(self.__model[STATE][ARDUINO][SPEED])
             
         return result
-    
-    """
-    def __get_best_vswr_sav(self, low_f, high_f, pos, f, swr):
-        # How far are we from the target
-        # We wnat to limit the span to around the required frequency
-        # modified by how far away we are
-        
-        new_low_f = low_f
-        new_high_f = high_f
-        diff = round(f - self.__freq, 3)
-        #print('1: ', low_f, high_f, f, diff)
-        if diff > 0.0:
-            # Current f if higher in freq than wanted
-            # We go 1MHz above and below to incorporate wanted and diff
-            new_low_f = self.__freq - 1.0
-            new_high_f = self.__freq + abs(diff) + 1.0
-        else:
-            # Current f is lower in freq than wanted
-            new_low_f = self.__freq - abs(diff) - 1.0
-            new_high_f = self.__freq + 1.0
-        if new_low_f < low_f: new_low_f = low_f
-        if new_high_f > high_f: new_high_f = high_f
-        new_f = f
-        new_pos = pos
-        attempts = 10
-        inc_mult = 10
-        # We really want to get within 10KHz
-        target_diff = 0.03
-        # Move increment depending on how far away we are
-        inc = int(abs(diff)*inc_mult)
-        #print('2: ',new_low_f, new_high_f, f, inc, diff)
-        # Loop until exit condition is met
-        while True:
-            if diff < 0.0:
-                # Lower than target
-                new_pos -= inc
-                self.__move_to(new_pos)
-            else:
-                # Higher than target
-                new_pos += inc
-                self.__move_to(new_pos)
-            # Test again with higher resolution
-            
-            r, new_f, swr = self.__vna_api.get_vswr(new_low_f, new_high_f, POINTS)
-            diff = round(new_f - self.__freq, 3)
-            inc = int(abs(diff)*inc_mult)
-            #print('3: ',new_low_f, new_high_f, new_f, inc, diff)
-                    
-            # Check termination conditions
-            if inc == 0 or abs(diff) <= target_diff or attempts <= 0:
-                break
-            else:
-                attempts -= 1
-        return True
-    """
     
     #=======================================================
     # Stolen Callback for serial comms

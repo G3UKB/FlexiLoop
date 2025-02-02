@@ -61,17 +61,10 @@ flexi_loop_model = {
                 STEPS_2: 20,
                 STEPS_3: 20,
             },
-            
-            NAMES: {
-                NAME_1: 'Loop-1',
-                NAME_2: 'Loop-2',
-                NAME_3: 'Loop-3',
-            },
-            
             # Loop 1-3 {name: [[abs feedback value, f, swr], [...], ...], name: [...]]
-            CAL_L1: {},
-            CAL_L2: {},
-            CAL_L3: {},
+            CAL_L1: [],
+            CAL_L2: [],
+            CAL_L3: [],
         },
         SETPOINTS: {
             # Loop 1-3 {name: [[abs feedback value, f, swr], [...], ...], name: [...]]

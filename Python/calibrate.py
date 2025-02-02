@@ -159,8 +159,7 @@ class Calibrate(threading.Thread):
     def __calibrate(self, args):
         # Get args
         loop, self.__man_cb = args
-        cal_map = {}
-        acc = []
+        cal_map = []
         
         # Retrieve the end points
         r, [home, maximum] = self.__retrieve_end_points()
@@ -200,11 +199,9 @@ class Calibrate(threading.Thread):
                 return False, "Failed to get params for position!", cal_map
             
             # Add the position
-            acc.append([new_pos, f, swr])
+            cal_map.append([new_pos, f, swr])
             new_pos = new_pos + fb_inc
-        
-        l = ('Loop-1', 'Loop_2', 'Loop-3') 
-        cal_map[l[loop-1]] = acc   
+          
         self.__msg_cb("Calibration complete", MSG_STATUS)
         self.__save_context(loop, cal_map)
         # Save model

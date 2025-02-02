@@ -498,6 +498,11 @@ int move_to_feedback_value(int target) {
         // If necessary move reverse so adjustment is always moving forward.
         while(get_feedback_value() > target) {
           move_ms(100, REVERSE);
+          if (check_abort() || check_limit()) {
+            md.setM1Speed(0);
+            end = TRUE;
+            break;
+          }
         }
 
         if (end == FALSE) {
