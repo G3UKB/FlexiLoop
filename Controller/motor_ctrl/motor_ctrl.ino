@@ -283,7 +283,7 @@ void process(String data) {
       
       if (move_to_feedback_value(val)) {
         Serial.print("MoveTo: ");
-        Serial.print(val);
+        Serial.print(get_feedback_value());
         Serial.print(';');
       } else {
         Serial.print("Motor fault on move!;");
@@ -344,7 +344,7 @@ int check_limit() {
   last_fbval = get_feedback_value();
   while( fb_counter >= 0 ) {
     fb_val = get_feedback_value();
-    if ((fb_val > last_fbval + 2) || (fb_val < last_fbval - 2)) {
+    if ((fb_val > last_fbval) || (fb_val < last_fbval)) {
       // Still moving
       limit = FALSE;
       break;
@@ -531,8 +531,8 @@ int move_to_feedback_value(int target) {
     current_speed = l_speed;
     md.setM1Speed(0);
     // Final position update
-    delay(500);
     send_status();
+    delay(500);
   }
   return TRUE;
 }

@@ -82,7 +82,6 @@ class Calibrate(threading.Thread):
         self.__event = threading.Event()
         self.__wait_for = ""
         self.__args = []
-        self.__pos = 0
     
     # Terminate
     def terminate(self):
@@ -303,7 +302,7 @@ class Calibrate(threading.Thread):
         if VERB: self.logger.info("Out of wait")
         if self.__abort:
             self.__event.clear()
-            return False, "Operation aborted!"
+            return False
         self.__event.clear()
         return True
     
@@ -332,7 +331,7 @@ class Calibrate(threading.Thread):
             sleep(0.5)
             r, f, swr = self.__vna_api.get_vswr(start, stop, POINTS)
             if r:
-                return True, (f, swr, self.__pos)
+                return True, (f, swr, self.__args[0])
             else:
                 return False, (None, None, None)
         else:
@@ -352,7 +351,6 @@ class Calibrate(threading.Thread):
             self.__event.set() 
         elif name == STATUS:
             # Calculate position and directly event to API which has a pass-through to UI
-            self.__pos = val[0]
             ppos = analog_pos_to_percent(self.__model, val[0])
             if ppos != None:
                 self.__cb((name, (True, "", [str(ppos), val[0]])))
