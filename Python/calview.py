@@ -106,8 +106,8 @@ class Calview(QDialog):
         # Table area
         self.__table = QTableWidget()
         self.__table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.__table.setColumnCount(4)
-        self.__table.setHorizontalHeaderLabels(('Set Name', 'Position %', 'Freq', 'SWR',))
+        self.__table.setColumnCount(3)
+        self.__table.setHorizontalHeaderLabels(('Position %', 'Freq', 'SWR',))
         grid.addWidget(self.__table, 1, 0, 1, 3)
         
         # Button area
@@ -174,22 +174,17 @@ class Calview(QDialog):
             self.__table.removeRow(0);
         # Populate
         key = self.__get_loop_item()
-        cps = self.__model[CONFIG][CAL][key]
-        if len(cps) > 0:
-            for key, item in cps.items():
-                self.__table.insertRow(row)
-                self.__table.setItem(row, 0, QTableWidgetItem(str(key)))
-                row += 1
-                for d in item:
-                    self.__table.insertRow(row)
-                    self.__table.setItem(row, 1, QTableWidgetItem(str(analog_pos_to_percent(self.__model, d[0]))))
-                    self.__table.setItem(row, 2, QTableWidgetItem(str(d[1])))
-                    self.__table.setItem(row, 3, QTableWidgetItem(str(d[2])))
-                    # Add to dict
-                    self.__pos_lookup[analog_pos_to_percent(self.__model, d[0])] = d[0] 
-                    row += 1
-            if self.__table.rowCount() > 0:
-                self.__table.selectRow(0)
+        points = self.__model[CONFIG][CAL][key]
+        for point in reversed(points):
+            self.__table.insertRow(row)
+            self.__table.setItem(row, 0, QTableWidgetItem(str(analog_pos_to_percent(self.__model, point[0]))))
+            self.__table.setItem(row, 1, QTableWidgetItem(str(point[1])))
+            self.__table.setItem(row, 2, QTableWidgetItem(str(point[2])))
+            # Add to dict
+            self.__pos_lookup[analog_pos_to_percent(self.__model, point[0])] = point[0] 
+            row += 1
+        if self.__table.rowCount() > 0:
+            self.__table.selectRow(0)
         
     # Get key for loop    
     def __get_loop_item(self):

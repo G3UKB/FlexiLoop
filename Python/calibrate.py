@@ -179,24 +179,24 @@ class Calibrate(threading.Thread):
         
         # We have end points and steps so work out the increment.
         fb_points =  maximum - home
-        fb_inc = int(fb_points/steps)
+        fb_inc = int(fb_points/(steps - 1))
         # Start at the home position
         new_pos = home
         # Move to each increment from home to max and get the resonant freq vswr
         for step in range(steps):
             if self.__abort:
                 self.__abort = False
-                return (ABORT, (False, "Configuration operation aborted!"))
+                return (ABORT, (False, "Calibration operation aborted!", cal_map))
             if not self.__move_wait(new_pos):
                 self.logger.warning("Failed to move to feedback position!")
-                return False, "Failed to move to position!", cal_map
+                return (CALIBRATE, (False, "Failed to move to feedback position!", cal_map))
             
             r, (f, swr, pos) = self.__manage_vals(low_f_vna, high_f_vna, "Please enter frequency and SWR for step {}, offset {}".format(step+1, fb_inc), MSG_ALERT)
             self.__msg_cb("Step {}, pos: actual {}, wanted {}, f {}, swr {}".format(step+1, pos, new_pos, f, swr))
             #print('Low: pos, pos_fb, f, swr:', low_pos_abs, pos, f, swr)
             if not r:
                 self.logger.warning("Failed to get params for position!")
-                return False, "Failed to get params for position!", cal_map
+                return (CALIBRATE, (False, "Failed to get params for position!", cal_map))
             
             # Add the position
             cal_map.append([new_pos, f, swr])
@@ -206,7 +206,7 @@ class Calibrate(threading.Thread):
         self.__save_context(loop, cal_map)
         # Save model
         persist.saveCfg(CONFIG_PATH, self.__model)
-        return ('Calibrate', (True, "", cal_map))
+        return (CALIBRATE, (True, "", cal_map))
     
     # Set the frequency limits
     def __limits(self, args):
