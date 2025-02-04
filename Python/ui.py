@@ -438,9 +438,9 @@ class UI(QMainWindow):
         # -------------------------------------------
         # Auto area
         self.__autogrid = QGridLayout()
-        gb_auto = QGroupBox('Auto')
-        gb_auto.setLayout(self.__autogrid)
-        self.__grid.addWidget(gb_auto, 2,0)
+        self.__gb_auto = QGroupBox('Auto')
+        self.__gb_auto.setLayout(self.__autogrid)
+        self.__grid.addWidget(self.__gb_auto, 2,0)
         self.__autogrid.setColumnMinimumWidth(5,300)
         self.__pop_auto(self.__autogrid)
         
@@ -1419,9 +1419,9 @@ class UI(QMainWindow):
         
         # Adjust the auto for VNA
         if self.__model[STATE][VNA][VNA_OPEN]:
-            self.__enable_disable_auto(True)
+            self.__gb_auto.setTitle('Auto')
         else:
-            self.__enable_disable_auto(False)
+            self.__gb_auto.setTitle('Auto - GUIDE ONLY')
             
     # All enabled (True) or disabled (False)
     def __enable_disable_feedback(self, state):

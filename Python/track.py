@@ -88,9 +88,11 @@ class Track(threading.Thread):
                         r = False
                 else:
                     # We can only get a good approximation if we are within a frequency set
-                    r, msg, (pos, f, swr) = find_from_position(self.__model, self.__loop, self.__pos)
+                    cal_t = (CAL_L1, CAL_L2, CAL_L3)
+                    cal_map = self.__model[CONFIG][CAL][cal_t[self.__loop-1]]
+                    r, f, swr = self.__find_from_position(cal_map, self.__pos)
             except Exception as e:
-                self.logger.info("Failed operation on VNA, could be timing when disabled ...")
+                self.logger.info("Exception in tracking [{}]".format(e))
                 r = False
                 
             # Return response
@@ -101,4 +103,42 @@ class Track(threading.Thread):
                 
         print("Track thread  exiting...")
     
+    # Find the frequency abd SWR from a position
+    def __find_from_position(self, cal_map, pos):
+        # Find the two points this pos falls between
+        index = 0
+        idx_low = -1
+        idx_high = -1
+        for pt in cal_map:
+            if pt[0] <= pos:
+                # Lower than target
+                idx_high = index+1 
+                idx_low = index
+            elif pt[0] <= pos:
+                break
+            index+=1
+        if idx_high == -1 or idx_low == -1:
+            return False, None
+    
+        # Calculate where between these points the frequency should be
+        # Note high is the setting for higher frequency not higher feedback value
+        # Same for low
+        #
+        # The feedback values and frequencies above and below the required frequency
+        fb_high = cal_map[idx_high][0]
+        fb_low = cal_map[idx_low][0]
+        frq_high = cal_map[idx_low][1]
+        frq_low = cal_map[idx_high][1]
+        swr_high = cal_map[idx_high][2]
+        swr_low = cal_map[idx_low][2]
+        
+        # We now need to calculate the feedback value for the required frequency
+        fb_span = fb_high - fb_low 
+        fb_inc = fb_high - pos 
+        fb_frac = fb_inc/fb_span
+        frq_span = frq_high - frq_low
+        frq = (frq_span * fb_frac) + frq_low
+        swr = (swr_high + swr_low)/2
+        
+        return True, round(frq, 3), round(swr, 2)
     
