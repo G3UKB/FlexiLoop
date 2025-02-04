@@ -42,6 +42,7 @@ import calview
 import track
 sys.path.append('../NanoVNA')
 import vna_api
+import fb_limits
 
 # Vertical line
 class VLine(QFrame):
@@ -74,12 +75,17 @@ class UI(QMainWindow):
                 self.logger.warn ('Failed to open VNA device! Trying periodically.')
             
         # Create the API instance
-        self.__api = api.API(model, self.__vna_api, self.callback, self.msg_callback)
+        self.__s_q = queue.Queue(10)
+        self.__api = api.API(model, self.__vna_api, self.__s_q , self.callback, self.msg_callback)
         self.__api.init_comms()
         
         # Create and run the track instance
         self.__track = track.Track(model, self.__vna_api, self.track_callback)
         self.__track.start()
+        
+        # Create and run the fb_limits instance
+        self.__fb_limits = fb_limits.FBLimits(self.__model, self.__s_q)
+        self.__fb_limits.start()
         
         # Create the config dialog
         self.__config_dialog = config.Config(self.__model, self.msg_callback)
@@ -153,8 +159,8 @@ class UI(QMainWindow):
         self.__man_cal_swr = 1.0
         
         # Tracking
-        self.__tracking_update = 8
-        self.__tracking_counter = self.__tracking_update
+        self.__update_ctr_set = 8
+        self.__update_ctr = self.__update_ctr_set
         self.__freq_track = '?.?'
         self.__swr_track = '?.?'
         
@@ -871,7 +877,7 @@ class UI(QMainWindow):
         self.__api.configure()
     
     def __do_pot_del(self):
-        # Ask user if they really want to delete the calibration
+        # Ask user if they really want to delete the feedback
         qm = QMessageBox
         ret = qm.question(self,'', "Do you want to delete the feedback positions?", qm.Yes | qm.No)
 
@@ -1130,11 +1136,12 @@ class UI(QMainWindow):
                 self.__currposfb.setText(str(self.__fb_pos))
                 # and tracking
                 if self.__current_activity == NONE:
-                    if self.__tracking_update <= 0:
-                        self.__tracking_update = self.__tracking_counter
+                    if self.__update_ctr <= 0:
+                        self.__update_ctr = self.__update_ctr_set
                         self.__track.do_one_pass(self.__selected_loop, self.__fb_pos)
+                        self.__fb_limits.do_one_pass()
                     else:
-                        self.__tracking_update -= 1
+                        self.__update_ctr -= 1
                 # and update the tracking UI
                 self.__freqval.setText(self.__freq_track)
                 self.__swrres.setText(self.__swr_track)

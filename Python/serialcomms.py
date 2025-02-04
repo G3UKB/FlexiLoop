@@ -158,6 +158,8 @@ class SerialComms(threading.Thread):
             'speed': self.__speed,
             'home': self.__home,
             'max': self.__maximum,
+            'set_home': self.__set_home,
+            'set_max': self.__set_max,
             'pos': self.__pos,
             'move': self.__move,
             'nudge_fwd': self.__nudge_fwd,
@@ -187,7 +189,13 @@ class SerialComms(threading.Thread):
             
     def __maximum(self, args):
         return self.send(b"x;", 30)
+    
+    def __set_home(self, args):
+        return self.send(b"j;", 2)
             
+    def __set_max(self, args):
+        return self.send(b"k;", 2)
+    
     def __pos(self, args):
         return self.send(b"p;", 2)
             

@@ -49,7 +49,7 @@ VERB = False
 class API:
     
     # Initialisation
-    def __init__(self, model, vna_api, cb, msgs_cb):
+    def __init__(self, model, vna_api, s_q, cb, msgs_cb):
         
         # Get root logger
         self.logger = logging.getLogger('root')
@@ -59,13 +59,14 @@ class API:
         self.__model = model
         # VNA instance
         self.__vna_api = vna_api
+        # Serial queue
+        self.__s_q = s_q
         # Callback for completion of function
         self.__cb = cb
         # Callback for messages
         self.__msgs = msgs_cb
         
         # Create a SerialComms instance
-        self.__s_q = queue.Queue(10)
         self.__serial_comms = serialcomms.SerialComms(self.__model, self.__s_q, self.serial_callback)
         
         # Create a Calibration instance

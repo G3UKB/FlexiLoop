@@ -28,23 +28,6 @@
 * Driver level code is a request/response architecture.
 * The only autominous aspect is status, limits and debug
 * reporting during move operations.
-*
-* Commands :
-*   o Set speed (speed)
-*   o Move to home position
-*   o Move to max extension
-*   o Get position value
-*   o Move to position 
-*   o Nudge forward
-*   o Nudge reverse
-*   o Run forward (n ms)
-*   o Run reverse (n ms)
-*   o Free run forward
-*   o Free run reverse
-*   o Stop free run
-*   o Relay energise
-*   o Relay de-energise
-*
 */
 
 // Motor driver lib
@@ -73,6 +56,9 @@ int current_speed = DEFAULT_SPEED; // Current speed in range 0 to +-400
 int p[10];
 // Track feedback values
 int fb_val = -1;
+// Limits
+int home_limit = -1;
+int max_limit = -1;
 
 // ******************************************************************
 // Entry point, runs once on power-on
@@ -121,6 +107,8 @@ void process(String data) {
   *   o Stop free run : e;
   *   o Nudge forward : f;
   *   o Move to home position : h;
+  *   o Set home limit : j, pos as int [0 to 1023].;
+  *   o Set max limit : k, pos as int [0 to 1023].;
   *   o Move to position : m, pos as int [0 to 1023].;
   *   o Get position value : p;
   *   o Nudge reverse : r;
@@ -175,25 +163,6 @@ void process(String data) {
   // Switch on command type
   switch (cmd) {
     
-    case 'y':
-      // Heartbeat is specifically monitored.
-      Serial.print("y;");
-      break;
-    case 'z':
-      // This is an abort which has caught us outside of 
-      // the normal 'check for abort' while moving. So may have been 
-      // during a position command etc. We don't want to send any response
-      // here as it will be an unexpected response and the abort should
-      // process normally at the controller level.
-      break;
-    case 's':
-      // Parse out the speed
-      speed = parse_int(data, 2);
-      // Set as current speed
-      current_speed = speed;
-      Serial.print("Speed;");
-      break;
-
     case 'a':
       digitalWrite(RLY_PIN, LOW);
       Serial.print("RlyOn;");
@@ -202,64 +171,6 @@ void process(String data) {
     case 'b':
       digitalWrite(RLY_PIN, HIGH);
       Serial.print("RlyOff;");
-      break;
-
-    case 'h':
-      if (!go_home_or_max(HOME)) {
-        Serial.print("Motor fault;");
-      };
-      Serial.print("Home;");
-      break;
-
-    case 'x':
-      if (!go_home_or_max(MAX)) {
-        Serial.print("Motor fault;");
-      }
-      Serial.print("Max;");
-      break;
-
-    case 'p':
-      Serial.print("Pos: ");
-      Serial.print(get_feedback_value());
-      Serial.print(';');
-      break;
-
-    case 'f':
-      if (move_ms(20, FORWARD)) {
-        Serial.print("NudgeFwd;");
-      } else {
-        Serial.println("Motor fault on nudge!;");
-      }
-      break;
-
-    case 'r':
-      if (move_ms(20, REVERSE)) {
-        Serial.print("NudgeRev;");
-      } else {
-        Serial.print("Motor fault on nudge!;");
-      }
-      break;
-    
-    case 'w':
-      // Parse out the number of ms
-      ms = parse_int(data, 2);
-
-      if (move_ms(ms, FORWARD)) {
-        Serial.print("msFwd;");
-      } else {
-        Serial.print("Motor fault on forward ms!;");
-      }
-      break;
-
-    case 'v':
-      // Parse out the number of ms
-      ms = parse_int(data, 2);
-
-      if (move_ms(ms, REVERSE)) {
-        Serial.print("msRev;");
-      } else {
-        Serial.print("Motor fault on reverse ms!;");
-      }
       break;
 
     case 'c':
@@ -277,10 +188,38 @@ void process(String data) {
       Serial.print("StopRun;");
       break;
 
+    case 'f':
+      if (move_ms(20, FORWARD)) {
+        Serial.print("NudgeFwd;");
+      } else {
+        Serial.println("Motor fault on nudge!;");
+      }
+      break;
+
+    case 'h':
+      if (!go_home_or_max(HOME)) {
+        Serial.print("Motor fault;");
+      };
+      Serial.print("Home;");
+      break;
+
+    case 'j':
+      // Parse out the home value
+      val = parse_int(data, 2);
+      home_limit = val;
+      Serial.print("HomeLimit;");
+      break;
+
+    case 'k':
+      // Parse out the max value
+      val = parse_int(data, 2);
+      max_limit = val;
+      Serial.print("MaxLimit;");
+      break;
+
     case 'm':
       // Parse out the value to move to
       val = parse_int(data, 2);
-      
       if (move_to_feedback_value(val)) {
         Serial.print("MoveTo: ");
         Serial.print(get_feedback_value());
@@ -288,6 +227,69 @@ void process(String data) {
       } else {
         Serial.print("Motor fault on move!;");
       }
+      break;
+
+    case 'p':
+      Serial.print("Pos: ");
+      Serial.print(get_feedback_value());
+      Serial.print(';');
+      break;
+
+    case 'r':
+      if (move_ms(20, REVERSE)) {
+        Serial.print("NudgeRev;");
+      } else {
+        Serial.print("Motor fault on nudge!;");
+      }
+      break;
+
+    case 's':
+      // Parse out the speed
+      speed = parse_int(data, 2);
+      // Set as current speed
+      current_speed = speed;
+      Serial.print("Speed;");
+      break;
+
+    case 'v':
+      // Parse out the number of ms
+      ms = parse_int(data, 2);
+
+      if (move_ms(ms, REVERSE)) {
+        Serial.print("msRev;");
+      } else {
+        Serial.print("Motor fault on reverse ms!;");
+      }
+      break;
+
+    case 'w':
+      // Parse out the number of ms
+      ms = parse_int(data, 2);
+      if (move_ms(ms, FORWARD)) {
+        Serial.print("msFwd;");
+      } else {
+        Serial.print("Motor fault on forward ms!;");
+      }
+      break;
+
+    case 'x':
+      if (!go_home_or_max(MAX)) {
+        Serial.print("Motor fault;");
+      }
+      Serial.print("Max;");
+      break;
+
+    case 'y':
+      // Heartbeat is specifically monitored.
+      Serial.print("y;");
+      break;
+
+    case 'z':
+      // This is an abort which has caught us outside of 
+      // the normal 'check for abort' while moving. So may have been 
+      // during a position command etc. We don't want to send any response
+      // here as it will be an unexpected response and the abort should
+      // process normally at the controller level.
       break;
 
     default:
@@ -336,25 +338,17 @@ int check_stop() {
 
 // Have we triggered a limit switch
 int check_limit() {
-  // Test for end of travel
-  int last_fbval, fb_val, i;
-  int fb_counter = FB_COUNT;
-  int limit = TRUE;
-
-  last_fbval = get_feedback_value();
-  while( fb_counter >= 0 ) {
-    fb_val = get_feedback_value();
-    if ((fb_val > last_fbval) || (fb_val < last_fbval)) {
-      // Still moving
-      limit = FALSE;
-      break;
-    } else {
-      delay(20);
-      fb_val = get_feedback_value();
-      fb_counter --;
+  fb_val = get_feedback_value();
+  // Test if very near either limit
+  if ((home_limit != -1) && (max_limit != -1)) {
+    if  (
+          (fb_val < home_limit + 2) ||
+          (fb_val > max_limit - 2) 
+        ) { 
+        return TRUE;
     }
   }
-  return limit;
+  return FALSE;
 }
 
 // Status report
