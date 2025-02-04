@@ -81,8 +81,47 @@ def analog_pos_to_percent(model, pos):
 def round_sig(x, sig=2):
     return round(x, sig)
 
+# Find the frequency abd SWR from a position
+def find_from_position(pos, cal_map):
+    # Find the two points this pos falls between
+    index = 0
+    idx_low = -1
+    idx_high = -1
+    for pt in cal_map:
+        if pt[1] >= pos:
+            # Lower than target
+            idx_high = index-1 
+            idx_low = index
+        elif pt[1] <= pos:
+            break
+        index+=1
+    if idx_high == -1 or idx_low == -1:
+        return False, None
+
+    # Calculate where between these points the frequency should be
+    # Note high is the setting for higher frequency not higher feedback value
+    # Same for low
+    #
+    # The feedback values and frequencies above and below the required frequency
+    fb_high = cal_map[idx_high][0]
+    fb_low = cal_map[idx_low][0]
+    frq_high = cal_map[idx_high][1]
+    frq_low = cal_map[idx_low][1]
+    swr_high = cal_map[idx_high][2]
+    swr_low = cal_map[idx_low][2]
+    # We now need to calculate the feedback value for the required frequency
+    fb_span = fb_low - fb_high
+    fb_inc = pos - fb_low
+    fb_frac = fb_inc/pos_span
+    
+    freq_span = frq_high - frq_low
+    freq = (freq_span * fb_frac) + freq_low
+    swr = (swr_high + swr_low)/2
+    
+    return True, freq, swr
+    
 # Find the best match (interpolate if necessary) frequency for a given absolute position
-def find_from_position(model, loop, pos):
+def find_from_position_sav(model, loop, pos):
     # Get the data set
     sets = model_for_loop(model, loop)
     # If we have data look for a match

@@ -124,11 +124,11 @@ class Tune(threading.Thread):
         idx_low = -1
         idx_high = -1
         for pt in cal_map:
-            if pt[1] <= self.__freq:
+            if pt[1] >= self.__freq:
                 # Lower than target
-                idx_high = index+1 
+                idx_high = index-1 
                 idx_low = index
-            elif pt[1] >= self.__freq:
+            elif pt[1] <= self.__freq:
                 break
             index+=1
         if idx_high == -1 or idx_low == -1:
@@ -139,23 +139,17 @@ class Tune(threading.Thread):
         # Same for low
         #
         # The feedback values and frequencies above and below the required frequency
-        if idx_high == len(vals):
-            # We are on last entry
-            fb_low = aset[idx_low][0]
-            target_pos = fb_low
-        else:
-            fb_high = aset[idx_high][0]
-            fb_low = aset[idx_low][0]
-            frq_high = aset[idx_high][1]
-            frq_low = aset[idx_low][1]
-            # We now need to calculate the feedback value for the required frequency
-            frq_span = frq_high - frq_low
-            frq_inc = self.__freq - frq_low
-            frq_frac = frq_inc/frq_span
-            fb_span = fb_low - fb_high
-            fb_frac = frq_frac * fb_span
-            target_pos = fb_low - fb_frac
-        
+        fb_high = cal_map[idx_high][0]
+        fb_low = cal_map[idx_low][0]
+        frq_high = cal_map[idx_high][1]
+        frq_low = cal_map[idx_low][1]
+        # We now need to calculate the feedback value for the required frequency
+        frq_span = frq_high - frq_low
+        frq_inc = self.__freq - frq_low
+        frq_frac = frq_inc/frq_span
+        fb_span = fb_low - fb_high
+        fb_frac = frq_frac * fb_span
+        target_pos = fb_low - fb_frac
         # We now have a position to move to
         self.__move_to(target_pos)
         return True, target_pos
@@ -195,7 +189,7 @@ class Tune(threading.Thread):
         
     # Perform move       
     def __move_to(self, target_pos):
-        self.__s_q.put(('move', [target_pos]))
+        self.__s_q.put(('move', [int(target_pos)]))
         self.__wait_for = MOVETO
         self.__event.wait()
         self.__event.clear()
@@ -219,7 +213,6 @@ class Tune(threading.Thread):
         
         # Difference between actual and wanted frequency
         diff = round(f - self.__freq, 3)
-        #print('1: ', low_f, high_f, f, diff)
         # Holds latest resonant frequency
         new_f = f
         # Run for this number of ms
