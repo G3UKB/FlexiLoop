@@ -108,7 +108,10 @@ class API:
                 self.__serial_running = True
                 return True
         return False
-            
+     
+    def get_comms(self):
+        return self.__serial_comms
+    
     # Termination
     def terminate(self):
         # Terminate all and wait for threads to exit

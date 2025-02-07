@@ -39,7 +39,7 @@ from utils import *
 #===================================================== 
 class FBLimits(threading.Thread):
     
-    def __init__(self, model, s_q, cb):
+    def __init__(self, model, s_q, comms, msg_cb):
         super(FBLimits, self).__init__()
         # Get root logger
         self.logger = logging.getLogger('root')
@@ -47,9 +47,11 @@ class FBLimits(threading.Thread):
         # Parameters
         self.__model = model
         self.__s_q = s_q
-        self.__cb = cb
+        self.__serial_comms = comms
+        self.__msg_cb = msg_cb
         
         # Instance vars
+        self.__event = threading.Event()
         self.one_pass = False
         self.term = False
         self.__home_limit = -1
@@ -83,19 +85,21 @@ class FBLimits(threading.Thread):
                 if homevalue != self.__home_limit or maxvalue != self.__max_limit:
                     # We have a change
                     self.__home_limit = homevalue
-                    self.__max_limit = maxlimit
+                    self.__max_limit = maxvalue
                     self.__s_q.put(('set_home', [self.__home_limit]))
-                    self.__wait_for = HOMELIMIT
+                    self.__wait_for = HOMEVAL
                     self.__event.wait()
                     self.__event.clear()
                     self.__s_q.put(('set_max', [self.__max_limit]))
-                    self.__wait_for = MAXLIMIT
+                    self.__wait_for = MAXVAL
                     self.__event.wait()
                     self.__event.clear()
                 # Give back callback
                 self.__serial_comms.restore_callback()
-            except:
-                self.logger.info("Exception in fb_limits [{}]".format(e))
+            except Exception as e:
+                self.logger.warn("Exception in fb_limits [{}]".format(e))
+                self.__msg_cb('Exception in fb_limits, please check log.', MSG_ALERT)
+                break
             
         print("FBLimits thread  exiting...")
     
@@ -115,5 +119,7 @@ class FBLimits(threading.Thread):
             # It should then pick up the abort flag
             self.__event.set() 
         else:
-            self.logger.info ("Waiting for {}, but got {}, continuing to wait!".format(self.__wait_for, name))
+            self.logger.info ("Waiting for {}, but got {}!".format(self.__wait_for, name))
+            self.__msg_cb("Waiting for {}, but got {}!".format(self.__wait_for, name))
+            self.__event.set() 
             

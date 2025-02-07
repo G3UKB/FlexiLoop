@@ -207,14 +207,14 @@ void process(String data) {
       // Parse out the home value
       val = parse_int(data, 2);
       home_limit = val;
-      Serial.print("HomeLimit;");
+      Serial.print("HomeVal;");
       break;
 
     case 'k':
       // Parse out the max value
       val = parse_int(data, 2);
       max_limit = val;
-      Serial.print("MaxLimit;");
+      Serial.print("MaxVal;");
       break;
 
     case 'm':

@@ -84,7 +84,7 @@ class UI(QMainWindow):
         self.__track.start()
         
         # Create and run the fb_limits instance
-        self.__fb_limits = fb_limits.FBLimits(self.__model, self.__s_q)
+        self.__fb_limits = fb_limits.FBLimits(self.__model, self.__s_q, self.__api.get_comms(), self.msg_callback)
         self.__fb_limits.start()
         
         # Create the config dialog
@@ -839,6 +839,8 @@ class UI(QMainWindow):
     def __close(self):
         self.__track.terminate()
         self.__track.join()
+        self.__fb_limits.terminate()
+        self.__fb_limits.join()
         self.__api.terminate()
 
     def resizeEvent(self, event):
