@@ -342,8 +342,8 @@ int check_limit() {
   // Test if very near either limit
   if ((home_limit != -1) && (max_limit != -1)) {
     if  (
-          (fb_val < home_limit + 2) ||
-          (fb_val > max_limit - 2) 
+          (fb_val <= home_limit) ||
+          (fb_val >= max_limit) 
         ) { 
         return TRUE;
     }

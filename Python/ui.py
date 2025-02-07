@@ -302,6 +302,7 @@ class UI(QMainWindow):
                 self.__model[STATE][ARDUINO][MOTOR_FB] = float(self.__fb_pos)
             elif name == LIMIT:
                 # No action required as the current activity will complete
+                print('Limit')
                 pass
             elif name == ABORT:
                 # User hit the abort button

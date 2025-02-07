@@ -191,10 +191,18 @@ class SerialComms(threading.Thread):
         return self.send(b"x;", 30)
     
     def __set_home(self, args):
-        return self.send(b"j;", 2)
+        h = args[0]
+        b = bytearray(b"j,")
+        b += str(h).encode('utf-8')
+        b += b'.;'
+        return self.send(b, 2)
             
     def __set_max(self, args):
-        return self.send(b"k;", 2)
+        m = args[0]
+        b = bytearray(b"k,")
+        b += str(m).encode('utf-8')
+        b += b'.;'
+        return self.send(b, 2)
     
     def __pos(self, args):
         return self.send(b"p;", 2)
