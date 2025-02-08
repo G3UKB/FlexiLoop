@@ -59,6 +59,7 @@ int fb_val = -1;
 // Limits
 int home_limit = -1;
 int max_limit = -1;
+int dir = -1;
 
 // ******************************************************************
 // Entry point, runs once on power-on
@@ -337,15 +338,26 @@ int check_stop() {
 }
 
 // Have we triggered a limit switch
+// HOME = home_limit (fb low value) (motor dir REVERSE -ve)
+// MAX = max limit (fb_high value) (motoe dir FORWARD +ve)
 int check_limit() {
-  fb_val = get_feedback_value();
+  int fb = get_feedback_value();
+  p[0] = fb; 
+  p[1] = home_limit; 
+  p[2] = max_limit;
+  debug_print("Limit: ", 3, p); 
   // Test if very near either limit
   if ((home_limit != -1) && (max_limit != -1)) {
-    if  (
-          (fb_val <= home_limit) ||
-          (fb_val >= max_limit) 
-        ) { 
+    if  (dir == FORWARD) {
+      if (fb >= max_limit - 10) {
+        debug_print("Fwd limit;", 0, p);
         return TRUE;
+      }
+    } else {
+      if (fb <= home_limit + 10) {
+        debug_print("Rev limit;", 0, p);
+        return TRUE;
+      }
     }
   }
   return FALSE;
@@ -386,12 +398,15 @@ int go_home_or_max(int pos) {
   // Local vars
   int st_counter = 5;
   int speed;
+ //int dir;
 
   // Which way are we going?
   if (pos == HOME) {
     speed = -current_speed;
+    dir = REVERSE;
   } else {
     speed = current_speed;
+    dir = FORWARD;
   }
 
   // Set speed and test we are go
@@ -431,7 +446,8 @@ int move_to_feedback_value(int target) {
   int counter = 5;
   int current_val = get_feedback_value();
   int speed = 0;
-  int dir = FORWARD;
+  //int dir = FORWARD;
+  dir = FORWARD;
   int end = FALSE;
   if (target > current_val) {
     // Moving forward
@@ -486,12 +502,13 @@ int move_to_feedback_value(int target) {
         // See if we can do better
         current_speed = 50;  // slow it down
         int attempts = 10;    // Limit this at 10 correction attempts
-        int dir;
+        //int dir;
 
         // Ensure we take up gear slack in the same direction on every move.
         // If necessary move reverse so adjustment is always moving forward.
         while(get_feedback_value() > target) {
-          move_ms(100, REVERSE);
+          dir = REVERSE;
+          move_ms(100, dir);
           if (check_abort() || check_limit()) {
             md.setM1Speed(0);
             end = TRUE;
@@ -536,8 +553,10 @@ int move_ms(int ms, int pos) {
   int speed = 0;
 
   if (pos == FORWARD) {
+    dir = FORWARD;
     speed = current_speed;
   } else {
+    dir = REVERSE;
     speed = -current_speed;
   }
   md.setM1Speed(speed);
@@ -560,6 +579,7 @@ int move_fwd() {
     md.setM1Speed(0);
     return FALSE;
   } else {
+    dir = FORWARD;
     while (!check_stop() && !check_limit()) {
       delay (100);
       if (counter-- <= 0) {
@@ -581,6 +601,7 @@ int move_rev() {
     return FALSE;
   } else {
     delay (300);
+    dir = REVERSE;
     while (!check_stop() && !check_limit()) {
       delay (100);
       if (counter-- <= 0) {

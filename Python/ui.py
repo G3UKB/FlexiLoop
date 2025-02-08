@@ -302,7 +302,6 @@ class UI(QMainWindow):
                 self.__model[STATE][ARDUINO][MOTOR_FB] = float(self.__fb_pos)
             elif name == LIMIT:
                 # No action required as the current activity will complete
-                print('Limit')
                 pass
             elif name == ABORT:
                 # User hit the abort button
@@ -311,7 +310,8 @@ class UI(QMainWindow):
                 self.__switch_mode = self.__saved_mode
                 self.logger.info("Activity aborted by user!")
             elif name == DEBUG:
-                self.logger.info(args[0])
+                self.logger.debug(args[0])
+                #self.msg_callback(args[0], msgtype=MSG_DEBUG)
             else:
                 # Treat this as an abort because it will probably lock us up otherwise
                 self.logger.info ('Waiting for activity {} to completed but got activity {}! Aborting, please restart the activity.'.format(self.__current_activity, name))

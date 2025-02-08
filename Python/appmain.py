@@ -55,7 +55,7 @@ class AppMain:
         
         # Set up basic rotating file logging
         logger = logging.getLogger('root')
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
         file_handler = logging.handlers.RotatingFileHandler(filename='log/flexi-loop.log', maxBytes=10000, backupCount = 3, encoding='utf-8')
         formatter = logging.Formatter('%(asctime)s - %(module)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
         file_handler.setFormatter(formatter)
