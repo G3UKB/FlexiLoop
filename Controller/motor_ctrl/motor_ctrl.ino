@@ -60,6 +60,8 @@ int fb_val = -1;
 int home_limit = -1;
 int max_limit = -1;
 int dir = -1;
+int acc_fb_val = -1;
+int fb_counter = 10;
 
 // ******************************************************************
 // Entry point, runs once on power-on
@@ -342,21 +344,40 @@ int check_stop() {
 // MAX = max limit (fb_high value) (motoe dir FORWARD +ve)
 int check_limit() {
   int fb = get_feedback_value();
-  //p[0] = fb; 
-  //p[1] = home_limit; 
-  //p[2] = max_limit;
-  //debug_print("Limit, ", 1, p);
-  //return FALSE;
   // Test if very near either limit
-  if ((home_limit != -1) && (max_limit != -1)) {
+  if ((home_limit == -1) || (max_limit == -1)) {
+    int success = FALSE;
+    // No limits so we can only test if not moving
+    if (acc_fb_val == -1) {
+      acc_fb_val = fb;
+    } else {
+      acc_fb_val += fb;
+      fb_counter -= 1;
+      if (fb_counter <= 0) {
+        if ((acc_fb_val/10 >= fb + 10) || (acc_fb_val/10 <= fb - 10)) {
+          success = TRUE;
+        }
+        acc_fb_val = -1;
+        fb_counter = 10;
+      } 
+    }
+    return success;
+  } else {
+    // We can test against the configured limits
     if  (dir == FORWARD) {
+      if (fb >= max_limit - 100) {
+        // Slow down, we can't get values that fast
+        md.setM1Speed(80);
+      }
       if (fb >= max_limit - 10) {
-        //debug_print("Fwd limit;", 0, p);
         return TRUE;
       }
     } else {
+      if (fb <= home_limit + 100) {
+        // Slow down, we can't get values that fast
+        md.setM1Speed(-80);
+      }
       if (fb <= home_limit + 10) {
-        //debug_print("Rev limit;", 0, p);
         return TRUE;
       }
     }
