@@ -342,20 +342,21 @@ int check_stop() {
 // MAX = max limit (fb_high value) (motoe dir FORWARD +ve)
 int check_limit() {
   int fb = get_feedback_value();
-  p[0] = fb; 
-  p[1] = home_limit; 
-  p[2] = max_limit;
-  debug_print("Limit: ", 3, p); 
+  //p[0] = fb; 
+  //p[1] = home_limit; 
+  //p[2] = max_limit;
+  //debug_print("Limit, ", 1, p);
+  //return FALSE;
   // Test if very near either limit
   if ((home_limit != -1) && (max_limit != -1)) {
     if  (dir == FORWARD) {
       if (fb >= max_limit - 10) {
-        debug_print("Fwd limit;", 0, p);
+        //debug_print("Fwd limit;", 0, p);
         return TRUE;
       }
     } else {
       if (fb <= home_limit + 10) {
-        debug_print("Rev limit;", 0, p);
+        //debug_print("Rev limit;", 0, p);
         return TRUE;
       }
     }
@@ -581,6 +582,8 @@ int move_fwd() {
   } else {
     dir = FORWARD;
     while (!check_stop() && !check_limit()) {
+      //p[0] = check_limit();
+      //debug_print("Fwd stop ", 1, p);
       delay (100);
       if (counter-- <= 0) {
         counter = 5;
@@ -603,6 +606,8 @@ int move_rev() {
     delay (300);
     dir = REVERSE;
     while (!check_stop() && !check_limit()) {
+      //p[0] = check_limit();
+      //debug_print("Rev stop ", 1, p);
       delay (100);
       if (counter-- <= 0) {
         counter = 5;

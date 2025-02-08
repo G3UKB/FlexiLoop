@@ -98,9 +98,9 @@ class FBLimits(threading.Thread):
                 self.logger.warn("Exception in fb_limits [{}]".format(e))
                 self.__msg_cb('Exception in fb_limits, please check log.', MSG_ALERT)
                 break
-            finally:
-                # Give back callback
-                self.__serial_comms.restore_callback()
+            
+            # Give back callback
+            self.__serial_comms.restore_callback()
             
         print("FBLimits thread  exiting...")
     
