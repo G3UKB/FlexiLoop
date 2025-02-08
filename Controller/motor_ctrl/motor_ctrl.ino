@@ -575,19 +575,24 @@ int move_ms(int ms, int pos) {
 // Free move forward
 int move_fwd() {
   int counter = 5;
+  dir = FORWARD;
+  // Might already be there
+  if (check_stop() || check_limit()) {
+    return TRUE;
+  }
   md.setM1Speed(current_speed);
   if (md.getFault()) {
     md.setM1Speed(0);
     return FALSE;
   } else {
-    dir = FORWARD;
-    while (!check_stop() && !check_limit()) {
-      //p[0] = check_limit();
-      //debug_print("Fwd stop ", 1, p);
+    while (TRUE) {
       delay (100);
       if (counter-- <= 0) {
         counter = 5;
         send_status();
+        if (check_stop() || check_limit()) {
+          break;
+        }
       }
     }
   }
@@ -598,20 +603,26 @@ int move_fwd() {
 // Free move reverse
 int move_rev() {
   int counter = 5;
+  dir = REVERSE;
+  // Might already be there
+  if (check_stop() || check_limit()) {
+    return TRUE;
+  }
   md.setM1Speed(-current_speed);
   if (md.getFault()) {
     md.setM1Speed(0);
     return FALSE;
   } else {
-    delay (300);
-    dir = REVERSE;
-    while (!check_stop() && !check_limit()) {
+    while (TRUE) {
       //p[0] = check_limit();
       //debug_print("Rev stop ", 1, p);
       delay (100);
       if (counter-- <= 0) {
         counter = 5;
         send_status();
+        if (check_stop() || check_limit()) {
+          break;
+        }
       }
     }
   }

@@ -78,12 +78,13 @@ class FBLimits(threading.Thread):
             
             # Check for change in limits
             try:
-                # Need to steal the serial comms callback
-                self.__serial_comms.steal_callback(self.limits_cb)
+                
                 homevalue = self.__model[CONFIG][CAL][HOME]
                 maxvalue = self.__model[CONFIG][CAL][MAX]
                 if homevalue != self.__home_limit or maxvalue != self.__max_limit:
                     # We have a change
+                    # Need to steal the serial comms callback
+                    self.__serial_comms.steal_callback(self.limits_cb)
                     self.__home_limit = homevalue
                     self.__max_limit = maxvalue
                     self.__s_q.put(('set_home', [self.__home_limit]))
@@ -93,14 +94,13 @@ class FBLimits(threading.Thread):
                     self.__s_q.put(('set_max', [self.__max_limit]))
                     self.__wait_for = MAXVAL
                     self.__event.wait()
-                    self.__event.clear() 
+                    self.__event.clear()
+                    # Give back callback
+                    self.__serial_comms.restore_callback()
             except Exception as e:
                 self.logger.warn("Exception in fb_limits [{}]".format(e))
                 self.__msg_cb('Exception in fb_limits, please check log.', MSG_ALERT)
                 break
-            
-            # Give back callback
-            self.__serial_comms.restore_callback()
             
         print("FBLimits thread  exiting...")
     
