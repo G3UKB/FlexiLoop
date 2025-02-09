@@ -54,8 +54,8 @@ class FBLimits(threading.Thread):
         self.__event = threading.Event()
         self.one_pass = False
         self.term = False
-        self.__home_limit = -1
-        self.__max_limit = -1
+        self.__home_limit = None
+        self.__max_limit = None
         self.__wait_for = None
     
     # Perform one tuning pass for given loop and frequency
@@ -82,6 +82,7 @@ class FBLimits(threading.Thread):
                 homevalue = self.__model[CONFIG][CAL][HOME]
                 maxvalue = self.__model[CONFIG][CAL][MAX]
                 if homevalue != self.__home_limit or maxvalue != self.__max_limit:
+                    print(homevalue, maxvalue)
                     # We have a change
                     # Need to steal the serial comms callback
                     self.__serial_comms.steal_callback(self.limits_cb)

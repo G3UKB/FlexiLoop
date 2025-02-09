@@ -1130,6 +1130,17 @@ class UI(QMainWindow):
             # Check feedback status
             if self.__model[CONFIG][CAL][HOME] != -1 and self.__model[CONFIG][CAL][MAX] != -1:
                 fb_config = True
+             
+            # Do tracking and limits   
+            if self.__current_activity == NONE:
+                if self.__update_ctr <= 0:
+                    self.__update_ctr = self.__update_ctr_set
+                    if self.__current_pos != -1:
+                        self.__track.do_one_pass(self.__selected_loop, self.__fb_pos)
+                    self.__fb_limits.do_one_pass()
+                else:
+                    self.__update_ctr -= 1
+                    
             # Update current motor position
             if self.__current_pos == -1:
                 self.__currpos.setText('-')
@@ -1137,15 +1148,7 @@ class UI(QMainWindow):
             else:
                 self.__currpos.setText(str(self.__current_pos) + '%')
                 self.__currposfb.setText(str(self.__fb_pos))
-                # and tracking
-                if self.__current_activity == NONE:
-                    if self.__update_ctr <= 0:
-                        self.__update_ctr = self.__update_ctr_set
-                        self.__track.do_one_pass(self.__selected_loop, self.__fb_pos)
-                        self.__fb_limits.do_one_pass()
-                    else:
-                        self.__update_ctr -= 1
-                # and update the tracking UI
+                # Update the tracking UI
                 self.__freqval.setText(self.__freq_track)
                 self.__swrres.setText(self.__swr_track)
             

@@ -48,6 +48,7 @@
 // Loop iteration rate in ms
 #define TICK 100
 #define FB_COUNT 10
+#define FB_INC 10
 
 // Instance of motor driver
 DualMC33926MotorShield md;
@@ -61,7 +62,7 @@ int home_limit = -1;
 int max_limit = -1;
 int dir = -1;
 int acc_fb_val = -1;
-int fb_counter = 10;
+int fb_counter = FB_COUNT;
 
 // ******************************************************************
 // Entry point, runs once on power-on
@@ -345,20 +346,28 @@ int check_stop() {
 int check_limit() {
   int fb = get_feedback_value();
   // Test if very near either limit
-  if ((home_limit == -1) || (max_limit == -1)) {
+  if ((home_limit == -1) && (max_limit == -1)) {
     int success = FALSE;
     // No limits so we can only test if not moving
+    
     if (acc_fb_val == -1) {
       acc_fb_val = fb;
     } else {
       acc_fb_val += fb;
       fb_counter -= 1;
+      int av_val = acc_fb_val/FB_COUNT;
       if (fb_counter <= 0) {
-        if ((acc_fb_val/10 >= fb + 10) || (acc_fb_val/10 <= fb - 10)) {
-          success = TRUE;
+        if (av_val >= fb) {
+          if (av_val < av_val + FB_INC) {
+            success = TRUE;
+          }
+        } else if (av_val <= fb) {
+          if (av_val > av_val - FB_INC) {
+            success = TRUE;
+          }
         }
         acc_fb_val = -1;
-        fb_counter = 10;
+        fb_counter = FB_COUNT;
       } 
     }
     return success;
@@ -440,20 +449,20 @@ int go_home_or_max(int pos) {
     // We wait until the feedback no longer changes.
     // This means we have hit the limit switch and movement has stopped.
     // Precaution wait
-    delay(100);
+    delay(500);
     // Loop until success or abort
     while(TRUE) {
-      // Test for end conditions
-      if (check_abort() || check_limit()) {
-        break;
-      }
-      // Time for a status report?
       if (st_counter-- <= 0) {
         st_counter = 5;
+        // Status report
         send_status();
+        // Test for end conditions
+        if (check_abort() || check_limit()) {
+          break;
+        }
       }
       // If we spin too fast the feedback may not change enough and give a false positive
-      delay (500);   
+      delay (100);   
     }
 
     // All done
