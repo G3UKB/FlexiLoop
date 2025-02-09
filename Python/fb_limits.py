@@ -78,11 +78,9 @@ class FBLimits(threading.Thread):
             
             # Check for change in limits
             try:
-                
                 homevalue = self.__model[CONFIG][CAL][HOME]
                 maxvalue = self.__model[CONFIG][CAL][MAX]
                 if homevalue != self.__home_limit or maxvalue != self.__max_limit:
-                    print(homevalue, maxvalue)
                     # We have a change
                     # Need to steal the serial comms callback
                     self.__serial_comms.steal_callback(self.limits_cb)

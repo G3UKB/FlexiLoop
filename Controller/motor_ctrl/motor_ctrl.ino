@@ -349,7 +349,6 @@ int check_limit() {
   if ((home_limit == -1) && (max_limit == -1)) {
     int success = FALSE;
     // No limits so we can only test if not moving
-    
     if (acc_fb_val == -1) {
       acc_fb_val = fb;
     } else {
