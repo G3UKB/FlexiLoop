@@ -69,7 +69,7 @@ class UI(QMainWindow):
         
         # Create the VNA instance
         self.__vna_open = False
-        self.__vna_api = vna_api.VNAApi(model)
+        self.__vna_api = vna_api.VNAApi(model, self.msg_callback)
         if self.__model[CONFIG][VNA][VNA_ENABLED]:
             if not self.__vna_api.open():
                 self.logger.warn ('Failed to open VNA device! Trying periodically.')

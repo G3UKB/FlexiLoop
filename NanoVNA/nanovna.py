@@ -50,9 +50,9 @@ class NanoVNA:
             r, self.dev =  getport()
             if r:
                 try:
-                    self.serial = serial.Serial(self.dev)
+                    self.serial = serial.Serial(self.dev, write_timeout = 1)
                 except Exception as e:
-                    self.logger.warn("Unable to open VNA {}".format(e))
+                    self.logger.warning("Unable to open VNA {}".format(e))
                     return False                                   
                 return True
             return False

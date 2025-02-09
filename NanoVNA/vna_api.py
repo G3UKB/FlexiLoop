@@ -39,11 +39,12 @@ except:
 import nanovna
 
 class VNAApi:
-    def __init__(self, model, app=True):
+    def __init__(self, model, msg_cb, app=True):
         # Get root logger
         self.__app = app
-        if self.__app: self.logger = logging.getLogger('root')
+        self.logger = logging.getLogger('root')
         self.__model = model
+        self.__msg_cb = msg_cb
             
         # Instantiate driver
         self.__nv = nanovna.NanoVNA()
@@ -66,23 +67,28 @@ class VNAApi:
             isopen = self.__model[STATE][VNA][VNA_OPEN]
         else:
             isopen = True
-        if isopen:
-            while True:
-                # Get the sets
-                f, vswr = self.__get_sets(start, end, points)
-                # Find lowest VSWR in the set
-                low_vswr = 100.0
-                low_idx = 0
-                idx = 0
-                for pt in vswr:
-                    if pt < low_vswr:
-                        low_vswr = pt
-                        low_idx = idx
-                    idx += 1
-                new_f = round((float(f[low_idx]))/1.0e6,3)
-                new_swr =  round(vswr[low_idx], 2)
-                return (True, new_f, new_swr)
-        else:
+        try:
+            if isopen:
+                while True:
+                    # Get the sets
+                    f, vswr = self.__get_sets(start, end, points)
+                    # Find lowest VSWR in the set
+                    low_vswr = 100.0
+                    low_idx = 0
+                    idx = 0
+                    for pt in vswr:
+                        if pt < low_vswr:
+                            low_vswr = pt
+                            low_idx = idx
+                        idx += 1
+                    new_f = round((float(f[low_idx]))/1.0e6,3)
+                    new_swr =  round(vswr[low_idx], 2)
+                    return (True, new_f, new_swr)
+            else:
+                return (False, None, None)
+        except Exception as e:
+            self.logger.warning("VNA exception, please reset VNA [{}]".format(e))
+            self.__msg_cb("VNA exception, please reset VNA [{}]".format(e), MSG_ALERT)
             return (False, None, None)
     
     # Get the VSWR as close to the given frequency as we have points
@@ -91,32 +97,37 @@ class VNAApi:
             isopen = self.__model[STATE][VNA][VNA_OPEN]
         else:
             isopen = True
-        if isopen:
-            while True:
-                # Get the sets
-                freqs, vswr = self.__get_sets(start, end, points)
-                # Find the point closest to the given frequency
-                t = int(target*1.0e6)
-                f_diff = -1
-                first = True
-                idx = 0
-                for f in freqs:
-                    f = int(f)
-                    if first:
-                        first = False
-                        f_diff = f
-                    else:
-                        # Better or worse
-                        if f_diff < 0:
-                            # Step too far
-                            break
+        try:
+            if isopen:
+                while True:
+                    # Get the sets
+                    freqs, vswr = self.__get_sets(start, end, points)
+                    # Find the point closest to the given frequency
+                    t = int(target*1.0e6)
+                    f_diff = -1
+                    first = True
+                    idx = 0
+                    for f in freqs:
+                        f = int(f)
+                        if first:
+                            first = False
+                            f_diff = f
                         else:
-                            f_diff = t - f
-                    idx += 1
-                new_f = round((float(freqs[idx-1]))/1.0e6,3)
-                new_swr =  round(vswr[idx-1], 2)
-                return (True, new_f, new_swr)
-        else:
+                            # Better or worse
+                            if f_diff < 0:
+                                # Step too far
+                                break
+                            else:
+                                f_diff = t - f
+                        idx += 1
+                    new_f = round((float(freqs[idx-1]))/1.0e6,3)
+                    new_swr =  round(vswr[idx-1], 2)
+                    return (True, new_f, new_swr)
+            else:
+                return (False, None, None)
+        except Exception as e:
+            self.logger.warning("VNA exception, please reset VNA [{}]".format(e))
+            self.__msg_cb("VNA exception, please reset VNA [{}]".format(e), MSG_ALERT)
             return (False, None, None)
     
     # Get the frequency and VSWR sets for the given range   
@@ -138,6 +149,9 @@ class VNAApi:
         
 #======================================================================================================================
 # Test code
+def msg_cb(msg):
+    print (msg)
+    
 def main():
      # Manage command line arguments
     parser = argparse.ArgumentParser(
@@ -156,12 +170,14 @@ def main():
     points = args.points
 
     # Instantiate VNAApi as stand alone
-    api = VNAApi(None, False)
+    api = VNAApi(None, msg_cb, False)
     if api.open():
         r, f, vswr = api.get_vswr(float(start), float(end), int(points))
-        print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
-        r, f, vswr = api.get_freq(float(start), float(end), float(target), int(points))
-        print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
+        if r:
+            print ('Resonance at Freq: {}, VSWR: {}'.format(f, vswr))
+            r, f, vswr = api.get_freq(float(start), float(end), float(target), int(points))
+            if r:
+                print ('VSWR at Freq: {}, VSWR: {}'.format(f, vswr))
         api.close()
     else:
         print('Failed to open device!')
