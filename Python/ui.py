@@ -84,7 +84,7 @@ class UI(QMainWindow):
         self.__track.start()
         
         # Create and run the fb_limits instance
-        self.__fb_limits = fb_limits.FBLimits(self.__model, self.__s_q, self.__api.get_comms(), self.msg_callback)
+        self.__fb_limits = fb_limits.FBLimits(self.__model, self.__s_q, self.__api.get_comms(), self.callback, self.msg_callback)
         self.__fb_limits.start()
         
         # Create the config dialog
@@ -1137,7 +1137,10 @@ class UI(QMainWindow):
                     self.__update_ctr = self.__update_ctr_set
                     if self.__current_pos != -1:
                         self.__track.do_one_pass(self.__selected_loop, self.__fb_pos)
-                    self.__fb_limits.do_one_pass()
+                    if self.__fb_limits.has_change():
+                        self.__current_activity = FBLIMITS
+                        self.__st_act.setText(FBLIMITS)
+                        self.__fb_limits.do_one_pass()
                 else:
                     self.__update_ctr -= 1
                     
@@ -1159,9 +1162,9 @@ class UI(QMainWindow):
                     self.__init_pos = False
                     # Initialte a get pos so current values reflected at startup
                     if self.__model[STATE][ARDUINO][MOTOR_POS] == -1:
-                        self.__api.get_pos()
                         self.__current_activity = POS
                         self.__st_act.setText(POS)
+                        self.__api.get_pos()
                  
             # Check activity state
             if self.__current_activity == NONE:

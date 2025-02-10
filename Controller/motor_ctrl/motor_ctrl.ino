@@ -377,7 +377,7 @@ int check_limit() {
         // Slow down, we can't get values that fast
         md.setM1Speed(80);
       }
-      if (fb >= max_limit - 10) {
+      if (fb >= max_limit - 5) {
         return TRUE;
       }
     } else {
@@ -385,7 +385,7 @@ int check_limit() {
         // Slow down, we can't get values that fast
         md.setM1Speed(-80);
       }
-      if (fb <= home_limit + 10) {
+      if (fb <= home_limit + 5) {
         return TRUE;
       }
     }
@@ -476,7 +476,6 @@ int move_to_feedback_value(int target) {
   int counter = 5;
   int current_val = get_feedback_value();
   int speed = 0;
-  //int dir = FORWARD;
   dir = FORWARD;
   int end = FALSE;
   if (target > current_val) {
@@ -605,6 +604,7 @@ int move_ms(int ms, int pos) {
 int move_fwd() {
   int counter = 5;
   dir = FORWARD;
+
   // Might already be there
   if (check_stop() || check_limit()) {
     return TRUE;
@@ -616,14 +616,18 @@ int move_fwd() {
   } else {
     while (TRUE) {
       delay (100);
+      if (check_stop() || check_limit()) {
+        break;
+      }
       if (counter-- <= 0) {
         counter = 5;
-        send_status();
-        if (check_stop() || check_limit()) {
-          break;
-        }
+        send_status(); 
       }
     }
+  }
+  // Final adjust
+  if (get_feedback_value() > max_limit){
+    move_to_feedback_value(max_limit);
   }
   md.setM1Speed(0);
   return TRUE;
@@ -643,17 +647,19 @@ int move_rev() {
     return FALSE;
   } else {
     while (TRUE) {
-      //p[0] = check_limit();
-      //debug_print("Rev stop ", 1, p);
       delay (100);
+      if (check_stop() || check_limit()) {
+        break;
+      }
       if (counter-- <= 0) {
         counter = 5;
         send_status();
-        if (check_stop() || check_limit()) {
-          break;
-        }
       }
     }
+  }
+  // Final adjust
+  if (get_feedback_value() < home_limit){
+    move_to_feedback_value(home_limit);
   }
   md.setM1Speed(0);
   return TRUE;

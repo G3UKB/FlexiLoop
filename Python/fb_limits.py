@@ -39,7 +39,7 @@ from utils import *
 #===================================================== 
 class FBLimits(threading.Thread):
     
-    def __init__(self, model, s_q, comms, msg_cb):
+    def __init__(self, model, s_q, comms, cb, msg_cb):
         super(FBLimits, self).__init__()
         # Get root logger
         self.logger = logging.getLogger('root')
@@ -48,6 +48,7 @@ class FBLimits(threading.Thread):
         self.__model = model
         self.__s_q = s_q
         self.__serial_comms = comms
+        self.__cb = cb
         self.__msg_cb = msg_cb
         
         # Instance vars
@@ -57,6 +58,13 @@ class FBLimits(threading.Thread):
         self.__home_limit = None
         self.__max_limit = None
         self.__wait_for = None
+    
+    def has_change(self):
+        homevalue = self.__model[CONFIG][CAL][HOME]
+        maxvalue = self.__model[CONFIG][CAL][MAX]
+        if homevalue != self.__home_limit or maxvalue != self.__max_limit:
+            return True
+        return False
     
     # Perform one tuning pass for given loop and frequency
     def do_one_pass(self):
@@ -96,18 +104,19 @@ class FBLimits(threading.Thread):
                     self.__event.clear()
                     # Give back callback
                     self.__serial_comms.restore_callback()
+                    self.__cb
             except Exception as e:
                 self.logger.warn("Exception in fb_limits [{}]".format(e))
                 self.__msg_cb('Exception in fb_limits, please check log.', MSG_ALERT)
                 break
-            
+            self.__cb((FBLIMITS, (True, "", [])))
         print("FBLimits thread  exiting...")
     
     # Stolen callback    
     def limits_cb(self, data):
         (name, (success, msg, val)) = data
         if name == self.__wait_for:
-            self.__event.set() 
+            self.__event.set()
         elif name == STATUS:
             # Very infrequent abd short lived so ignore
             pass

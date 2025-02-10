@@ -111,6 +111,7 @@ LOOP_3 = 3
 NONE = 'None'
 CALIBRATE = 'Calibrate'
 CONFIGURE = 'Configure'
+FBLIMITS = 'FbLimits'
 FREQLIMITS = 'FreqLimits'
 SPEED = 'Speed'
 HOME = 'Home'
