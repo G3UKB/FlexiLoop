@@ -630,6 +630,8 @@ int move_fwd() {
     move_to_feedback_value(max_limit);
   }
   md.setM1Speed(0);
+  delay(100);
+  send_status();
   return TRUE;
 }
 
@@ -657,11 +659,9 @@ int move_rev() {
       }
     }
   }
-  // Final adjust
-  if (get_feedback_value() < home_limit){
-    move_to_feedback_value(home_limit);
-  }
   md.setM1Speed(0);
+  delay(100);
+  send_status();
   return TRUE;
 }
 
