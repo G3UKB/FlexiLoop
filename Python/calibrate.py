@@ -117,7 +117,7 @@ class Calibrate(threading.Thread):
         disp_tab = {
             'configure': self.__configure,
             'calibrate': self.__calibrate,
-            'freqlimits': self.__limits,
+            'freqlimits': self.__span,
         }
         # Execute and return response
         # We need to steal the callback for the comms thread
@@ -208,20 +208,20 @@ class Calibrate(threading.Thread):
         return (CALIBRATE, (True, "", cal_map))
     
     # Set the frequency limits
-    def __limits(self, args):
+    def __span(self, args):
         loop, cb = args
         # If we have a VNA then set the frequency limits
         if self.__model[STATE][VNA][VNA_OPEN]:
             try:
-                self.__set_limits(loop, 'move', self.__model[CONFIG][CAL][HOME], MOVETO, HOME)
-                self.__set_limits(loop, 'move', self.__model[CONFIG][CAL][MAX], MOVETO, MAX)
+                self.__set_span(loop, 'move', self.__model[CONFIG][CAL][HOME], MOVETO, HOME)
+                self.__set_span(loop, 'move', self.__model[CONFIG][CAL][MAX], MOVETO, MAX)
             except Exception as e:
                 self.logger.fatal('Exception in Calibrate {}, [{}]'.format(e, traceback.print_exc()))
                 return (FREQLIMITS, (False, 'Exception in Calibrate {}'.format(e), []))
-            self.__msg_cb("Set limits complete", MSG_STATUS)
+            self.__msg_cb("Set span complete", MSG_STATUS)
             return (FREQLIMITS, (True, "", []))
         
-    def __set_limits(self, loop, cmd, args, resp, where):
+    def __set_span(self, loop, cmd, args, resp, where):
         self.__comms_q.put((cmd, [args]))
         # Wait response
         self.__wait_for = resp

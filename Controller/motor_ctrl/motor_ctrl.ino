@@ -47,8 +47,11 @@
 #define DEFAULT_SPEED 200
 // Loop iteration rate in ms
 #define TICK 100
+// Feedback
 #define FB_COUNT 10
 #define FB_INC 10
+// Status
+#define STATUS_COUNT 10
 
 // Instance of motor driver
 DualMC33926MotorShield md;
@@ -426,7 +429,7 @@ int go_home_or_max(int pos) {
   // Assume home is reverse
 
   // Local vars
-  int st_counter = 5;
+  int st_counter = STATUS_COUNT;
   int speed;
  //int dir;
 
@@ -452,7 +455,7 @@ int go_home_or_max(int pos) {
     // Loop until success or abort
     while(TRUE) {
       if (st_counter-- <= 0) {
-        st_counter = 5;
+        st_counter = STATUS_COUNT;
         // Status report
         send_status();
         // Test for end conditions
@@ -473,7 +476,7 @@ int go_home_or_max(int pos) {
 
 // Move actuator to given feedback value
 int move_to_feedback_value(int target) {
-  int counter = 5;
+  int counter = STATUS_COUNT;
   int current_val = get_feedback_value();
   int speed = 0;
   dir = FORWARD;
@@ -496,8 +499,9 @@ int move_to_feedback_value(int target) {
     if (dir == FORWARD) {
       while(get_feedback_value() < target) {
         if (counter-- <= 0) {
-          counter = 5;
+          counter = STATUS_COUNT;
           send_status();
+          delay(50);
           if (check_abort() || check_limit()) {
             end = TRUE;
             break;
@@ -508,7 +512,7 @@ int move_to_feedback_value(int target) {
     } else {
       while(get_feedback_value() > target){
         if (counter-- <= 0) {
-          counter = 5;
+          counter = STATUS_COUNT;
           send_status();
           if (check_abort() || check_limit()) {
             md.setM1Speed(0);
@@ -559,7 +563,7 @@ int move_to_feedback_value(int target) {
             if (attempts -- <= 0) {
               break;
             }
-            if (check_abort()) {
+            if (check_abort() || check_limit()) {
               break;
             }
           }
@@ -602,7 +606,7 @@ int move_ms(int ms, int pos) {
 
 // Free move forward
 int move_fwd() {
-  int counter = 5;
+  int counter = STATUS_COUNT;
   dir = FORWARD;
 
   // Might already be there
@@ -620,7 +624,7 @@ int move_fwd() {
         break;
       }
       if (counter-- <= 0) {
-        counter = 5;
+        counter = STATUS_COUNT;
         send_status(); 
       }
     }
@@ -637,7 +641,7 @@ int move_fwd() {
 
 // Free move reverse
 int move_rev() {
-  int counter = 5;
+  int counter = STATUS_COUNT;
   dir = REVERSE;
   // Might already be there
   if (check_stop() || check_limit()) {
@@ -654,7 +658,7 @@ int move_rev() {
         break;
       }
       if (counter-- <= 0) {
-        counter = 5;
+        counter = STATUS_COUNT;
         send_status();
       }
     }

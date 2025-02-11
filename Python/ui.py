@@ -284,13 +284,13 @@ class UI(QMainWindow):
                     elif name == TUNE:
                         # Switch mode back to what is was before any change for long running activities
                         self.__switch_mode = self.__saved_mode
-                    self.logger.info ('Activity {} completed successfully'.format(self.__current_activity))
+                    self.logger.info ('Activity {} completed successfully'.format(name))
                     # Do we have a deferred activity
                     if self.__deferred_activity != None:
                         self.__deferred_activity()
                         self.__deferred_activity = None
                 else:
-                    self.logger.info ('Activity {} completed but failed!'.format(self.__current_activity))
+                    self.logger.info ('Activity {} completed but failed!'.format(name))
                     self.__current_activity = NONE
                     # Switch mode back to what is was before any change for long running activities
                     self.__switch_mode = self.__saved_mode
@@ -888,6 +888,8 @@ class UI(QMainWindow):
             self.__model[CONFIG][CAL][HOME] = -1
             self.__model[CONFIG][CAL][MAX] = -1
             self.__model[STATE][ARDUINO][MOTOR_POS] = -1
+            sec = (LIM_1, LIM_2, LIM_3)
+            self.__model[CONFIG][CAL][LIMITS][sec[self.__selected_loop - 1]] = [None, None]
             self.__current_pos = -1
             # Set to reinit position
             self.__init_pos = True
